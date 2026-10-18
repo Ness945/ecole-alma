@@ -139,3 +139,80 @@ test("un ancien onglet en v1 ne peut pas remplacer la progression RPG v2", () =>
   assert.equal(load(storage).rpg.coins, 37);
   assert.deepEqual(load(storage).rpg.owned, ["head-crown"]);
 });
+
+// ───────────────────────── Graphisme et cohérence des objets (0.7) ─────────────────────────
+import { avatarSvg as drawAvatar, itemArt as drawItem, shop as catalog, unequip as takeOff, validRpg as validRpgState, defaultRpg as newRpg, styles as hairStyles, skins as skinList, hairs as hairList } from "../frontend/js/rpg.js";
+import { shade, petArt, avatarItems } from "../frontend/js/avatar-art.js";
+
+test("chaque objet à porter a un dessin, et l'icône de boutique est le même dessin que sur le personnage", () => {
+  const worn = catalog.filter((i) => i.kind === "avatar");
+  assert.deepEqual([...avatarItems].sort(), worn.map((i) => i.id).sort(), "aucun objet sans dessin, aucun dessin orphelin");
+  for (const i of worn) {
+    const icon = drawItem(i.id);
+    assert.match(icon, /^<svg viewBox="[\d. -]+" class="item-art"/);
+    const rpg = newRpg();
+    rpg.owned = [i.id];
+    rpg.equipped[i.slot] = i.id;
+    const fragment = icon.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+    assert.ok(drawAvatar(rpg).includes(fragment), `${i.id} : l'objet porté est exactement le dessin de l'icône`);
+  }
+  for (const i of catalog.filter((i) => i.kind === "castle")) assert.match(drawItem(i.id), /<svg/);
+});
+test("le personnage se dessine pour toutes les apparences et tous les objets, sans identifiant dupliqué ni valeur invalide", () => {
+  const worn = catalog.filter((i) => i.kind === "avatar");
+  for (const skin of skinList.keys())
+    for (const hair of hairList.keys())
+      for (const st of hairStyles) {
+        const r = newRpg();
+        r.look = { skin, hair, style: st.id };
+        for (const slot of ["head", "cape", "dress", "feet", "hand"]) {
+          const pick = worn.filter((i) => i.slot === slot)[(skin + hair + st.id) % worn.filter((i) => i.slot === slot).length];
+          r.owned.push(pick.id);
+          r.equipped[slot] = pick.id;
+        }
+        const svg = drawAvatar(r, "t", { pet: ["fox", "dragon", null][(skin + st.id) % 3] });
+        assert.ok(!/undefined|NaN|\[object/.test(svg));
+        assert.ok(!/\sid="/.test(svg), "pas d'identifiant : plusieurs dessins peuvent cohabiter dans une page");
+        assert.equal((svg.match(/<svg/g) || []).length, 1);
+        assert.ok(validRpgState(r));
+      }
+  assert.ok(petArt("fox") && petArt("dragon") && petArt("autre") === "");
+});
+test("anciennes sauvegardes : sans emplacement « chaussures » ni coiffure, elles restent valides et dessinables", () => {
+  const old = newRpg(5);
+  delete old.equipped.feet;
+  delete old.look.style;
+  assert.equal(validRpgState(old), true);
+  assert.doesNotThrow(() => drawAvatar(old));
+  const bad = newRpg();
+  bad.look.style = 9;
+  assert.equal(validRpgState(bad), false);
+  const wrongSlot = newRpg();
+  wrongSlot.owned = ["boots-trail"];
+  wrongSlot.equipped.head = "boots-trail";
+  assert.equal(validRpgState(wrongSlot), false, "une chaussure ne se porte pas sur la tête");
+  const unowned = newRpg();
+  unowned.equipped.feet = "shoes-star";
+  assert.equal(validRpgState(unowned), false);
+});
+test("nouveaux objets : achat, équipement, retrait sans perte et sans double débit", () => {
+  const s = fresh();
+  s.rpg.coins = 50;
+  for (const id of ["boots-trail", "head-flowers", "dress-sun", "lantern-glow"]) assert.equal(purchase(s, id), true, id);
+  assert.equal(s.rpg.coins, 50 - 10 - 10 - 16 - 14);
+  assert.equal(purchase(s, "boots-trail"), false);
+  assert.equal(equip(s, "boots-trail"), true);
+  assert.equal(s.rpg.equipped.feet, "boots-trail");
+  assert.equal(takeOff(s, "head-flowers"), false, "on ne retire pas ce qui n'est pas porté");
+  assert.equal(takeOff(s, "boots-trail"), true);
+  assert.equal(s.rpg.equipped.feet, null);
+  assert.ok(s.rpg.owned.includes("boots-trail"), "l'objet reste dans la collection");
+  assert.equal(takeOff(s, "inconnu"), false);
+  validate(JSON.parse(JSON.stringify(s)));
+});
+test("shade éclaircit et assombrit sans sortir de la gamme", () => {
+  assert.equal(shade("#808080", 0), "#808080");
+  assert.equal(shade("#000000", 1), "#ffffff");
+  assert.equal(shade("#ffffff", -1), "#000000");
+  assert.match(shade("#4c9b91", -0.28), /^#[0-9a-f]{6}$/);
+});

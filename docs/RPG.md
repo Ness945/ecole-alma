@@ -53,3 +53,12 @@ L’application reste en modules ES natifs ; Node sert les fichiers. Cette archi
 Tests de domaine : migration réelle avec sauvegarde ancienne et session, original préservé, achats sans double débit, soldes insuffisants, équipement possédé seulement, aperçu sans mutation, récompense unique, corruption rejetée et 1 000 multiplications vérifiées.
 
 Trois parcours navigateur passent : anciennes missions, pont et RPG. Le parcours RPG vérifie matière/notion, prérequis, leçon des déterminants, cinq défis ciblés, leçon de multiplication, migration, boutique, château, recharge, persistance et hors ligne. Accueil, leçon, dressing et château sont vérifiés sans débordement dans neuf dimensions d’écran. Les essais sont sous Edge sur Windows, pas encore sur iPad/Android physiques.
+
+## Graphisme et cohérence (0.7)
+
+- `frontend/js/avatar-art.js` est la **source unique** des dessins du personnage : chaque objet à porter y est un fragment SVG ; l'icône de la boutique est un recadrage (`VIEW`) de ce même fragment, donc ce que l'on achète est exactement ce que l'on voit sur l'aventurière. Aucun identifiant SVG (plusieurs dessins cohabitent dans une page).
+- 4 coiffures (longs, queue de cheval, tresses, chignon) en plus des 4 teints et 4 couleurs de cheveux.
+- Nouveaux objets : couronne de fleurs, robe soleil, bottes de sentier, chaussons étoilés (nouvel emplacement « Chaussures »), lanterne lumineuse.
+- Les compagnons (renard, dragon) et les tenues de mission (chapeau, couronne) sont dessinés en SVG partout : accueil, dressing, page « objets » ; l'état « équipé » vient de `rpg.equipped`.
+- Boutique groupée par emplacement ; bouton « Retirer cet objet » (l'objet reste dans la collection).
+- Compatibilité : `look.style` et `equipped.feet` sont facultatifs ; les anciennes sauvegardes restent valides, rien n'est perdu. Aucune ressource réseau nouvelle ; `avatar-art.js` est dans le cache hors ligne (`content-v9`).
