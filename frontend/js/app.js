@@ -1,5 +1,16 @@
 import { skills, chapters, items } from "./content.js";
 import {
+  marketView,
+  marketTeaser,
+  marketCount,
+  marketStages,
+  newMarket,
+  marketQuestion,
+  answerMarket,
+  advanceMarket,
+  learningReport,
+} from "./market.js";
+import {
   fresh,
   load,
   save,
@@ -113,7 +124,7 @@ function page(title, body) {
   return `<main class="page"><div class="page-head">${button("←", "home", "quiet", 'aria-label="Retour au royaume"')}<h1>${title}</h1></div>${body}</main>`;
 }
 function home() {
-  return homeView(state);
+  return homeView(state).replace("</main>", marketTeaser(state) + "</main>");
 }
 function current() {
   const s = state.session;
@@ -444,7 +455,7 @@ function parent() {
         })
         .join("") ||
       "<p>Aucune réponse pour le moment. Indiquez les notions déjà travaillées ou commencez par une découverte.</p>"
-    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${adventureReport()}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
+    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
       .map((s) => {
         const p = state.skills[s.id];
         return `<section class="skill-row"><div class="skill-top"><h3>${s.icon} ${s.name}</h3><select data-status="${s.id}" aria-label="Statut scolaire : ${s.name}" ${state.session ? "disabled" : ""}>${[
@@ -475,7 +486,7 @@ function parent() {
       })
       .join(
         "",
-      )}</div><p class="notice">${state.session ? "Une mission est en cours : les changements de statut attendront sa fin. " : ""}Version initiale : 14 compétences disponibles. Couverture CE1 partielle ; la progression proposée doit être mise en regard du travail en classe. Aucune donnée envoyée à une IA.</p>`,
+      )}</div><p class="notice">${state.session ? "Une mission est en cours : les changements de statut attendront sa fin. " : ""}30 notions disponibles. Couverture CE1 partielle ; la progression proposée doit être mise en regard du travail en classe. Aucune donnée envoyée à une IA.</p>`,
   );
 }
 function render() {
@@ -490,6 +501,7 @@ function render() {
     body =
       {
         home,
+        market: () => marketView(state),
         missions: discover,
         rooms: castleRooms,
         "legacy-outfits": legacyOutfits,
@@ -539,6 +551,102 @@ app.addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
   if (!b || b.disabled) return;
   const a = b.dataset.action;
+  if (a.startsWith("market-")) {
+    if (a === "market-open") {
+      state.market ??= newMarket(marketCount(state));
+      persist();
+      go("market");
+      return;
+    }
+    const m = state.market;
+    if (!m) return;
+    if (
+      a === "market-decor" &&
+      marketCount(state) === 4 &&
+      ["rose", "sage", "gold"].includes(b.dataset.color)
+    ) {
+      state.marketDecor = b.dataset.color;
+      persist();
+      render();
+      return;
+    }
+    if (a === "market-read") {
+      speak(
+        m.started
+          ? marketQuestion(m).prompt
+          : marketStages[m.stage]?.lesson || "Le marché est ouvert !",
+      );
+      return;
+    }
+    if (a === "market-equip") {
+      equipRpg(state, "bag-adventure");
+      persist();
+      go("avatar");
+      return;
+    }
+    if (a === "market-replay" && m.stage === 4) {
+      state.market = newMarket();
+      persist();
+      go("market");
+      return;
+    }
+    if (a === "market-start" && m.stage < 4) {
+      if (state.session) {
+        toast(
+          "Une mission est en pause. Termine-la ou range-la dans « Choisir ma mission » avant de commencer cette aventure.",
+        );
+        return;
+      }
+      state.skills[marketStages[m.stage].skill].status = "seen";
+      const recent = state.history
+        .filter((e) => e.skill === marketStages[m.stage].skill)
+        .slice(-5);
+      const autonomous = new Set(
+        recent
+          .filter((e) => e.correct && !e.assisted && !e.skip)
+          .map((e) => e.fingerprint),
+      ).size;
+      m.level = autonomous >= 4 ? 2 : autonomous >= 2 ? 1 : 0;
+      m.started = true;
+    }
+    if (m.started && !m.solved) {
+      if (a === "market-pick") m.draft[0] = Number(b.dataset.value);
+      if (a === "market-adjust") {
+        const i = Number(b.dataset.slot);
+        m.draft[i] = Math.max(
+          0,
+          Math.min(12, m.draft[i] + Number(b.dataset.delta)),
+        );
+      }
+      if (a === "market-hour")
+        m.draft[0] =
+          (((m.draft[0] || 12) + Number(b.dataset.delta) + 11) % 12) + 1;
+      if (a === "market-minute") m.draft[1] = 1 - m.draft[1];
+      if (a === "market-hint") m.helped = true;
+      if (a === "market-check") {
+        const result = answerMarket(m);
+        if (result) {
+          state.skills[result.skill].status = "seen";
+          record(state, result.skill, result);
+        }
+      }
+    }
+    if (a === "market-next" && m.solved) {
+      const finished = advanceMarket(m, m.feedback.startsWith("Bien"));
+      if (finished !== null) {
+        reward(state, {
+          id: `market:${finished}`,
+          index: 3,
+          queue: Array(3).fill(marketStages[finished].skill),
+        });
+      }
+      if (m.stage === 4 && !state.rpg.owned.includes("bag-adventure"))
+        state.rpg.owned.push("bag-adventure");
+    }
+    persist();
+    render();
+    return;
+  }
   if (["missions", "rooms", "legacy-outfits"].includes(a)) {
     go(a);
     return;

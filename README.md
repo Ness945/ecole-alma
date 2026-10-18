@@ -18,6 +18,8 @@ Une mission terminée apporte des étoiles de participation, deux graines, dix p
 
 ## Fonctionnalités présentes
 
+**Nouveau — le marché du royaume (0.5) :** une quête en quatre étapes avec lecture de commandes, paniers à remplir, pièces à composer et horloge à régler. Difficulté adaptée aux essais, étal personnalisable, sac à gagner et suivi parent enrichi. Voir [le fonctionnement du marché](docs/MARKET.md).
+
 **Nouveau — un petit RPG :** choix matière/notion, leçons interactives dont la multiplication, aventurière dessinée avec accessoires et château en perspective personnalisable. Les achats utilisent uniquement les pièces gagnées en mission. Voir [les nouveautés et la migration](docs/RPG.md).
 
 **L’aventure du pont :** trois séquences jouables pour manipuler les dizaines, reconnaître les noms et trouver les déterminants. Le pont se reconstruit sur la carte et ouvre une clairière. Les sauvegardes précédentes sont conservées. Voir [le détail de l’aventure](docs/ADVENTURE.md).

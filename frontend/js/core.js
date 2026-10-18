@@ -1,6 +1,7 @@
 import { skills, items } from "./content.js";
 import { defaultRpg, validRpg } from "./rpg.js";
 import { extraSkills } from "./expansion.js";
+import { validMarket } from "./market.js";
 export const DAY = 86400000;
 export const dimensions = [
   "recognition",
@@ -204,6 +205,12 @@ export function validate(raw) {
     raw.version = 2;
   }
   if (!validRpg(raw.rpg)) fail();
+  if (!validMarket(raw.market)) fail();
+  if (
+    raw.marketDecor !== undefined &&
+    !["rose", "sage", "gold"].includes(raw.marketDecor)
+  )
+    fail();
   const base = fresh();
   const integer = (x) => Number.isSafeInteger(x) && x >= 0;
   const ids = items.map((x) => x.id);

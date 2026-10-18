@@ -1,5 +1,9 @@
 # Vérification de la version initiale
 
+## Mise à jour : marché du royaume (0.5)
+
+38 tests unitaires. `tests/market-browser.mjs` couvre les quatre étapes, une erreur suivie d’un nouvel exemple, la reprise des manipulations, les formats 390/768/1024, les récompenses, l’équipement, la décoration et le hors ligne. Il accepte une URL en troisième argument pour vérifier la publication dans un profil isolé. Les cinq parcours précédents sont également exécutés avant publication.
+
 ## Mise à jour : contenu étendu (0.4)
 
 33 tests automatiques passent, dont 30 000 exercices générés, calculs supplémentaires vérifiés à partir des consignes, conjugaisons, limites du calendrier, formats horaires, sélection sans répétition récente et enrichissement des sauvegardes v2 sans mutation de la source. Les quatre parcours navigateur passent dans Edge : classique, pont, RPG et `content-browser.mjs`. Ce dernier ouvre chacune des 15 nouvelles leçons, valide une réponse, vérifie le format mobile et la reprise d’une saisie sur l’horloge. Les profils de test sont isolés des sauvegardes utilisateur.
