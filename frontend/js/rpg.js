@@ -1,3 +1,5 @@
+import { skins, hairs, styles, avatarSvg, avatarItemArt } from "./avatar-art.js";
+export { skins, hairs, styles, avatarSvg };
 export const shop = [
   {
     id: "head-hat",
@@ -25,6 +27,15 @@ export const shop = [
     price: 18,
     kind: "avatar",
     value: "crown",
+  },
+  {
+    id: "head-flowers",
+    slot: "head",
+    name: "Couronne de fleurs",
+    icon: "🌼",
+    price: 10,
+    kind: "avatar",
+    value: "flowers",
   },
   {
     id: "cape-forest",
@@ -63,6 +74,33 @@ export const shop = [
     value: "rose",
   },
   {
+    id: "dress-sun",
+    slot: "dress",
+    name: "Robe du soleil",
+    icon: "🌞",
+    price: 16,
+    kind: "avatar",
+    value: "sun",
+  },
+  {
+    id: "boots-trail",
+    slot: "feet",
+    name: "Bottines de sentier",
+    icon: "🥾",
+    price: 10,
+    kind: "avatar",
+    value: "trail",
+  },
+  {
+    id: "shoes-star",
+    slot: "feet",
+    name: "Chaussons étoilés",
+    icon: "👟",
+    price: 14,
+    kind: "avatar",
+    value: "star",
+  },
+  {
     id: "wand-star",
     slot: "hand",
     name: "Baguette étoilée",
@@ -79,6 +117,15 @@ export const shop = [
     price: 12,
     kind: "avatar",
     value: "bag",
+  },
+  {
+    id: "lantern-glow",
+    slot: "hand",
+    name: "Lanterne des lucioles",
+    icon: "🏮",
+    price: 14,
+    kind: "avatar",
+    value: "lantern",
   },
   {
     id: "roof-lilac",
@@ -126,14 +173,12 @@ export const shop = [
     value: "water",
   },
 ];
-export const skins = ["#f4c7a3", "#dca578", "#b97a51", "#875039"];
-export const hairs = ["#59382e", "#a56539", "#e4bc68", "#302c39"];
 export function defaultRpg(coins = 0) {
   return {
     coins,
     owned: [],
-    look: { skin: 0, hair: 0 },
-    equipped: { head: null, cape: null, dress: null, hand: null },
+    look: { skin: 0, hair: 0, style: 0 },
+    equipped: { head: null, cape: null, dress: null, feet: null, hand: null },
     castle: { roof: null, flags: null, garden: null, fountain: null },
   };
 }
@@ -147,16 +192,20 @@ export function validRpg(r) {
     r.owned.some((id) => !shop.some((i) => i.id === id)) ||
     !r.look ||
     ![0, 1, 2, 3].includes(r.look.skin) ||
-    ![0, 1, 2, 3].includes(r.look.hair)
+    ![0, 1, 2, 3].includes(r.look.hair) ||
+    // Coiffure : absente des sauvegardes antérieures (équivaut à 0).
+    !(r.look.style === undefined || styles.some((s) => s.id === r.look.style))
   )
     return false;
   for (const [group, kind, slots] of [
-    ["equipped", "avatar", ["head", "cape", "dress", "hand"]],
+    ["equipped", "avatar", ["head", "cape", "dress", "feet", "hand"]],
     ["castle", "castle", ["roof", "flags", "garden", "fountain"]],
   ]) {
     if (!r[group]) return false;
     for (const slot of slots) {
       const id = r[group][slot];
+      // Emplacement « feet » absent des sauvegardes antérieures (équivaut à vide).
+      if (id === undefined && slot === "feet") continue;
       if (
         id !== null &&
         (!r.owned.includes(id) ||
@@ -181,6 +230,14 @@ export function equip(state, id) {
   state.rpg[i.kind === "avatar" ? "equipped" : "castle"][i.slot] = id;
   return true;
 }
+export function unequip(state, id) {
+  const i = shop.find((i) => i.id === id);
+  if (!i) return false;
+  const group = state.rpg[i.kind === "avatar" ? "equipped" : "castle"];
+  if (group[i.slot] !== id) return false;
+  group[i.slot] = null;
+  return true;
+}
 export function preview(rpg, id) {
   const r = structuredClone(rpg),
     i = shop.find((i) => i.id === id);
@@ -188,27 +245,10 @@ export function preview(rpg, id) {
   return r;
 }
 export function itemArt(id) {
+  const worn = avatarItemArt(id);
+  if (worn) return worn;
   let body = "";
-  if (id === "head-crown")
-    body =
-      '<path d="m15 56-5-30 20 11 10-22 12 22 19-11-5 30Z" fill="#edc868" stroke="#bb8d44" stroke-width="3"/><path d="m40 32 6 9-6 9-6-9Z" fill="#85bdaa"/>';
-  else if (id === "head-hat")
-    body =
-      '<path d="m14 56 24-44 16 41 17 9q-30 16-62 0Z" fill="#7984b1" stroke="#53618c" stroke-width="3"/><path d="m25 42 27 10" stroke="#dfbd78" stroke-width="6"/>';
-  else if (id === "head-ribbon")
-    body =
-      '<path d="M36 39Q5 9 10 43q4 22 27 3 27 23 32-1 5-36-32-6" fill="#dc94af" stroke="#be708d" stroke-width="3"/><circle cx="39" cy="43" r="9" fill="#f7c7d6"/>';
-  else if (id.startsWith("cape"))
-    body = `<path d="M28 16q12-9 24 0l18 48q-30 15-60 0Z" fill="${id === "cape-night" ? "#646597" : "#70967a"}" stroke="#4d5c72" stroke-width="2"/><path d="m32 18 8 11 8-11" fill="#f4db95"/><path d="m41 42 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1Z" fill="#e8d79a"/>`;
-  else if (id.startsWith("dress"))
-    body = `<path d="m24 17-13 20 13 9-5 23q21 8 43-1l-7-22 14-9-14-20-14 8Z" fill="${id === "dress-rose" ? "#da8e9f" : "#9787c5"}" stroke="#8d729f" stroke-width="2"/><path d="m27 20 14 15 12-15" fill="#fff1d2"/><path d="M24 47h33" stroke="#edc57c" stroke-width="6"/>`;
-  else if (id === "wand-star")
-    body =
-      '<path d="m23 66 29-43" stroke="#aa855c" stroke-width="6" stroke-linecap="round"/><path d="m53 8 5 13 14 2-11 9 2 14-11-7-12 7 3-14-10-9 14-2Z" fill="#f3d073" stroke="#c5a051" stroke-width="2"/>';
-  else if (id === "bag-adventure")
-    body =
-      '<path d="M27 27q0-24 26 0" fill="none" stroke="#a47149" stroke-width="5"/><rect x="17" y="23" width="47" height="48" rx="12" fill="#c78c5e"/><rect x="26" y="44" width="30" height="20" rx="6" fill="#e4b080"/><path d="M20 32h42" stroke="#f2c997" stroke-width="3"/>';
-  else if (id.startsWith("roof"))
+  if (id.startsWith("roof"))
     body = `<path d="M17 42v26l23 9 24-13V38Z" fill="#e6d2ab"/><path d="m10 41 30-31 33 31-33 13Z" fill="${id === "roof-rose" ? "#c6889d" : "#9485be"}"/><path d="m40 10 33 31-33 13Z" fill="${id === "roof-rose" ? "#a66680" : "#71629a"}"/>`;
   else if (id === "castle-flags")
     body =
@@ -220,19 +260,6 @@ export function itemArt(id) {
     body =
       '<ellipse cx="40" cy="65" rx="31" ry="12" fill="#dcd0ba" stroke="#b4a893" stroke-width="3"/><ellipse cx="40" cy="62" rx="23" ry="8" fill="#8ec5d0"/><path d="M40 62V25m-18 8q18 15 36 0" fill="none" stroke="#d8cbb5" stroke-width="6"/><path d="M40 27q-21-29-25 7m25-7q21-29 25 7" fill="none" stroke="#83bbc8" stroke-width="3"/>';
   return `<svg viewBox="0 0 80 80" class="item-art" aria-hidden="true">${body}</svg>`;
-}
-export function avatarSvg(rpg, label = "Ton aventurière") {
-  const skin = skins[rpg.look.skin],
-    hair = hairs[rpg.look.hair],
-    e = rpg.equipped;
-  const dress =
-      e.dress === "dress-rose"
-        ? "#df8b9d"
-        : e.dress === "dress-lilac"
-          ? "#9685cb"
-          : "#4c9b91",
-    cape = e.cape === "cape-night" ? "#54558c" : "#658765";
-  return `<svg class="girl-avatar" viewBox="0 0 260 340" role="img" aria-label="${label}"><ellipse cx="133" cy="318" rx="65" ry="12" fill="#4f3b6420"/>${e.cape ? `<path d="M94 160Q62 195 61 286Q128 315 196 282L165 161Z" fill="${cape}" stroke="#ffffff55" stroke-width="3"/>${e.cape === "cape-night" ? '<g fill="#ffe7a6"><path d="m81 244 3-7 3 7 7 3-7 3-3 7-3-7-7-3Z"/><circle cx="178" cy="271" r="3"/><circle cx="72" cy="274" r="3"/></g>' : ""}` : ""}<path d="M81 145Q55 77 96 46Q145 10 181 64Q207 101 176 168Z" fill="${hair}"/><path d="M97 238v53m57-53v53" stroke="${skin}" stroke-width="21" stroke-linecap="round"/><path d="M86 284h24v26H78q-6-14 8-26m56 0h24q18 10 10 26h-34Z" fill="#805b47"/><path d="M88 162Q69 181 60 221m103-58q25 20 31 58" fill="none" stroke="${skin}" stroke-width="17" stroke-linecap="round"/><path d="M94 158Q130 146 164 158L180 242Q129 261 78 242Z" fill="${dress}"/><path d="M97 159l29 29 34-29" fill="#fff3da"/><path d="M91 206h78" stroke="#dfb165" stroke-width="10"/><rect x="122" y="200" width="15" height="14" rx="3" fill="#fff0bd"/><path d="M97 218l-6 22m65-22 8 22" stroke="#ffffff35" stroke-width="3"/><path d="M118 140v19q11 14 24 0v-19" fill="${skin}"/><ellipse cx="130" cy="105" rx="47" ry="51" fill="${skin}"/><path d="M82 102Q71 45 125 40Q180 37 180 99Q154 85 145 64Q124 95 82 102" fill="${hair}"/><path d="M89 103q-10 10-9 27m91-27q11 12 8 28" fill="none" stroke="${hair}" stroke-width="13" stroke-linecap="round"/><g fill="#3d3034"><ellipse cx="112" cy="111" rx="4" ry="6"/><ellipse cx="151" cy="111" rx="4" ry="6"/></g><g fill="#fff"><circle cx="113" cy="109" r="1.4"/><circle cx="152" cy="109" r="1.4"/></g><ellipse cx="103" cy="127" rx="9" ry="5" fill="#df8e8a" opacity=".45"/><ellipse cx="158" cy="127" rx="9" ry="5" fill="#df8e8a" opacity=".45"/><path d="M122 132q9 9 18 0" fill="none" stroke="#a15853" stroke-width="3" stroke-linecap="round"/>${e.head === "head-hat" ? '<path d="m81 67 39-57 31 54 31 9q-51 28-111 0Z" fill="#6d79a6" stroke="#505d89" stroke-width="3"/><path d="m96 49 57 14" stroke="#e4be75" stroke-width="7"/>' : e.head === "head-crown" ? '<path d="m91 64-5-30 23 12 20-25 20 25 24-12-6 30Z" fill="#edc868" stroke="#bd8b37" stroke-width="3"/><path d="m130 39 6 9-6 9-6-9Z" fill="#8bbdac"/>' : e.head === "head-ribbon" ? '<path d="M166 65q-42-29-33 2 1 14 30 5 29 23 29-1 0-23-26-6" fill="#dc92ac"/><circle cx="164" cy="69" r="7" fill="#f7c3d3"/>' : ""}${e.hand === "wand-star" ? '<path d="m193 223 21-66" stroke="#b28a52" stroke-width="6"/><path d="m219 129 5 13 14 1-11 9 3 14-12-8-12 7 3-14-10-9 14-1Z" fill="#f8d878" stroke="#cca24b" stroke-width="2"/>' : e.hand === "bag-adventure" ? '<path d="M170 197q14-24 25 0" fill="none" stroke="#ae7346" stroke-width="5"/><rect x="165" y="194" width="36" height="47" rx="10" fill="#c98c59"/><rect x="173" y="215" width="21" height="18" rx="5" fill="#e6b174"/>' : ""}</svg>`;
 }
 export function castleSvg(rpg, id = "kingdom") {
   const c = rpg.castle,

@@ -44,6 +44,7 @@ import {
   itemArt,
   purchase,
   equip as equipRpg,
+  unequip as unequipRpg,
   avatarSvg,
 } from "./rpg.js";
 import { homeView, pickerView, customizationView } from "./rpg-ui.js";
@@ -394,11 +395,11 @@ function castleRooms() {
 function legacyOutfits() {
   return page(
     "Mon personnage",
-    `<div class="avatar-preview" aria-label="Ton personnage et son compagnon">${item(state.outfit)?.icon || "🧑‍🌾"} ${item(state.pet)?.icon || ""}</div><div class="collection">${items
+    `<div class="avatar-preview legacy-avatar">${avatarSvg(state.rpg, "Ton personnage et son compagnon", { pet: state.pet })}</div><div class="collection">${items
       .filter((i) => i.kind !== "garden")
       .map(
         (i) =>
-          `<div class="collect-item"><span class="emoji">${i.icon}</span><h3>${i.name}</h3>${state.inventory.includes(i.id) ? button(state[i.kind === "pet" ? "pet" : "outfit"] === i.id ? "✓ Équipé" : "Équiper", "equip", "small", `data-id="${i.id}"`) : '<p class="sub">À découvrir dans une aventure</p>'}</div>`,
+          `<div class="collect-item"><span class="emoji">${i.icon}</span><h3>${i.name}</h3>${state.inventory.includes(i.id) ? button(i.kind === "pet" ? (state.pet === i.id ? "✓ Équipé" : "Équiper") : (state.rpg.equipped.head === ({ hat: "head-hat", crown: "head-crown" })[i.id] ? "✓ Équipé" : "Équiper"), "equip", "small", `data-id="${i.id}"`) : '<p class="sub">À découvrir dans une aventure</p>'}</div>`,
       )
       .join("")}</div>`,
   );
@@ -780,10 +781,19 @@ app.addEventListener("click", (e) => {
   if (a === "look") {
     const part = b.dataset.part,
       n = Number(b.dataset.index);
-    if (["skin", "hair"].includes(part) && [0, 1, 2, 3].includes(n)) {
+    if (["skin", "hair", "style"].includes(part) && [0, 1, 2, 3].includes(n)) {
       state.rpg.look[part] = n;
       persist();
       render();
+    }
+    return;
+  }
+  if (a === "rpg-unequip") {
+    if (unequipRpg(state, b.dataset.id)) {
+      persist();
+      previewItem = null;
+      render();
+      toast("Objet retiré. Il reste dans ta collection.");
     }
     return;
   }

@@ -1090,3 +1090,50 @@ body {
   background: #f6f1fa;
   letter-spacing: normal;
 }
+
+/* Dressing : apparence nommée, coiffures, boutique par emplacement */
+.appearance-label {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6f6580;
+}
+.styles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.style-choice {
+  min-height: 48px;
+  padding: 8px 14px;
+  border-radius: 24px;
+  background: #fff;
+  border: 2px solid #e3dbe8;
+  font-size: 14px;
+}
+.style-choice.selected {
+  border-color: #8e6dab;
+  background: #eee1f4;
+}
+.shop-group {
+  margin: 0 0 26px;
+}
+.shop-group > h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: #6f6580;
+  letter-spacing: 0.02em;
+}
+.shop-item-art .item-art {
+  width: 100%;
+  height: 100%;
+}
+.legacy-avatar {
+  display: flex;
+  justify-content: center;
+}
+.legacy-avatar .girl-avatar {
+  width: 220px;
+  height: auto;
+}
