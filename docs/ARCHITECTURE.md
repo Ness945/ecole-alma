@@ -49,3 +49,7 @@ L’espace parent est protégé contre le clic accidentel, sans prétendre être
 ## IA future
 
 Pas d’appel IA dans cette version. Pour l’intégrer : endpoint serveur dédié, clé uniquement dans l’environnement, consentement parent, budget et délais plafonnés, schéma strict, validation mathématique/grammaticale puis fallback local. Ne jamais transmettre la sauvegarde entière ni laisser l’IA modifier récompenses, statuts ou prérequis. Le frontend ne doit jamais recevoir de clé.
+
+## Bilan de départ (0.6)
+
+Quatre modules sans framework : `discovery-bank.js` (banque pure, aucune dépendance), `discovery-model.js` (structure, règles, validation importée par `core.js`), `discovery.js` (moteur pur : choix du défi, arrêt, rapport, recommandations) et `discovery-ui.js` (écrans, délégué par `app.js` via un objet `ctx`). Les observations vivent dans `state.discovery`, jamais dans `skills[].evidence` ; `record()` et les seuils de maîtrise ne sont pas utilisés. Voir [DISCOVERY.md](DISCOVERY.md).

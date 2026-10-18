@@ -1,10 +1,11 @@
 import { createRequire } from "node:module";
 import { mkdir } from "node:fs/promises";
 import assert from "node:assert/strict";
+import { launch } from "./browser-launch.mjs";
 const { chromium } = createRequire(import.meta.url)(
   process.argv[2] || "playwright",
 );
-const browser = await chromium.launch({ headless: true, channel: "msedge" });
+const browser = await launch(chromium);
 try {
   const context = await browser.newContext({
       reducedMotion: "reduce",

@@ -1,5 +1,11 @@
 # Vérification de la version initiale
 
+## Mise à jour : bilan de départ (0.6)
+
+`tests/discovery.test.js` (37 tests, 75 au total avec les existants) : banque (≥ 3 familles par notion, ≥ 6 variantes, bonne réponse parmi des options distinctes, calculs recomputés, exemples sans fuite, empreintes uniques, texte de lecture jamais lu par la voix), tolérance de saisie, règles d’adaptation et d’arrêt (maximum par notion, séries d’échecs, fatigue, « non appris », verbes/sujets conditionnés au parent, notion « pas abordée » jamais proposée, exemples récents évités), distinction autonomie/aide/passage/« non appris », aucune conclusion après une seule réussite ni sur des QCM seuls, absence d’écriture dans les preuves de maîtrise, récompense unique (rechargement, nouveau bilan), idempotence des réponses, reprise exacte après aller-retour JSON, anciennes sauvegardes, nouveau bilan sans perte et compactage, recommandations respectant les prérequis, validation des imports (13 mutations refusées).
+
+`tests/discovery-browser.mjs` : parcours de réussite complet avec récompense unique et rechargement, parcours avec aides/erreurs/passages, rapport parent (porte, statut modifiable, relance conservant l’historique), lancement d’une mission recommandée, interruption + rechargement + reprise de la même question, consigne vocale de lecture, trois formats (390×844, 768×1024, 1024×768 : pas de débordement ni de cible tactile minuscule) et hors ligne. `tests/pages-browser.mjs` ouvre aussi le bilan hors ligne sous `/ecole-alma/`. Les six parcours précédents passent toujours (Chromium via `PLAYWRIGHT_EXECUTABLE`, Edge par défaut).
+
 ## Mise à jour : marché du royaume (0.5)
 
 38 tests unitaires. `tests/market-browser.mjs` couvre les quatre étapes, une erreur suivie d’un nouvel exemple, la reprise des manipulations, les formats 390/768/1024, les récompenses, l’équipement, la décoration et le hors ligne. Il accepte une URL en troisième argument pour vérifier la publication dans un profil isolé. Les cinq parcours précédents sont également exécutés avant publication.
