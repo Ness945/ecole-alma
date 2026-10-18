@@ -104,7 +104,7 @@ function speak(text, lang = "fr-FR") {
   speechSynthesis.speak(u);
 }
 function header() {
-  return `<header class="topbar"><button class="brand quiet" data-action="home" aria-label="Retour au royaume"><img src="/assets/icon.svg" alt=""><div><small>APPRENDRE DEVIENT UNE AVENTURE</small>L’Académie des Aventuriers</div></button><div class="top-actions"><div class="resources"><span title="Étoiles de progression">⭐ ${state.stars}</span><span title="Pièces à dépenser">🪙 ${state.rpg.coins}</span><span title="Graines du jardin">🌱 ${state.seeds}</span></div><button data-action="avatar" class="header-girl" aria-label="Mon aventurière">${avatarSvg(state.rpg)}</button></div></header>`;
+  return `<header class="topbar"><button class="brand quiet" data-action="home" aria-label="Retour au royaume"><img src="./assets/icon.svg" alt=""><div><small>APPRENDRE DEVIENT UNE AVENTURE</small>L’Académie des Aventuriers</div></button><div class="top-actions"><div class="resources"><span title="Étoiles de progression">⭐ ${state.stars}</span><span title="Pièces à dépenser">🪙 ${state.rpg.coins}</span><span title="Graines du jardin">🌱 ${state.seeds}</span></div><button data-action="avatar" class="header-girl" aria-label="Mon aventurière">${avatarSvg(state.rpg)}</button></div></header>`;
 }
 function footer() {
   return `<footer class="footer"><span>À petits pas, de grandes découvertes.<br>Progression enregistrée sur cet appareil.</span><div>${button(state.settings.sound ? "🔊 Son" : "🔇 Son", "sound", "quiet small")}${button("⚙ Espace parent", "parent-gate", "quiet small")}</div></footer>`;
@@ -953,7 +953,7 @@ app.addEventListener(
 );
 if ("serviceWorker" in navigator)
   navigator.serviceWorker
-    .register("/sw.js")
+    .register("./sw.js")
     .catch(() =>
       toast("Le mode hors ligne n’est pas disponible à cette adresse."),
     );

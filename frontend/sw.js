@@ -1,4 +1,6 @@
-const CACHE = "academie-content-v4";
+const CACHE_PREFIX = `academie-${self.registration.scope}-`;
+const CACHE = `${CACHE_PREFIX}content-v5`;
+const scopedUrl = (path) => new URL(path.replace(/^\//, ""), self.registration.scope).href;
 const FILES = [
   "/",
   "/index.html",
@@ -26,7 +28,7 @@ const FILES = [
   "/manifest.webmanifest",
 ];
 self.addEventListener("install", (e) =>
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))),
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES.map(scopedUrl)))),
 );
 self.addEventListener("activate", (e) =>
   e.waitUntil(
@@ -35,7 +37,7 @@ self.addEventListener("activate", (e) =>
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k.startsWith("academie-") && k !== CACHE)
+            .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE)
             .map((k) => caches.delete(k)),
         ),
       ),
@@ -44,7 +46,7 @@ self.addEventListener("activate", (e) =>
 self.addEventListener("fetch", (e) => {
   if (
     e.request.method !== "GET" ||
-    new URL(e.request.url).origin !== self.location.origin
+    !e.request.url.startsWith(self.registration.scope)
   )
     return;
   e.respondWith(
@@ -63,7 +65,7 @@ self.addEventListener("fetch", (e) => {
             (r) =>
               r ||
               (e.request.mode === "navigate"
-                ? caches.match("/index.html")
+                ? caches.match(scopedUrl("/index.html"))
                 : Response.error()),
           ),
       ),
