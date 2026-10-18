@@ -12,6 +12,7 @@ import {
   NEEDS_PARENT_SEEN,
   newDiscovery,
   newRun,
+  newStep,
   stepOf,
 } from "./discovery-model.js";
 
@@ -35,17 +36,52 @@ export function ensure(state) {
   state.discovery ??= newDiscovery();
   return state.discovery;
 }
+// Complète les bilans enregistrés avant l'ajout d'une exploration. Retourne true si la sauvegarde a changé.
+// Le bilan le plus récent, s'il était terminé, est rouvert pour que la nouvelle exploration reste accessible
+// (la récompense de participation n'est jamais redonnée) ; les autres reçoivent une étape vide « terminée ».
+export function upgradeDiscovery(state) {
+  const d = state.discovery;
+  if (!d) return false;
+  let changed = false;
+  const detailed = d.runs.filter((r) => !r.compact);
+  const newest = [...detailed].sort((a, b) => b.started - a.started)[0];
+  for (const run of d.runs) {
+    const missing = STEP_IDS.filter((id) =>
+      run.compact ? run.stepStatus[id] === undefined : run.steps[id] === undefined,
+    );
+    if (!missing.length) continue;
+    changed = true;
+    if (run.compact) {
+      for (const id of missing) run.stepStatus[id] = "done";
+      continue;
+    }
+    const reopen = run === newest && d.current === null && run.finished !== null && !run.abandoned;
+    for (const id of missing) {
+      const step = newStep();
+      if (!reopen && (run.finished !== null || run.abandoned)) {
+        step.status = "done";
+        step.stopReason = "complete";
+      }
+      run.steps[id] = step;
+    }
+    if (reopen) {
+      run.finished = null;
+      d.current = run.id;
+    }
+  }
+  return changed;
+}
 export const runList = (state) => state.discovery?.runs ?? [];
 export function openRun(state) {
   const d = state.discovery;
   return d?.current ? (d.runs.find((r) => r.id === d.current) ?? null) : null;
 }
 export const allChallenges = (run) =>
-  run.compact ? [] : STEP_IDS.flatMap((id) => run.steps[id].challenges);
+  run.compact ? [] : STEP_IDS.flatMap((id) => run.steps[id]?.challenges ?? []);
 export const challengesOf = (run, skill) =>
   run.compact
     ? []
-    : run.steps[stepOf(skill).id].challenges.filter((c) => c.skill === skill);
+    : (run.steps[stepOf(skill).id]?.challenges ?? []).filter((c) => c.skill === skill);
 
 export function tally(list) {
   const t = { A: 0, Q: 0, D: 0, H: 0, W: 0, S: 0, N: 0 };
@@ -88,7 +124,7 @@ export function compactRun(run) {
       );
   }
   const stepStatus = Object.fromEntries(
-    STEP_IDS.map((id) => [id, run.steps[id].status]),
+    STEP_IDS.map((id) => [id, run.steps[id]?.status ?? "done"]),
   );
   delete run.steps;
   Object.assign(run, { compact: true, summary, stepStatus });
@@ -155,6 +191,9 @@ export function eligibility(state, run, skill) {
     if (!SAMPLED.includes(p)) continue;
     if (parentStatus(state, p) === "not_seen")
       return { ok: false, reason: "prereq_not_seen", prereq: p };
+    // Une notion préalable d'une autre exploration encore non faite ne bloque pas : on ne sait simplement pas.
+    const pStep = stepOf(p).id;
+    if (pStep !== stepOf(skill).id && run.steps[pStep]?.status !== "done") continue;
     const t = countsOf(run, p);
     if (t.N) return { ok: false, reason: "prereq_not_learned", prereq: p };
     if (t.A < 1) return { ok: false, reason: "prereq_unconfirmed", prereq: p };
@@ -248,7 +287,7 @@ export function finishStep(state, run, stepId, reason, now = Date.now()) {
   step.stopReason = reason;
   step.active = null;
   const granted = grantParticipation(state, run, now);
-  if (STEP_IDS.every((id) => run.steps[id].status === "done")) {
+  if (STEP_IDS.every((id) => run.steps[id]?.status === "done")) {
     run.finished = now;
     if (state.discovery.current === run.id) state.discovery.current = null;
   }
@@ -312,7 +351,7 @@ export function answerActive(state, run, stepId, input, now = Date.now()) {
     if (!value.trim()) return { error: "empty" };
     const helped = a.help.hint || a.help.voice || a.help.adult;
     outcome = judge(q, value) ? (helped ? "helped" : "auto") : "wrong";
-    if (q.form !== "blocks") a.draft = value.slice(0, 200);
+    if (q.form === "input" || q.form === "choice") a.draft = value.slice(0, 200);
   }
   const challenge = {
     skill: a.skill,
@@ -456,7 +495,15 @@ export function buildReport(state) {
         : { category: "unassessed", reason: unassessedText(state, latest, skill) };
     const previous = runs
       .filter((r) => r !== found && countsOf(r, skill).total > 0)
-      .map((r) => ({ date: r.started, counts: countsOf(r, skill) }));
+      .map((r) => {
+        const counts = countsOf(r, skill);
+        return { date: r.started, counts, category: classify(counts, parent).category };
+      });
+    // Réponses données en mission depuis ce bilan : un simple constat, séparé des seuils de maîtrise.
+    const after = found
+      ? (state.skills[skill]?.evidence ?? []).filter((e) => e.at > found.started && !e.skip)
+      : [];
+    const since = { total: after.length, auto: after.filter((e) => e.correct && !e.assisted).length };
     let note = "";
     if (skill === "reading" && list.some((c) => c.outcome === "helped" && (c.voice || c.adult)))
       note =
@@ -480,6 +527,8 @@ export function buildReport(state) {
         help: [c.hint && "exemple", c.voice && "voix", c.adult && "adulte"].filter(Boolean),
       })),
       previous,
+      since,
+      change: previous.length && cls.category !== "unassessed" ? { from: previous[0].category, to: cls.category } : null,
       missions: missionLevel(state, skill),
     };
   });
@@ -538,3 +587,28 @@ export function nextAdventure(state, rows) {
 }
 export const explored = (run) =>
   run ? SAMPLED.filter((s) => countsOf(run, s).total > 0) : [];
+
+// Retours chaleureux et variés pour Alma. Le bilan ne corrige pas : réussite et erreur reçoivent exactement les mêmes messages.
+export const THANKS = {
+  default: [
+    "Merci, j’ai bien noté ta réponse ! ✨",
+    "Luna range ta réponse dans sa besace magique 🎒",
+    "C’est noté dans le carnet de voyage 📒",
+    "Bien reçu ! Tu avances à ton rythme.",
+    "Merci ! Chaque réponse aide Luna à choisir tes aventures.",
+  ],
+  skipped: [
+    "Merci de me l’avoir dit ! « Pas encore » est une réponse très utile pour Luna.",
+    "C’est noté : tu n’as pas encore tous les secrets de cette notion, et c’est normal !",
+    "Merci pour ta franchise, Luna en tiendra compte pour choisir tes aventures.",
+  ],
+  not_learned: [
+    "Merci ! Si tu ne l’as pas encore appris, on le découvrira ensemble plus tard.",
+    "Bien noté : Luna te montrera cela doucement quand tu seras prêt(e).",
+    "Merci de me l’avoir dit, c’est une très bonne information pour Luna.",
+  ],
+};
+export function thanksFor(outcome, index) {
+  const pool = THANKS[outcome === "skipped" || outcome === "not_learned" ? outcome : "default"];
+  return pool[((index % pool.length) + pool.length) % pool.length];
+}

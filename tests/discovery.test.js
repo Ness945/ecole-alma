@@ -10,7 +10,7 @@ import {
   looseEqual,
   READING_INSTRUCTION,
 } from "../frontend/js/discovery-bank.js";
-import { RULES, STEPS, validDiscovery } from "../frontend/js/discovery-model.js";
+import { RULES, STEPS, STEP_IDS, SAMPLED, LEGACY_STEP_IDS, validDiscovery } from "../frontend/js/discovery-model.js";
 
 const memory = () => {
   const m = new Map();
@@ -49,7 +49,7 @@ function play(state, run, step, script) {
   return log;
 }
 const allSeen = (s) => {
-  for (const id of ["verb", "subject"]) s.skills[id].status = "seen";
+  for (const id of ["verb", "subject", "clock", "money"]) s.skills[id].status = "seen";
   return s;
 };
 
@@ -77,7 +77,7 @@ test("banque : réponses attendues présentes parmi des options distinctes, calc
       if (f.form === "choice") {
         assert.ok(q.options.includes(q.answer), `${f.id}#${i} option correcte`);
         assert.equal(new Set(q.options).size, q.options.length, `${f.id}#${i} options distinctes`);
-        assert.ok(q.options.length >= (f.id === "num-compare" ? 2 : 3) || f.id.includes("det"), `${f.id}#${i} distracteurs`);
+        assert.ok(q.options.length >= (["num-compare", "money-enough"].includes(f.id) ? 2 : 3) || f.id.includes("det"), `${f.id}#${i} distracteurs`);
         assert.equal(q.options.filter((o) => judge(q, o)).length, 1, `${f.id}#${i} une seule bonne option`);
       }
       if (v.calc) {
@@ -88,7 +88,7 @@ test("banque : réponses attendues présentes parmi des options distinctes, calc
           compose: a * 10 + b,
           compare: v.calc.word === "grand" ? Math.max(a, b) : Math.min(a, b),
         }[v.calc.op];
-        assert.equal(Number(v.answer), expected, `${f.id}#${i} calcul`);
+        assert.equal(parseInt(v.answer, 10), expected, `${f.id}#${i} calcul`);
       }
       if (f.skill === "reading") {
         assert.equal(q.speech, "instruction");
@@ -96,8 +96,8 @@ test("banque : réponses attendues présentes parmi des options distinctes, calc
         assert.ok(!READING_INSTRUCTION.includes(q.passage.slice(0, 12)));
       }
     });
-    const ex = String(f.example?.answer ?? "").toLowerCase();
-    if (ex) assert.ok(![...answers].some((a) => a.toLowerCase() === ex), `${f.id} : l'exemple révèle une réponse`);
+    // L'exemple montré en aide ne doit jamais recopier l'énoncé d'une variante (ce serait lui donner la réponse).
+    f.variants.forEach((v, i) => assert.ok(!f.example.includes(make(f.id, i, 0).prompt), `${f.id}#${i} : exemple identique à une question`));
   }
 });
 test("banque : make est pur (même question après rechargement)", () => {
@@ -269,7 +269,7 @@ test("le bilan n'écrit jamais dans les preuves de maîtrise ni dans les statuts
   const s = allSeen(fresh());
   const before = JSON.stringify({ skills: s.skills, rpg: { ...s.rpg, coins: 0 } });
   const run = D.startRun(s, 18, "d:n", tick());
-  for (const st of ["numbers", "reading", "grammar"]) play(s, run, st, []);
+  for (const st of STEP_IDS) play(s, run, st, []);
   assert.equal(JSON.stringify({ skills: s.skills, rpg: { ...s.rpg, coins: 0 } }), before);
   assert.equal(s.completed.filter((x) => String(x).includes("discovery")).length, 0);
 });
@@ -372,7 +372,7 @@ test("anciennes sauvegardes : v2 sans bilan et v1 migrée restent valides, sans 
 test("la sauvegarde avec bilan est écrite puis relue à l'identique", () => {
   const s = allSeen(fresh()),
     run = D.startRun(s, 26, "d:v", tick());
-  for (const st of ["numbers", "reading", "grammar"]) play(s, run, st, []);
+  for (const st of STEP_IDS) play(s, run, st, []);
   const mem = memory();
   save(mem, s);
   assert.deepEqual(load(mem), s);
@@ -403,12 +403,12 @@ test("au-delà de 8 bilans détaillés, les plus anciens sont résumés sans per
   assert.ok(compact[0].summary.number.A + compact[0].summary.number.H > 0);
   validate(s);
   const report = D.buildReport(s);
-  assert.equal(report.rows.length, 9);
+  assert.equal(report.rows.length, SAMPLED.length);
 });
 test("conseil de délai : un bilan terminé il y a moins de 3 jours déclenche un avertissement doux", () => {
   const s = allSeen(fresh()),
     run = D.startRun(s, 29, "d:y", tick());
-  for (const st of ["numbers", "reading", "grammar"]) play(s, run, st, []);
+  for (const st of STEP_IDS) play(s, run, st, []);
   assert.equal(D.rerunAdvice(s, run.finished + 1000).recent, true);
   assert.equal(D.rerunAdvice(s, run.finished + 4 * 86400000).recent, false);
 });
@@ -447,7 +447,7 @@ test("les recommandations respectent les prérequis (leçon de la notion manquan
 test("la proposition pour Alma privilégie l'approfondissement et ne cible jamais une notion « pas encore abordée »", () => {
   const s = allSeen(fresh()),
     run = D.startRun(s, 33, "d:bb", tick());
-  for (const st of ["numbers", "reading", "grammar"]) play(s, run, st, []);
+  for (const st of STEP_IDS) play(s, run, st, []);
   const rows = D.buildReport(s).rows;
   const next = D.nextAdventure(s, rows);
   assert.ok(next);
@@ -459,13 +459,13 @@ test("la proposition pour Alma privilégie l'approfondissement et ne cible jamai
 test("parcours complet : toutes les notions explorées, bilan terminé, récompense unique", () => {
   const s = allSeen(fresh()),
     run = D.startRun(s, 34, "d:cc", tick());
-  for (const st of ["numbers", "reading", "grammar"]) play(s, run, st, []);
+  for (const st of STEP_IDS) play(s, run, st, []);
   validate(s);
   assert.ok(run.finished);
   assert.equal(s.discovery.current, null);
   assert.equal(s.discovery.rewardGranted, true);
   const rows = D.buildReport(s).rows;
-  assert.equal(rows.filter((r) => r.category === "deepen").length, 9);
+  assert.equal(rows.filter((r) => r.category === "deepen").length, SAMPLED.length);
 });
 
 // ───────────────────────── Validation à l'import ─────────────────────────
@@ -499,4 +499,103 @@ test("import : un bilan valide est accepté, tout bilan mal formé est refusé",
   assert.equal(validDiscovery(undefined), true);
   assert.equal(validDiscovery(null), false);
   assert.equal(validDiscovery([]), false);
+});
+
+// ───────────────────────── Forme « ordre », exploration « repères et mesures », anciens bilans ─────────────────────────
+test("forme « ordre » : le mélange proposé n'est jamais déjà la bonne réponse et seul le bon ordre est accepté", () => {
+  const ordered = Object.values(FAMILIES).filter((f) => f.form === "order");
+  assert.ok(ordered.length >= 2);
+  for (const f of ordered)
+    f.variants.forEach((v, i) => {
+      for (const seed of [0, 1, 7, 99]) {
+        const q = make(f.id, i, seed);
+        assert.notEqual(q.options.join(" "), q.answer, `${f.id}#${i} seed ${seed}`);
+        assert.deepEqual([...q.options].sort(), [...v.items].sort());
+      }
+      const q = make(f.id, i, 3);
+      assert.ok(judge(q, q.answer));
+      assert.ok(!judge(q, [...v.items].reverse().join(" ")));
+      assert.ok(!judge(q, q.options.join(" ")));
+    });
+});
+test("exploration « repères et mesures » : jours/mois et formes toujours proposés, heure et euros seulement si le parent les a marqués « déjà travaillés »", () => {
+  const s = fresh(),
+    run = D.startRun(s, 50, "d:world", tick());
+  assert.equal(D.eligibility(s, run, "calendar").ok, true);
+  assert.equal(D.eligibility(s, run, "shapes").ok, true);
+  assert.equal(D.eligibility(s, run, "clock").reason, "needs_parent_seen");
+  assert.equal(D.eligibility(s, run, "money").reason, "needs_parent_seen");
+  play(s, run, "world", []);
+  assert.ok(D.challengesOf(run, "calendar").length >= 2 && D.challengesOf(run, "shapes").length >= 2);
+  assert.equal(D.challengesOf(run, "clock").length + D.challengesOf(run, "money").length, 0);
+  validate(s);
+});
+test("une notion préalable d'une autre exploration non faite ne bloque pas ; faite et non confirmée, elle bloque", () => {
+  const s = allSeen(fresh()),
+    run = D.startRun(s, 51, "d:cross", tick());
+  assert.equal(D.eligibility(s, run, "clock").ok, true, "exploration des nombres pas encore faite");
+  play(s, run, "numbers", ["ko", "ko"]);
+  assert.equal(D.eligibility(s, run, "clock").reason, "prereq_unconfirmed");
+});
+test("anciens bilans (sans l'exploration « repères et mesures ») : valides, complétés, le plus récent rouvert, jamais de nouvelle récompense", () => {
+  const s = allSeen(fresh()),
+    older = D.startRun(s, 52, "d:old1", tick());
+  for (const st of STEP_IDS) play(s, older, st, []);
+  const newer = D.startRun(s, 53, "d:old2", tick());
+  for (const st of STEP_IDS) play(s, newer, st, []);
+  const coins = s.rpg.coins;
+  // Simule une sauvegarde de la première version : trois explorations seulement.
+  const legacy = JSON.parse(JSON.stringify(s));
+  for (const r of legacy.discovery.runs) for (const id of STEP_IDS) if (!LEGACY_STEP_IDS.includes(id)) delete r.steps[id];
+  assert.doesNotThrow(() => validate(legacy), "une sauvegarde de l'ancienne version reste valide");
+  assert.equal(D.upgradeDiscovery(legacy), true);
+  assert.equal(D.upgradeDiscovery(legacy), false, "idempotent");
+  validate(legacy);
+  const [a, b] = legacy.discovery.runs;
+  assert.equal(a.steps.world.status, "done", "ancien bilan : étape vide terminée");
+  assert.equal(b.steps.world.status, "todo", "bilan le plus récent rouvert");
+  assert.equal(b.finished, null);
+  assert.equal(legacy.discovery.current, b.id);
+  assert.equal(legacy.rpg.coins, coins);
+  // Alma fait la nouvelle exploration dans ce bilan : plus de récompense, bilan à nouveau terminé.
+  play(legacy, D.openRun(legacy), "world", []);
+  assert.equal(legacy.rpg.coins, coins);
+  assert.ok(b.finished);
+  assert.equal(legacy.discovery.current, null);
+  validate(legacy);
+  // Bilan résumé enregistré avant la nouvelle étape
+  const compactLegacy = JSON.parse(JSON.stringify(s));
+  const r0 = compactLegacy.discovery.runs[0];
+  D.compactRun(r0);
+  delete r0.stepStatus.world;
+  assert.doesNotThrow(() => validate(compactLegacy));
+  D.upgradeDiscovery(compactLegacy);
+  assert.equal(compactLegacy.discovery.runs[0].stepStatus.world, "done");
+  validate(compactLegacy);
+});
+test("rapport : évolution indicative entre deux bilans et réponses en mission depuis le bilan", () => {
+  const s = fresh();
+  const r1 = D.startRun(s, 60, "d:ev1", tick());
+  play(s, r1, "numbers", ["ko", "ko"]);
+  const r2 = D.startRun(s, 61, "d:ev2", tick());
+  play(s, r2, "numbers", ["ok", "ok"]);
+  s.skills.number.status = "seen";
+  s.skills.number.evidence.push({ correct: true, assisted: false, skip: false, dimension: "production", fingerprint: "x", at: r2.started + 5 });
+  s.skills.number.evidence.push({ correct: false, assisted: false, skip: false, dimension: "production", fingerprint: "y", at: r2.started + 6 });
+  const row = D.buildReport(s).rows.find((r) => r.skill === "number");
+  assert.equal(row.change.to, "deepen");
+  assert.notEqual(row.change.from, "deepen");
+  assert.deepEqual(row.since, { total: 2, auto: 1 });
+  const none = D.buildReport(s).rows.find((r) => r.skill === "addition");
+  assert.equal(none.change, null);
+});
+test("retours à Alma : variés, mais identiques pour une réussite et une erreur (bilan sans correction)", () => {
+  for (let i = 0; i < 10; i++) {
+    const msgs = ["auto", "helped", "wrong"].map((o) => D.thanksFor(o, i));
+    assert.equal(new Set(msgs).size, 1, "même message quelle que soit la justesse");
+  }
+  assert.ok(new Set([0, 1, 2, 3, 4].map((i) => D.thanksFor("auto", i))).size >= 4, "messages variés");
+  assert.notEqual(D.thanksFor("skipped", 0), D.thanksFor("auto", 0));
+  assert.notEqual(D.thanksFor("not_learned", 0), D.thanksFor("skipped", 0));
+  assert.ok(Object.values(D.THANKS).flat().every((t) => !/bravo|faux|erreur|incorrect|raté|bonne réponse/i.test(t)));
 });

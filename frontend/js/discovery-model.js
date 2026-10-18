@@ -31,7 +31,18 @@ export const STEPS = [
     limit: 10,
     invite: "Retrouver les noms, les petits mots qui les présentent et, si c’est le moment, les verbes.",
   },
+  {
+    id: "world",
+    name: "Les repères et les mesures",
+    short: "Repères et mesures",
+    icon: "🧭",
+    skills: ["calendar", "shapes", "clock", "money"],
+    limit: 8,
+    invite: "Jours et mois, formes et, si c’est le moment, l’heure et les euros.",
+  },
 ];
+// Explorations présentes dans la toute première version du bilan : tout bilan enregistré les contient.
+export const LEGACY_STEP_IDS = ["numbers", "reading", "grammar"];
 export const STEP_IDS = STEPS.map((s) => s.id);
 export const SAMPLED = STEPS.flatMap((s) => s.skills);
 export const stepOf = (skill) => STEPS.find((s) => s.skills.includes(skill));
@@ -50,7 +61,7 @@ export const RULES = {
   participationSeeds: 1,
 };
 // Notions que l'on ne propose que si le parent les a marquées « déjà travaillées ».
-export const NEEDS_PARENT_SEEN = ["verb", "subject"];
+export const NEEDS_PARENT_SEEN = ["verb", "subject", "clock", "money"];
 
 export const OUTCOMES = ["auto", "helped", "wrong", "skipped", "not_learned"];
 export const OUTCOME_LABELS = {
@@ -62,7 +73,7 @@ export const OUTCOME_LABELS = {
 };
 export const STEP_STATUS = ["todo", "active", "done"];
 export const STOP_REASONS = ["", "complete", "limit", "fatigue", "asked"];
-const FORMS = ["choice", "input", "blocks", "tap"];
+const FORMS = ["choice", "input", "blocks", "tap", "order"];
 const COUNT_KEYS = ["A", "Q", "D", "H", "W", "S", "N"];
 
 const int = (x, max = Number.MAX_SAFE_INTEGER) =>
@@ -169,7 +180,8 @@ function validCompactRun(r) {
         COUNT_KEYS.every((c) => int(r.summary[k][c], 99)),
     ) &&
     plain(r.stepStatus) &&
-    STEP_IDS.every((id) => STEP_STATUS.includes(r.stepStatus[id]))
+    LEGACY_STEP_IDS.every((id) => STEP_STATUS.includes(r.stepStatus[id])) &&
+    Object.entries(r.stepStatus).every(([id, st]) => STEP_IDS.includes(id) && STEP_STATUS.includes(st))
   );
 }
 function validRun(r) {
@@ -184,10 +196,12 @@ function validRun(r) {
   )
     return false;
   if (r.compact !== undefined) return validCompactRun(r);
+  // Un bilan enregistré avant l'ajout d'une exploration n'a pas encore cette étape : upgradeDiscovery() la complète.
   return (
     plain(r.steps) &&
-    STEP_IDS.every((id) => validStep(r.steps[id], id)) &&
-    Object.keys(r.steps).length === STEP_IDS.length
+    LEGACY_STEP_IDS.every((id) => r.steps[id] !== undefined) &&
+    Object.keys(r.steps).every((id) => STEP_IDS.includes(id)) &&
+    Object.keys(r.steps).every((id) => validStep(r.steps[id], id))
   );
 }
 export function validDiscovery(d) {

@@ -20,6 +20,7 @@ import {
   discoverySubmit,
   resetDiscoveryScreen,
 } from "./discovery-ui.js";
+import { upgradeDiscovery } from "./discovery.js";
 import {
   fresh,
   load,
@@ -77,6 +78,7 @@ let selectedSubject = "Mathématiques",
   previewItem = null;
 try {
   state = load(localStorage);
+  if (upgradeDiscovery(state)) save(localStorage, state);
 } catch (e) {
   fatal = e.message;
   state = fresh();
@@ -563,6 +565,7 @@ function discoveryCtx() {
     speak,
     toast,
     startMission: (id) => start("mini", id),
+    download,
     now: () => Date.now(),
     seed: () => crypto.getRandomValues(new Uint32Array(1))[0],
     uuid: () => "d:" + crypto.randomUUID(),
@@ -1082,6 +1085,7 @@ app.addEventListener("change", async (e) => {
         return;
       download(JSON.stringify(state, null, 2), "academie-avant-import.json");
       state = imported;
+      upgradeDiscovery(state);
       resetDiscoveryScreen();
       persist();
       render();

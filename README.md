@@ -18,7 +18,7 @@ Une mission terminée apporte des étoiles de participation, deux graines, dix p
 
 ## Fonctionnalités présentes
 
-**Nouveau — « À la découverte de tes pouvoirs » (0.6) :** un bilan de départ ludique en trois petites explorations (nombres et calcul, lecture, mots et phrases), avec aides, « Je ne sais pas encore » / « Je ne l’ai pas appris », reprise exacte, récompense de participation unique et rapport parent prudent avec recommandations vers les leçons et missions. Ce n’est pas un diagnostic et il ne modifie pas la maîtrise. Voir [le fonctionnement du bilan](docs/DISCOVERY.md).
+**Nouveau — « À la découverte de tes pouvoirs » (0.6, enrichi en 0.7) :** un bilan de départ ludique en quatre petites explorations (nombres et calcul, lecture, mots et phrases, repères et mesures), avec aides, « Je ne sais pas encore » / « Je ne l’ai pas appris », reprise exacte, récompense de participation unique et rapport parent prudent avec recommandations vers les leçons et missions, impression/export et évolution entre deux bilans. Ce n’est pas un diagnostic et il ne modifie pas la maîtrise. Voir [le fonctionnement du bilan](docs/DISCOVERY.md).
 
 **Nouveau — le marché du royaume (0.5) :** une quête en quatre étapes avec lecture de commandes, paniers à remplir, pièces à composer et horloge à régler. Difficulté adaptée aux essais, étal personnalisable, sac à gagner et suivi parent enrichi. Voir [le fonctionnement du marché](docs/MARKET.md).
 
