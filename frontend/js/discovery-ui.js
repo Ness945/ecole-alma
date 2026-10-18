@@ -115,6 +115,10 @@ function questionView(state, run, stepId) {
     input = `<div class="choices" role="group" aria-label="Réponses possibles">${q.options.map((o) => btn(esc(o), "disc-pick", a.draft === o ? "selected" : "", `data-value="${esc(o)}" aria-pressed="${a.draft === o}" ${disabled}`)).join("")}</div>`;
   if (q.form === "tap")
     input = `<div class="disc-sentence" role="group" aria-label="Touche un mot de la phrase">${q.tokens.map((t, i) => btn(esc(t), "disc-pick", `disc-token ${a.draft === String(i) ? "selected" : ""}`, `data-index="${i}" aria-pressed="${a.draft === String(i)}" ${disabled}`)).join("")}</div>`;
+  if (q.form === "order") {
+    const picked = a.draft ? a.draft.split(",").map(Number) : [];
+    input = `<div class="disc-order"><p class="disc-order-line" aria-live="polite">${picked.length ? picked.map((i) => esc(q.options[i])).join(" → ") : "Touche les mots ou les nombres un par un."}</p><div class="choices" role="group" aria-label="Éléments à ranger">${q.options.map((o, i) => btn(esc(o) + (picked.includes(i) ? ` <small>(${picked.indexOf(i) + 1})</small>` : ""), "disc-order", picked.includes(i) ? "selected" : "", `data-index="${i}" aria-pressed="${picked.includes(i)}" ${picked.includes(i) || a.answered ? "disabled" : ""}`)).join("")}</div><p>${btn("↺ Recommencer le rangement", "disc-clear", "quiet", picked.length && !a.answered ? "" : "disabled")}</p></div>`;
+  }
   if (q.form === "blocks") {
     const [t = 0, u = 0] = a.draft.split(",").map(Number);
     input = `<div class="blocks">${[
@@ -127,7 +131,10 @@ function questionView(state, run, stepId) {
       )
       .join("")}</div>`;
   }
-  const hasDraft = a.draft !== "" && a.draft !== "0,0";
+  const hasDraft =
+    q.form === "order"
+      ? a.draft.split(",").filter(Boolean).length === q.options.length
+      : a.draft !== "" && a.draft !== "0,0";
   const confirm =
     q.form === "input"
       ? `<form class="answer" id="disc-form"><label class="sr-only" for="disc-input">Ta réponse</label><input id="disc-input" autocomplete="off" maxlength="80" inputmode="${q.numeric ? "numeric" : "text"}" value="${esc(a.draft)}" ${disabled}><button class="primary" ${disabled}>C’est ma réponse ✓</button></form>`
@@ -135,12 +142,7 @@ function questionView(state, run, stepId) {
   const helpRow = a.answered
     ? ""
     : `<div class="row disc-help">${btn("🔊 Écouter la consigne", "disc-read", "small")}${reading ? btn("👂 Écouter le texte (aide)", "disc-read-text", "small", `aria-pressed="${a.help.voice}"`) + btn("🧑 Un adulte me lit le texte (aide)", "disc-adult", "small", `aria-pressed="${a.help.adult}"`) : btn("🧑 Un adulte m’aide", "disc-adult", "small", `aria-pressed="${a.help.adult}"`)}${btn("💡 Un exemple pour m’aider", "disc-hint", "small", `aria-pressed="${a.help.hint}"`)}</div>${a.help.hint ? `<div class="notice disc-example" role="status">💡 ${esc(q.example)}</div>` : ""}<div class="row disc-escape">${btn("🤷 Je ne sais pas encore", "disc-skip", "quiet")}${btn("📚 Je ne l’ai pas appris", "disc-notlearned", "quiet")}</div>`;
-  const thanks = {
-    skipped:
-      "Merci de me l’avoir dit ! « Pas encore » est une réponse très utile pour Luna.",
-    not_learned:
-      "Merci ! Si tu ne l’as pas encore appris, on le découvrira ensemble plus tard.",
-  }[a.outcome] ?? "Merci, j’ai bien noté ta réponse ! ✨";
+  const thanks = D.thanksFor(a.outcome, step.challenges.length - 1);
   const more = a.answered ? D.nextChallenge(state, run, stepId) : null;
   const feedback = a.answered
     ? `<div class="feedback disc-thanks" role="status">🦄 ${thanks}<br><small>Ici, chaque réponse aide Luna à choisir tes aventures : il n’y a pas de note.</small><br>${btn(more ? "Défi suivant →" : "Terminer cette exploration →", "disc-next", "primary")} ${btn("✋ Je m’arrête pour aujourd’hui", "disc-stop", "quiet")}</div>`
@@ -171,7 +173,7 @@ function resultsView(state) {
   const open = D.openRun(state);
   return page(
     "Tes découvertes",
-    `<section class="panel"><p class="eyebrow">🦄 MERCI POUR TON EXPLORATION</p><h2>Tu as exploré ${plural(names.length, "pouvoir", "pouvoirs")} avec Luna.</h2><p class="intro-lesson">Bravo d’avoir essayé, demandé de l’aide et dit quand tu ne savais pas encore. C’est exactement ce qui aide Luna à bien te connaître.</p><div class="disc-explored">${names.map((id) => `<span class="disc-chip-explored">${skills.find((s) => s.id === id).icon} ${esc(D.skillName(id))}</span>`).join("")}</div><p class="sub">Il n’y a ni note ni classement : ce sont des pistes pour tes prochaines aventures. Tes découvertes s’enrichiront avec tes missions.</p></section><section class="panel disc-next"><p class="eyebrow">TA PROCHAINE AVENTURE</p>${next ? `<h2>${next.icon} ${esc(next.name)}</h2><p>Luna pense que ce sera une belle aventure pour toi.</p>${next.mission ? btn("Partir en mission →", "disc-mission", "primary", `data-id="${next.skill}"`) : btn("Découvrir avec Luna →", "lesson", "primary", `data-id="${next.skill}"`)}` : `<h2>À toi de choisir !</h2><p>Choisis la mission qui te fait envie.</p>${btn("Choisir ma mission →", "missions", "primary")}`}</section><div class="row">${open ? btn("Continuer l’exploration", "disc-hub", "secondary") : ""}${btn("Retour au royaume", "home", "quiet")}</div>`,
+    `<section class="panel"><p class="eyebrow">🦄 MERCI POUR TON EXPLORATION</p><h2>Tu as exploré ${plural(names.length, "pouvoir", "pouvoirs")} avec Luna.</h2><p class="intro-lesson">Bravo d’avoir essayé, demandé de l’aide et dit quand tu ne savais pas encore. C’est exactement ce qui aide Luna à bien te connaître.</p><div class="disc-explored">${names.map((id) => `<span class="disc-chip-explored">${skills.find((s) => s.id === id).icon} ${esc(D.skillName(id))}</span>`).join("")}</div><p class="sub">Il n’y a ni note ni classement : ce sont des pistes pour tes prochaines aventures. Tes découvertes s’enrichiront avec tes missions.</p></section><section class="panel disc-next"><p class="eyebrow">TA PROCHAINE AVENTURE</p><div class="disc-ritual"><span class="disc-ritual-icon" aria-hidden="true">🧭</span><p class="disc-ritual-line">Luna ouvre son carnet de voyage…</p></div>${next ? `<h2 class="disc-ritual-pick">${next.icon} ${esc(next.name)}</h2><p>Luna pense que ce sera une belle aventure pour toi.</p>${next.mission ? btn("Partir en mission →", "disc-mission", "primary", `data-id="${next.skill}"`) : btn("Découvrir avec Luna →", "lesson", "primary", `data-id="${next.skill}"`)}` : `<h2 class="disc-ritual-pick">À toi de choisir !</h2><p>Choisis la mission qui te fait envie.</p>${btn("Choisir ma mission →", "missions", "primary")}`}</section><div class="row">${open ? btn("Continuer l’exploration", "disc-hub", "secondary") : ""}${btn("Retour au royaume", "home", "quiet")}</div>`,
   );
 }
 
@@ -209,7 +211,13 @@ function rowHtml(state, row) {
   const history = row.previous.length
     ? `<p class="sub">Bilans précédents : ${row.previous.map((h) => `${esc(D.dateFr(h.date))} — ${esc(describeCounts(h.counts))}`).join(" ; ")}.</p>`
     : "";
-  return `<section class="disc-row" data-skill="${row.skill}" data-category="${row.category}"><div class="disc-row-head"><h4>${row.icon} ${esc(row.name)}</h4><span class="disc-chip disc-chip--${row.category}">${D.CATEGORIES[row.category]}</span></div><p>${esc(row.reason)}</p>${row.note ? `<p class="notice">${esc(row.note)}</p>` : ""}${row.counts.total ? `<p class="disc-counts">${esc(describeCounts(row.counts))}${row.date ? ` · bilan du ${esc(D.dateFr(row.date))}` : ""}</p>${obs}` : ""}${history}<p class="sub">Dans les missions (preuves de maîtrise, indépendantes de ce bilan) : ${MISSION_TEXT[row.missions]}.</p>${prereq ? `<p class="sub">Les prérequis passent d’abord : la proposition commence par « ${esc(D.skillName(prereq.id))} ».</p>` : ""}${notSeen ? `<p class="sub">Cette notion est marquée « pas encore abordée » : c’est à vous de décider si vous souhaitez la découvrir maintenant.</p>` : ""}${actions ? `<div class="row">${actions}</div>` : ""}</section>`;
+  const change = row.change
+    ? `<p class="sub disc-change">Depuis le bilan précédent : ${row.change.from === row.category ? `la piste reste « ${D.CATEGORIES[row.category]} »` : `« ${D.CATEGORIES[row.change.from]} » → « ${D.CATEGORIES[row.category]} »`} (indicatif : un nouveau bilan ne remplace pas un avis d’enseignant).</p>`
+    : "";
+  const since = row.since.total
+    ? `<p class="sub disc-since">Depuis ce bilan, en mission : ${plural(row.since.total, "réponse", "réponses")}, dont ${plural(row.since.auto, "réussite autonome", "réussites autonomes")}. Ces réponses complètent le bilan mais ne le modifient pas.</p>`
+    : "";
+  return `<section class="disc-row" data-skill="${row.skill}" data-category="${row.category}"><div class="disc-row-head"><h4>${row.icon} ${esc(row.name)}</h4><span class="disc-chip disc-chip--${row.category}">${D.CATEGORIES[row.category]}</span></div><p>${esc(row.reason)}</p>${row.note ? `<p class="notice">${esc(row.note)}</p>` : ""}${row.counts.total ? `<p class="disc-counts">${esc(describeCounts(row.counts))}${row.date ? ` · bilan du ${esc(D.dateFr(row.date))}` : ""}</p>${obs}` : ""}${history}${change}${since}<p class="sub">Dans les missions (preuves de maîtrise, indépendantes de ce bilan) : ${MISSION_TEXT[row.missions]}.</p>${prereq ? `<p class="sub">Les prérequis passent d’abord : la proposition commence par « ${esc(D.skillName(prereq.id))} ».</p>` : ""}${notSeen ? `<p class="sub">Cette notion est marquée « pas encore abordée » : c’est à vous de décider si vous souhaitez la découvrir maintenant.</p>` : ""}${actions ? `<div class="row">${actions}</div>` : ""}</section>`;
 }
 export function discoveryParentView(state, { sessionActive = false } = {}) {
   const report = D.buildReport(state),
@@ -237,7 +245,7 @@ export function discoveryParentView(state, { sessionActive = false } = {}) {
     : btn("Relancer un bilan", "disc-rerun", "secondary");
   return page(
     "Bilan parent",
-    `<section class="panel"><p class="eyebrow">BILAN PROVISOIRE</p><h2>${TITLE}</h2><p>Un repérage prudent de quelques notions de l’application, pour choisir les premières missions d’Alma. <strong>Ce n’est ni un diagnostic scolaire ou clinique, ni une évaluation du niveau CE1</strong> : il n’y a ni note globale ni certification, et il s’enrichit avec les missions suivantes.</p>${btn("Ouvrir le parcours d’Alma", "disc-hub", "secondary")}</section><section class="panel"><h2>Notions déjà abordées en classe</h2><p>Ce sont les statuts scolaires habituels de l’espace parent. « À vérifier » signifie seulement « inconnu » : cela ne veut jamais dire « difficulté ». Les notions « pas encore abordées » ne sont pas proposées. Si Alma répond « Je ne l’ai pas appris », cela reste une observation du bilan et ne change jamais ces statuts.</p>${sessionActive ? '<p class="notice">Une mission est en cours : les statuts pourront être modifiés après sa fin.</p>' : ""}<div class="disc-context">${context}</div></section>${report.runs.length ? groups : '<section class="panel"><p>Aucun bilan pour le moment : les résultats apparaîtront ici après les premiers défis d’Alma.</p></section>'}<section class="panel"><h2>Comment lire ce bilan</h2><ul class="disc-legend"><li><strong>À approfondir</strong> : au moins ${RULES.independentSuccesses} réussites autonomes sur des exemples différents et aucune réponse non aboutie.</li><li><strong>À entraîner avec un exemple</strong> : une aide a été utile, ou plusieurs réponses non abouties (notion pas encore vue, consigne mal comprise ou fatigue sont possibles).</li><li><strong>À explorer</strong> : notion que vous avez marquée « pas encore abordée », ou que l’enfant déclare ne pas avoir apprise (à confirmer).</li><li><strong>À confirmer</strong> : moins de ${RULES.minObservations} observations indépendantes, ou résultats contradictoires.</li><li><strong>Non évaluée</strong> : non proposée (prérequis, contexte scolaire, pause ou limite de défis).</li></ul><p class="sub">Règles : un défi accessible, puis un exemple différent pour confirmer ; au plus ${RULES.maxPerSkill} défis par notion ; arrêt d’une notion après ${RULES.skillStopStreak} réponses non abouties ou passées d’affilée ; pause conseillée après ${RULES.stepStopStreak} défis non réussis d’affilée dans une étape. Une réussite après un exemple montré ou sur un exemple déjà vu n’est pas comptée comme preuve indépendante. Aucune correction n’est affichée pendant le bilan. Le bilan le plus récent de chaque notion fait foi ; les précédents restent consultables. Ces observations ne modifient ni les seuils de maîtrise ni les preuves des missions.</p></section><section class="panel"><h2>Nouveau bilan et historique</h2>${history}${rerun}</section>`,
+    `<section class="panel"><p class="eyebrow">BILAN PROVISOIRE</p><h2>${TITLE}</h2><p>Un repérage prudent de quelques notions de l’application, pour choisir les premières missions d’Alma. <strong>Ce n’est ni un diagnostic scolaire ou clinique, ni une évaluation du niveau CE1</strong> : il n’y a ni note globale ni certification, et il s’enrichit avec les missions suivantes.</p><div class="row disc-tools">${btn("Ouvrir le parcours d’Alma", "disc-hub", "secondary")} ${btn("🖨 Imprimer ou enregistrer en PDF", "disc-print", "secondary")} ${btn("⬇ Exporter le bilan (fichier)", "disc-export", "secondary")}</div><p class="disc-print-only">Bilan provisoire édité le ${esc(D.dateFr(Date.now()))}. Ce document n’est ni un diagnostic ni une évaluation officielle.</p></section><section class="panel"><h2>Notions déjà abordées en classe</h2><p>Ce sont les statuts scolaires habituels de l’espace parent. « À vérifier » signifie seulement « inconnu » : cela ne veut jamais dire « difficulté ». Les notions « pas encore abordées » ne sont pas proposées. Si Alma répond « Je ne l’ai pas appris », cela reste une observation du bilan et ne change jamais ces statuts.</p>${sessionActive ? '<p class="notice">Une mission est en cours : les statuts pourront être modifiés après sa fin.</p>' : ""}<div class="disc-context">${context}</div></section>${report.runs.length ? groups : '<section class="panel"><p>Aucun bilan pour le moment : les résultats apparaîtront ici après les premiers défis d’Alma.</p></section>'}<section class="panel"><h2>Comment lire ce bilan</h2><ul class="disc-legend"><li><strong>À approfondir</strong> : au moins ${RULES.independentSuccesses} réussites autonomes sur des exemples différents et aucune réponse non aboutie.</li><li><strong>À entraîner avec un exemple</strong> : une aide a été utile, ou plusieurs réponses non abouties (notion pas encore vue, consigne mal comprise ou fatigue sont possibles).</li><li><strong>À explorer</strong> : notion que vous avez marquée « pas encore abordée », ou que l’enfant déclare ne pas avoir apprise (à confirmer).</li><li><strong>À confirmer</strong> : moins de ${RULES.minObservations} observations indépendantes, ou résultats contradictoires.</li><li><strong>Non évaluée</strong> : non proposée (prérequis, contexte scolaire, pause ou limite de défis).</li></ul><p class="sub">Règles : un défi accessible, puis un exemple différent pour confirmer ; au plus ${RULES.maxPerSkill} défis par notion ; arrêt d’une notion après ${RULES.skillStopStreak} réponses non abouties ou passées d’affilée ; pause conseillée après ${RULES.stepStopStreak} défis non réussis d’affilée dans une étape. Une réussite après un exemple montré ou sur un exemple déjà vu n’est pas comptée comme preuve indépendante. Aucune correction n’est affichée pendant le bilan. Le bilan le plus récent de chaque notion fait foi ; les précédents restent consultables. Ces observations ne modifient ni les seuils de maîtrise ni les preuves des missions.</p></section><section class="panel"><h2>Nouveau bilan et historique</h2>${history}${rerun}</section>`,
   );
 }
 
@@ -270,6 +278,22 @@ export function discoveryAction(ctx, b) {
   if (a === "disc-hub") {
     resetDiscoveryScreen();
     ctx.go("discovery");
+    return;
+  }
+  if (a === "disc-print") {
+    window.print();
+    return;
+  }
+  if (a === "disc-export") {
+    const data = {
+      kind: "academie-bilan-depart",
+      version: 1,
+      exported: new Date(ctx.now()).toISOString(),
+      note: "Observations provisoires, ni diagnostic ni évaluation officielle.",
+      contexte: Object.fromEntries(SAMPLED.map((id) => [id, state.skills[id].status])),
+      discovery: state.discovery ?? null,
+    };
+    ctx.download(JSON.stringify(data, null, 2), "academie-bilan-de-depart.json");
     return;
   }
   if (a === "disc-results") {
@@ -333,6 +357,12 @@ export function discoveryAction(ctx, b) {
     q = D.questionOf(run, active);
   if (a === "disc-pick" && !active.answered) {
     D.setDraft(run, stepId, b.dataset.index ?? b.dataset.value);
+  } else if (a === "disc-order" && !active.answered) {
+    const picked = active.draft ? active.draft.split(",") : [],
+      i = b.dataset.index;
+    if (!picked.includes(i) && picked.length < q.options.length) D.setDraft(run, stepId, [...picked, i].join(","));
+  } else if (a === "disc-clear" && !active.answered) {
+    D.setDraft(run, stepId, "");
   } else if (a === "disc-block" && !active.answered) {
     let [t = 0, u = 0] = active.draft.split(",").map(Number);
     const step = Number(b.dataset.step);
@@ -343,7 +373,9 @@ export function discoveryAction(ctx, b) {
     if (q.form === "blocks") {
       const [t = 0, u = 0] = active.draft.split(",").map(Number);
       submit(ctx, { kind: "answer", value: String(t * 10 + u) });
-    } else if (q.form === "tap")
+    } else if (q.form === "order")
+      submit(ctx, { kind: "answer", value: active.draft.split(",").map((i) => q.options[Number(i)]).join(" ") });
+    else if (q.form === "tap")
       submit(ctx, { kind: "answer", value: q.tokens[Number(active.draft)] ?? "" });
     else submit(ctx, { kind: "answer", value: active.draft });
     return;

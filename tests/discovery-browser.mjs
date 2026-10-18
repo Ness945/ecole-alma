@@ -41,7 +41,7 @@ const currentQuestion = (page) =>
     for (const step of Object.values(run.steps))
       if (step.active && !step.active.answered) {
         const q = D.questionOf(run, step.active);
-        return { form: q.form, answer: q.answer, tokens: q.tokens, skill: q.skill, speech: q.speech, passage: q.passage };
+        return { form: q.form, answer: q.answer, tokens: q.tokens, options: q.options, numeric: q.numeric, skill: q.skill, speech: q.speech, passage: q.passage };
       }
     return null;
   }, KEY);
@@ -56,6 +56,14 @@ async function solve(page, q, wrong = false) {
     const idx = q.tokens.findIndex((t) => t === q.answer);
     const pick = wrong ? q.tokens.findIndex((t) => t !== q.answer) : idx;
     await page.locator(`[data-action="disc-pick"][data-index="${pick}"]`).click();
+    await act(page, "disc-confirm").click();
+  } else if (q.form === "order") {
+    const tokens = wrong ? [...q.answer.split(" ")].reverse() : q.answer.split(" ");
+    for (const t of tokens) await page.locator(`[data-action="disc-order"][data-index="${q.options.indexOf(t)}"]`).click();
+    if (wrong) {
+      await page.locator('[data-action="disc-clear"]').click();
+      for (const t of q.answer.split(" ").reverse()) await page.locator(`[data-action="disc-order"][data-index="${q.options.indexOf(t)}"]`).click();
+    }
     await act(page, "disc-confirm").click();
   } else if (q.form === "blocks") {
     const n = wrong ? (Number(q.answer) + 11) % 100 : Number(q.answer);
@@ -106,7 +114,12 @@ try {
     assert.equal(await page.locator(".disc-reward").count(), 0, "pas de seconde récompense");
     await openHub(page);
     await drive(page, "grammar");
+    await openHub(page);
+    await drive(page, "world");
+    assert.equal((await save(page)).discovery.runs[0].finished !== null, true, "bilan terminé après les quatre explorations");
     await act(page, "disc-results").click();
+    assert.equal(await page.locator(".disc-ritual").count(), 1, "rituel de fin de Luna");
+    assert.equal(await page.locator(".disc-ritual-pick").count(), 1);
     await page.getByText(/MERCI POUR TON EXPLORATION/).waitFor();
     const after = await save(page);
     assert.equal(after.rpg.coins, coins + 5);
@@ -187,6 +200,87 @@ try {
     await context.close();
   }
 
+  // ── 2c. Forme « remettre dans l'ordre », rangement erroné puis recommencé ───
+  {
+    const { context, page } = await fresh();
+    await openHub(page);
+    await drive(page, "numbers", ["help", "ko", "ok", "skip", "skip"]);
+    const chall = (await save(page)).discovery.runs[0].steps.numbers.challenges;
+    assert.equal(chall[2].item, "num-order", "le troisième défi est un rangement");
+    assert.equal(chall[2].outcome, "auto");
+    await context.close();
+  }
+  {
+    const { context, page } = await fresh();
+    await openHub(page);
+    await drive(page, "numbers", ["help", "ko", "ko", "skip", "skip"]);
+    assert.equal((await save(page)).discovery.runs[0].steps.numbers.challenges[2].outcome, "wrong", "mauvais ordre = incorrect");
+    await context.close();
+  }
+
+  // ── 2d. Rapport parent : impression, export, évolution entre deux bilans ───
+  {
+    const { context, page } = await fresh();
+    await openHub(page);
+    await drive(page, "numbers", ["ok", "ok"]);
+    await page.reload();
+    await page.getByRole("button", { name: "⚙ Espace parent" }).click();
+    await page.locator("#gate").fill("56");
+    await page.getByRole("button", { name: "Ouvrir", exact: true }).click();
+    await act(page, "disc-parent").click();
+    await page.locator(".disc-row").first().waitFor();
+    const [download] = await Promise.all([page.waitForEvent("download"), act(page, "disc-export").click()]);
+    assert.match(download.suggestedFilename(), /bilan/);
+    const exported = JSON.parse(await (await import("node:fs/promises")).readFile(await download.path(), "utf8"));
+    assert.equal(exported.kind, "academie-bilan-depart");
+    assert.equal(exported.discovery.runs.length, 1);
+    assert.match(exported.note, /ni diagnostic/);
+    await page.emulateMedia({ media: "print" });
+    assert.equal(await page.locator('[data-action="disc-print"]').first().isVisible(), false, "boutons masqués à l’impression");
+    assert.equal(await page.locator(".disc-print-only").isVisible(), true);
+    await page.emulateMedia({ media: "screen" });
+    // deuxième bilan → évolution indicative
+    await act(page, "disc-rerun").click();
+    await act(page, "disc-rerun-confirm").click();
+    await act(page, "disc-hub").click().catch(() => {});
+    await page.locator(".disc-step").first().waitFor();
+    await drive(page, "numbers", ["ko", "ko"]);
+    await page.getByRole("button", { name: /Retour au royaume|←/ }).first().click();
+    await page.getByRole("button", { name: "⚙ Espace parent" }).click();
+    await act(page, "disc-parent").click();
+    assert.match(await page.locator('.disc-row[data-skill="number"]').innerText(), /Depuis le bilan précédent/);
+    await context.close();
+  }
+
+  // ── 2e. Sauvegarde de la première version (3 explorations) : complétée, rien n'est perdu ───
+  {
+    const { context, page } = await fresh();
+    await openHub(page);
+    await drive(page, "numbers");
+    await openHub(page);
+    await drive(page, "reading");
+    await openHub(page);
+    await drive(page, "grammar");
+    // Retire l'exploration 4 pour imiter une sauvegarde enregistrée avant son ajout.
+    await page.evaluate((k) => {
+      const st = JSON.parse(localStorage.getItem(k));
+      for (const r of st.discovery.runs) delete r.steps.world;
+      localStorage.setItem(k, JSON.stringify(st));
+    }, KEY);
+    const coins = await coinsOf(page);
+    await page.reload();
+    await page.locator(".disc-teaser").waitFor();
+    await openHub(page);
+    assert.equal(await page.locator(".disc-step").count(), 4);
+    assert.match(await page.locator('.disc-step[data-state="todo"]').innerText(), /repères/i);
+    await drive(page, "world");
+    const st = await save(page);
+    assert.equal(st.rpg.coins, coins, "pas de nouvelle récompense");
+    assert.equal(st.discovery.runs.length, 1);
+    assert.ok(st.discovery.runs[0].finished);
+    await context.close();
+  }
+
   // ── 3. Interruption puis reprise exacte, avec brouillon ───────────────────
   {
     const { context, page } = await fresh();
@@ -241,7 +335,7 @@ try {
     assert.ok(await noOverflow(page), `accueil ${w}px`);
     await openHub(page);
     assert.ok(await noOverflow(page), `hub ${w}px`);
-    for (const id of ["numbers", "reading", "grammar"]) {
+    for (const id of ["numbers", "reading", "grammar", "world"]) {
       await page.locator(`[data-action="disc-open"][data-step="${id}"]`).click();
       await page.locator(".disc-question").waitFor();
       assert.ok(await noOverflow(page), `question ${id} ${w}px`);

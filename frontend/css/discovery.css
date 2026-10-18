@@ -234,3 +234,92 @@
     width: 100%;
   }
 }
+
+/* Remettre dans l'ordre */
+.disc-order-line {
+  min-height: 3rem;
+  margin: 0 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 2px dashed currentColor;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+.disc-order .choices button small {
+  margin-left: 0.35em;
+  font-size: 0.8em;
+  opacity: 0.85;
+}
+
+/* Rituel de fin : Luna « choisit » la prochaine aventure */
+.disc-ritual {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+.disc-ritual-icon {
+  font-size: 1.8rem;
+  display: inline-block;
+  animation: disc-compass 2.2s ease-in-out 1;
+}
+.disc-ritual-line {
+  margin: 0;
+  animation: disc-fade-out 0.4s ease 2.2s both;
+}
+.disc-ritual-pick,
+.disc-next .disc-ritual-pick ~ * {
+  animation: disc-fade-in 0.6s ease 2.4s both;
+}
+@keyframes disc-compass {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(40deg); }
+  55% { transform: rotate(-30deg); }
+  100% { transform: rotate(0); }
+}
+@keyframes disc-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes disc-fade-out {
+  to { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .disc-ritual-icon,
+  .disc-ritual-line,
+  .disc-ritual-pick,
+  .disc-next .disc-ritual-pick ~ * {
+    animation: none;
+  }
+}
+
+/* Impression du bilan parent */
+.disc-print-only {
+  display: none;
+}
+@media print {
+  .disc-page .page-head button,
+  .disc-page button,
+  .disc-page select,
+  .disc-page .row,
+  .disc-tools,
+  .disc-page .notice[role="alert"] {
+    display: none !important;
+  }
+  .disc-page .disc-context-row select {
+    display: inline !important;
+  }
+  .disc-print-only {
+    display: block;
+    font-style: italic;
+  }
+  .disc-page .panel,
+  .disc-row {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  body {
+    background: #fff !important;
+  }
+}
