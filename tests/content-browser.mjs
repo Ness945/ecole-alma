@@ -1,10 +1,11 @@
 import { createRequire } from "node:module";
 import assert from "node:assert/strict";
+import { launch } from "./browser-launch.mjs";
 import { extraSkills } from "../frontend/js/expansion.js";
 const { chromium } = createRequire(import.meta.url)(
   process.argv[2] || "playwright",
 );
-const browser = await chromium.launch({ headless: true, channel: "msedge" });
+const browser = await launch(chromium);
 const context = await browser.newContext({
   reducedMotion: "reduce",
   viewport: { width: 390, height: 844 },

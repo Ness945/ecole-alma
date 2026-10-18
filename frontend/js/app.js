@@ -11,6 +11,16 @@ import {
   learningReport,
 } from "./market.js";
 import {
+  discoveryTeaser,
+  discoveryParentSummary,
+  discoveryView,
+  discoveryParentView,
+  discoveryAction,
+  discoveryInput,
+  discoverySubmit,
+  resetDiscoveryScreen,
+} from "./discovery-ui.js";
+import {
   fresh,
   load,
   save,
@@ -124,7 +134,10 @@ function page(title, body) {
   return `<main class="page"><div class="page-head">${button("←", "home", "quiet", 'aria-label="Retour au royaume"')}<h1>${title}</h1></div>${body}</main>`;
 }
 function home() {
-  return homeView(state).replace("</main>", marketTeaser(state) + "</main>");
+  return homeView(state).replace(
+    "</main>",
+    discoveryTeaser(state) + marketTeaser(state) + "</main>",
+  );
 }
 function current() {
   const s = state.session;
@@ -437,12 +450,19 @@ function adventureReport() {
     .join("");
   return `<section class="panel"><p class="eyebrow">L’aventure du pont</p><h2>${bridgeCount(state)} parties construites sur 3</h2>${rows || "<p>Une première histoire pour manipuler, comprendre puis essayer sans aide.</p>"}<p class="sub">La construction récompense le travail réalisé. Elle ne certifie pas la maîtrise d’une notion.</p></section>`;
 }
+function gatePanel() {
+  return page(
+    "Espace parent",
+    `<section class="panel"><h2>Cette porte est pour les grands.</h2><p>Pour ouvrir les réglages, combien font 7 × 8 ?</p><form id="gate-form" class="answer"><label class="sr-only" for="gate">Réponse du parent</label><input id="gate" inputmode="numeric" maxlength="3"><button class="primary">Ouvrir</button></form><p class="sub">Protection contre les clics accidentels, pas un contrôle d’accès sécurisé.</p></section>`,
+  );
+}
+function discoveryParentPage() {
+  return parentUnlocked
+    ? discoveryParentView(state, { sessionActive: Boolean(state.session) })
+    : gatePanel();
+}
 function parent() {
-  if (!parentUnlocked)
-    return page(
-      "Espace parent",
-      `<section class="panel"><h2>Cette porte est pour les grands.</h2><p>Pour ouvrir les réglages, combien font 7 × 8 ?</p><form id="gate-form" class="answer"><label class="sr-only" for="gate">Réponse du parent</label><input id="gate" inputmode="numeric" maxlength="3"><button class="primary">Ouvrir</button></form><p class="sub">Protection contre les clics accidentels, pas un contrôle d’accès sécurisé.</p></section>`,
-    );
+  if (!parentUnlocked) return gatePanel();
   const recent = state.history.slice(-12),
     touched = [...new Set(recent.map((e) => e.skill))];
   return page(
@@ -455,7 +475,7 @@ function parent() {
         })
         .join("") ||
       "<p>Aucune réponse pour le moment. Indiquez les notions déjà travaillées ou commencez par une découverte.</p>"
-    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
+    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
       .map((s) => {
         const p = state.skills[s.id];
         return `<section class="skill-row"><div class="skill-top"><h3>${s.icon} ${s.name}</h3><select data-status="${s.id}" aria-label="Statut scolaire : ${s.name}" ${state.session ? "disabled" : ""}>${[
@@ -502,6 +522,8 @@ function render() {
       {
         home,
         market: () => marketView(state),
+        discovery: () => discoveryView(state),
+        "discovery-parent": discoveryParentPage,
         missions: discover,
         rooms: castleRooms,
         "legacy-outfits": legacyOutfits,
@@ -532,6 +554,20 @@ function render() {
       '<span class="coin-symbol" aria-hidden="true">✦</span>',
     );
 }
+function discoveryCtx() {
+  return {
+    state,
+    persist,
+    render,
+    go,
+    speak,
+    toast,
+    startMission: (id) => start("mini", id),
+    now: () => Date.now(),
+    seed: () => crypto.getRandomValues(new Uint32Array(1))[0],
+    uuid: () => "d:" + crypto.randomUUID(),
+  };
+}
 function go(to) {
   route = to;
   render();
@@ -551,6 +587,10 @@ app.addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
   if (!b || b.disabled) return;
   const a = b.dataset.action;
+  if (a.startsWith("disc-")) {
+    discoveryAction(discoveryCtx(), b);
+    return;
+  }
   if (a.startsWith("market-")) {
     if (a === "market-open") {
       state.market ??= newMarket(marketCount(state));
@@ -997,6 +1037,7 @@ app.addEventListener("submit", (e) => {
   e.preventDefault();
   if (e.target.id === "answer-form")
     answer(document.querySelector("#answer-input").value);
+  if (e.target.id === "disc-form") discoverySubmit(discoveryCtx());
   if (e.target.id === "gate-form") {
     if (document.querySelector("#gate").value.trim() === "56") {
       parentUnlocked = true;
@@ -1009,6 +1050,7 @@ app.addEventListener("input", (e) => {
     state.session.draft = e.target.value;
     persist();
   }
+  if (e.target.id === "disc-input") discoveryInput(discoveryCtx(), e.target);
   if (e.target.id === "profile-name") {
     state.name = e.target.value;
     persist();
@@ -1040,6 +1082,7 @@ app.addEventListener("change", async (e) => {
         return;
       download(JSON.stringify(state, null, 2), "academie-avant-import.json");
       state = imported;
+      resetDiscoveryScreen();
       persist();
       render();
       toast("Sauvegarde importée.");

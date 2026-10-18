@@ -2,6 +2,7 @@ import { skills, items } from "./content.js";
 import { defaultRpg, validRpg } from "./rpg.js";
 import { extraSkills } from "./expansion.js";
 import { validMarket } from "./market.js";
+import { validDiscovery } from "./discovery-model.js";
 export const DAY = 86400000;
 export const dimensions = [
   "recognition",
@@ -206,6 +207,7 @@ export function validate(raw) {
   }
   if (!validRpg(raw.rpg)) fail();
   if (!validMarket(raw.market)) fail();
+  if (!validDiscovery(raw.discovery)) fail();
   if (
     raw.marketDecor !== undefined &&
     !["rose", "sage", "gold"].includes(raw.marketDecor)

@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
+import { launch } from './browser-launch.mjs';
 
 const prefix='/ecole-alma/';
 const server=createServer(async(req,res)=>{
@@ -17,7 +18,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=`http://127.0.0.1:${server.address().port}${prefix}`;
 const {chromium}=createRequire(import.meta.url)(process.argv[2]||'playwright');
-const browser=await chromium.launch({headless:true,channel:'msedge'});
+const browser=await launch(chromium);
 try{
  const context=await browser.newContext({reducedMotion:'reduce'}),page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
@@ -36,6 +37,14 @@ try{
  await page.locator('[data-id="number"]').click();
  await page.getByRole('button',{name:'À moi d’essayer →',exact:true}).click();
  await page.locator('.exercise').waitFor();
+ await page.getByRole('button',{name:/Retour au royaume|←/}).first().click().catch(()=>{});
+ await page.goto(url);
+ await page.locator('.disc-teaser').waitFor();
+ await page.locator('[data-action="disc-hub"]').first().click();
+ await page.locator('.disc-step').first().waitFor();
+ await page.locator('[data-action="disc-open"][data-step="reading"]').click();
+ await page.locator('.disc-question').waitFor();
+ assert.equal(await page.evaluate(()=>location.pathname),prefix);
  assert.deepEqual(errors,[]);
- console.log('GitHub Pages: sous-chemin /ecole-alma/, images, manifeste, cache et mission hors ligne OK.');
+ console.log('GitHub Pages: sous-chemin /ecole-alma/, images, manifeste, cache, mission et bilan de départ hors ligne OK.');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}

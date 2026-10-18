@@ -1,10 +1,11 @@
 // Usage: node tests/browser.mjs <chemin-du-module-playwright>
 import { createRequire } from "node:module";
 import assert from "node:assert/strict";
+import { launch } from "./browser-launch.mjs";
 import { mkdir } from "node:fs/promises";
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.argv[2] || "playwright");
-const browser = await chromium.launch({ headless: true, channel: "msedge" });
+const browser = await launch(chromium);
 const context = await browser.newContext({
   reducedMotion: "reduce",
   viewport: { width: 1280, height: 800 },
