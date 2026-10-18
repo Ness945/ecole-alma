@@ -1,0 +1,33 @@
+# Vérification de la version initiale
+
+## Mise à jour : contenu étendu (0.4)
+
+33 tests automatiques passent, dont 30 000 exercices générés, calculs supplémentaires vérifiés à partir des consignes, conjugaisons, limites du calendrier, formats horaires, sélection sans répétition récente et enrichissement des sauvegardes v2 sans mutation de la source. Les quatre parcours navigateur passent dans Edge : classique, pont, RPG et `content-browser.mjs`. Ce dernier ouvre chacune des 15 nouvelles leçons, valide une réponse, vérifie le format mobile et la reprise d’une saisie sur l’horloge. Les profils de test sont isolés des sauvegardes utilisateur.
+
+## Mise à jour : petit RPG (0.3)
+
+28 tests automatiques, dont migration v1 → v2 avec copie de secours et protection contre un ancien onglet, achats sans double débit, équipement, aperçu sans mutation, corruption rejetée et 1 000 multiplications. Le test génératif général couvre désormais 15 000 exercices.
+
+`tests/rpg-browser.mjs` vérifie les matières et sous-thèmes, une leçon interactive des déterminants, une mission ciblée, la leçon des paniers multiplicatifs, le dressing, les achats, l’atelier du château et la reprise hors ligne. L’accueil, la leçon, le dressing et l’atelier sont vérifiés dans les neuf formats existants. Les trois parcours (classique, pont, RPG) passent dans Edge avec profils séparés. Les tests n’utilisent pas les données du navigateur de l’enfant.
+
+## Mise à jour : aventure du pont (0.2)
+
+21 tests automatiques réussis. Le nouveau parcours navigateur vérifie les trois étapes complètes, le regroupement de cubes, le choix et le dépôt de mots, la reprise après rechargement, la rotation, les récompenses et la clairière hors ligne. Le parcours des anciennes missions reste également passant. La nouvelle manipulation ne déborde pas horizontalement sur les huit formats tablette et le petit écran 390×844. Les sauvegardes v1 et une ancienne mission en cours sont couvertes par un test de compatibilité.
+
+## Automatique
+
+`npm test` : statuts exclus des séances, prérequis, distinction aide/autonomie, calendrier des rappels, mémoire différée, impossibilité d’acquérir une compétence par QCM seuls, attribution unique des récompenses, solde et occupation du jardin, aller-retour JSON, imports invalides, graphe acyclique, ressources hors ligne présentes.
+
+Tests génératifs : 10 000 groupes nominaux avec contrôle genre/nombre ; 14 000 exercices avec bonne réponse reconnue, distracteurs distincts et calculs vérifiés.
+
+`npm run check` : syntaxe des modules principaux.
+
+`tests/browser.mjs` : Edge avec Playwright, profil isolé ; découverte → réponse manipulée → rechargement → reprise → fin de mission → rechargement sans double récompense → plantation → accès parent → modification de statut et profil → rechargement → navigation et exercice hors ligne. Les erreurs JavaScript de page font échouer le parcours.
+
+Formats vérifiés pour le débordement horizontal de l’accueil et de l’exercice de manipulation : 768×1024, 800×1280, 834×1194, 1024×1366 et les quatre paysages correspondants. L’accueil est également vérifié à 390×844. Capture de l’accueil conservée dans `test-results/royaume.png` (non versionnée). Le bouton « Je ne sais pas » est aussi vérifié dans le parcours hors ligne.
+
+## Limites
+
+Ces essais sont effectués dans Edge sur Windows. Safari/iPad, Android réel, lecteurs d’écran, clavier virtuel réel, synthèse vocale, installation sur écran d’accueil, impressions et mises à jour entre plusieurs versions ne sont pas encore vérifiés. La présence des ressources dans le cache et un vrai rechargement hors ligne sont vérifiés ; cela ne garantit pas les voix hors ligne.
+
+La correction du contenu doit aussi être relue par un adulte avant un usage autonome durable. Les tests automatiques vérifient des invariants, pas la qualité d’une séquence d’enseignement complète.

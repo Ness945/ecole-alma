@@ -1,0 +1,1092 @@
+:root {
+  --paper: #f6f4f9;
+  --ink: #363951;
+  --green: #655a91;
+  --muted: #828199;
+  --line: #e3dfec;
+  --serif: Georgia, "Times New Roman", serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+body {
+  background:
+    radial-gradient(ellipse at 8% 5%, #f3e9ed 0, transparent 37%),
+    radial-gradient(ellipse at 95% 50%, #eaf0ee 0, transparent 35%), #f8f6fa;
+}
+.shell {
+  max-width: 1450px;
+  padding: 0 40px;
+}
+.topbar {
+  height: 100px;
+  border-color: #e7e1ec;
+}
+.brand {
+  text-align: left;
+  padding: 0;
+  font-size: 21px;
+  min-height: 54px;
+}
+.brand:hover {
+  background: transparent !important;
+}
+.brand small {
+  font-size: 9px;
+  letter-spacing: 1.8px;
+}
+.brand img {
+  box-shadow: 0 5px 15px #4f38531a;
+  border-radius: 13px;
+}
+.resources {
+  background: #fffcf8;
+  box-shadow: 0 3px 12px #635b7810;
+  border-color: #e5dfeb;
+  padding: 12px 20px;
+  gap: 19px;
+}
+.header-girl {
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e5dfe9;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px #7f678426;
+}
+.header-girl svg {
+  width: 70px;
+  height: 91px;
+  margin: -1px -10px;
+}
+.primary {
+  background: linear-gradient(135deg, #7566a4, #5d528d);
+  border-color: #6a5b95;
+  box-shadow:
+    0 5px 0 #4c4370,
+    0 9px 18px #71619525;
+  color: white;
+}
+.primary:hover:not(:disabled) {
+  background: #6b5b9b;
+  border-color: #6b5b9b;
+  color: white;
+}
+.primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #4c4370;
+}
+.secondary {
+  background: #fffcfa;
+  border: 1px solid #d8d1e3;
+  box-shadow: 0 3px 0 #e3dce9;
+}
+.rpg-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 35px 0 29px;
+  gap: 20px;
+}
+.rpg-welcome h1 {
+  font-size: clamp(30px, 3.3vw, 45px);
+  line-height: 1.15;
+}
+.rpg-welcome h1 em {
+  font-style: normal;
+  color: #8d719a;
+}
+.rpg-welcome p:not(.eyebrow) {
+  color: #858197;
+  font-size: 15px;
+  margin: 14px 0 0;
+}
+.level-badge {
+  border-radius: 18px;
+  padding: 15px 20px;
+  background: #f2e9d6;
+  color: #8c7448;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+.level-badge small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 7px;
+}
+.rpg-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 26px;
+  align-items: stretch;
+}
+.rpg-world {
+  position: relative;
+  min-height: 470px;
+  overflow: hidden;
+  border-radius: 30px;
+  background: #e8edf1;
+  box-shadow: 0 12px 30px #77708512;
+  border: 1px solid #e1dfed;
+}
+.rpg-world > .castle-art {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  object-fit: cover;
+}
+.castle-art {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.island-label {
+  position: absolute;
+  top: 24px;
+  left: 25px;
+  border-radius: 20px;
+  background: #fffaf1bc;
+  backdrop-filter: blur(7px);
+  padding: 9px 14px;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  color: #78748c;
+}
+.island-link {
+  position: absolute;
+  z-index: 2;
+  font-size: 13px;
+  background: #fffcf5ee;
+  border: 2px solid #fff;
+  box-shadow:
+    0 5px 0 #81738421,
+    0 8px 18px #62536b16;
+  min-height: 50px;
+  padding: 11px 16px;
+}
+.castle-link {
+  left: 42%;
+  top: 54%;
+}
+.garden-link {
+  left: 9%;
+  top: 70%;
+}
+.hero-girl {
+  position: absolute;
+  right: 8%;
+  bottom: 12%;
+  width: 138px;
+  height: 180px;
+  border: 0;
+  background: transparent !important;
+  padding: 0;
+  filter: drop-shadow(0 9px 5px #66706d22);
+  transition: transform 0.2s;
+}
+.hero-girl:hover {
+  transform: translateY(-4px);
+}
+.girl-avatar {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.world-caption {
+  position: absolute;
+  bottom: 18px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #697984;
+}
+.quest-aside {
+  padding: 30px 27px;
+  background: #fffdf9;
+  border: 1px solid #e7e0eb;
+  border-radius: 28px;
+  box-shadow: 0 7px 20px #6a53720b;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.quest-luna {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  font-size: 37px;
+  margin-bottom: 25px;
+}
+.quest-luna > span {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #8b7693;
+  font-weight: 700;
+}
+.quest-luna small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0;
+  font-weight: 400;
+  margin-top: 6px;
+  color: #948a9b;
+}
+.quest-aside h2 {
+  font-size: 32px;
+  line-height: 1.15;
+}
+.quest-aside p {
+  color: #817a8d;
+  font-size: 14px;
+  margin: 4px 0 25px;
+}
+.mission-choice {
+  font-size: 16px;
+  min-height: 58px;
+  margin-top: auto;
+  margin-bottom: 15px;
+}
+.quest-aside .quiet {
+  font-size: 13px;
+}
+.daily-reward {
+  margin-top: 22px;
+  border-top: 1px solid #eee7e6;
+  padding-top: 18px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.daily-reward > span {
+  font-size: 27px;
+}
+.daily-reward strong {
+  font-size: 12px;
+  color: #8e7754;
+}
+.daily-reward small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #948a80;
+  margin-top: 5px;
+}
+.rpg-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin: 25px 0;
+}
+.rpg-shortcuts button {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  padding: 20px 16px;
+  background: #fffaf5;
+  border-color: #e9e0e7;
+  border-radius: 20px;
+  min-height: 105px;
+  box-shadow: 0 4px 0 #eae4ed80;
+}
+.rpg-shortcuts button:nth-child(2) {
+  background: #f1ebf8;
+}
+.rpg-shortcuts button:nth-child(3) {
+  background: #eaf0f4;
+}
+.rpg-shortcuts button:nth-child(4) {
+  background: #f6eddf;
+}
+.shortcut-icon {
+  font-size: 31px;
+}
+.rpg-shortcuts strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: normal;
+}
+.rpg-shortcuts small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #8a8394;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+.shortcut-arrow {
+  margin-left: auto;
+  color: #a299ac;
+  font-size: 17px;
+}
+.story-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 30px;
+  background: #edf1e8;
+  border: 1px solid #dce5d5;
+  border-radius: 23px;
+}
+.story-icon {
+  font-size: 45px;
+}
+.story-strip > div {
+  flex: 1;
+}
+.story-strip .eyebrow {
+  font-size: 9px;
+  margin-bottom: 8px;
+}
+.story-strip h2 {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+.story-strip p:not(.eyebrow) {
+  font-size: 13px;
+  color: #7c8975;
+  margin: 0;
+}
+.footer {
+  margin-top: 10px;
+}
+.subject-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin: 25px 0;
+}
+.subject-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  align-items: center;
+  padding: 23px 10px;
+  border: 2px solid transparent;
+  background: #fff;
+  box-shadow: 0 4px 0 #e8e2ee;
+}
+.subject-tab > span {
+  font-size: 35px;
+}
+.subject-tab strong {
+  font-size: 14px;
+}
+.subject-tab.active {
+  border-color: #9180ae;
+  background: #f1eaf7;
+}
+.subject-heading {
+  padding: 25px 30px;
+  border-radius: 23px;
+  margin: 25px 0;
+  background: #e8eef7;
+}
+.subject-heading h2 {
+  margin-bottom: 8px;
+}
+.subject-heading p:last-child {
+  margin: 0;
+  color: #7c7d94;
+  font-size: 14px;
+}
+.subject-heading.french {
+  background: #f0e8f6;
+}
+.subject-heading.world {
+  background: #e6eee2;
+}
+.subject-heading.english {
+  background: #f5eddc;
+}
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.course-card {
+  position: relative;
+  border: 1px solid #e5dfe9;
+  border-radius: 23px;
+  padding: 25px;
+  background: #fffdfc;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 4px 0 #e9e3ee66;
+}
+.course-icon {
+  width: 63px;
+  height: 63px;
+  border-radius: 20px;
+  background: #f1edf6;
+  display: grid;
+  place-items: center;
+  font-size: 33px;
+  margin-bottom: 21px;
+}
+.course-tag {
+  position: absolute;
+  right: 19px;
+  top: 27px;
+  font-size: 10px;
+  color: #8d7c99;
+  background: #f5f0f6;
+  padding: 7px 9px;
+  border-radius: 20px;
+}
+.course-card h3 {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: normal;
+  line-height: 1.2;
+}
+.course-card p {
+  font-size: 14px;
+  color: #8b8293;
+  margin: 0 0 24px;
+}
+.course-card button {
+  margin-top: auto;
+  width: 100%;
+  font-size: 14px;
+}
+.catalog-note {
+  margin-top: 25px !important;
+}
+.lesson-path {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 25px;
+  flex-wrap: wrap;
+}
+.lesson-path span {
+  background: #e9e2f1;
+  border-radius: 15px;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+.ludic-lesson .intro-lesson {
+  font-size: 19px;
+  max-width: 750px;
+}
+.lesson-play {
+  margin: 25px 0;
+  padding: 30px;
+  border: 1px solid #e5dfeb;
+  background: linear-gradient(135deg, #f5f0fa, #fbf6e8);
+  border-radius: 22px;
+  text-align: center;
+}
+.basket-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 25px 0;
+}
+.apple-basket {
+  background: #e2bd86;
+  border: 4px solid #bf955e;
+  border-radius: 13px 13px 30px 30px;
+  padding: 15px 17px;
+  box-shadow: 0 5px 0 #b8956a26;
+}
+.apple-basket span {
+  font-size: 27px;
+  display: block;
+}
+.apple-basket small {
+  display: block;
+  font-size: 12px;
+  color: #745434;
+  margin-top: 10px;
+}
+.math-formula {
+  font-size: 31px;
+  font-weight: 600;
+  color: #72608f;
+  line-height: 1.5;
+}
+.lesson-play .sub {
+  margin-top: 20px;
+}
+.grammar-dragon {
+  font-size: 64px;
+  margin: 15px;
+}
+.grammar-words {
+  display: flex;
+  gap: 13px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.grammar-words button {
+  font-size: 25px;
+  padding: 16px 24px;
+}
+.grammar-words .revealed {
+  background: #d6e6ce;
+  border: 2px solid #7f9d71;
+}
+.ten-bars {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 20px;
+}
+.ten-bar {
+  display: flex;
+  border: 3px solid #a88b54;
+  padding: 3px;
+  background: #dbbb7c;
+  border-radius: 6px;
+}
+.ten-bar i,
+.loose-cubes i {
+  width: 17px;
+  height: 25px;
+  border: 1px solid #a68442;
+  background: #e8ca90;
+  display: block;
+}
+.loose-cubes {
+  display: flex;
+  gap: 5px;
+}
+.lesson-objects {
+  font-size: clamp(27px, 4vw, 46px);
+  padding: 20px;
+  line-height: 1.8;
+}
+.lesson-launch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #e8e0eb;
+  padding-top: 25px;
+}
+.lesson-launch p {
+  font-size: 13px;
+  color: #938599;
+}
+.studio {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 28px;
+}
+.studio-stage {
+  position: relative;
+  min-height: 495px;
+  border: 1px solid #ddd8e6;
+  border-radius: 30px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: radial-gradient(ellipse at center, #fff9e8, #e4ddf0);
+}
+.dressing-stage::before {
+  content: "";
+  position: absolute;
+  width: 75%;
+  height: 80%;
+  border-radius: 50% 50% 5% 5%;
+  border: 10px solid #ffffff55;
+  box-shadow: inset 0 0 0 2px #c6bcd280;
+  background: #fcf6ef33;
+  top: 12%;
+}
+.dressing-stage > .girl-avatar {
+  width: 280px;
+  height: 365px;
+  z-index: 1;
+  filter: drop-shadow(0 10px 6px #84728e15);
+}
+.castle-stage {
+  background: #e8edf6;
+}
+.castle-stage .castle-art {
+  width: 100%;
+  margin: 20px 0;
+}
+.studio-label {
+  position: absolute;
+  top: 24px;
+  left: 15px;
+  right: 15px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1px;
+  z-index: 2;
+  color: #8e7c98;
+}
+.studio-caption {
+  font-size: 12px;
+  text-align: center;
+  position: absolute;
+  bottom: 18px;
+  left: 25px;
+  right: 25px;
+  color: #90829b;
+  z-index: 2;
+}
+.studio-controls {
+  background: #fffcfa;
+  border: 1px solid #e4dce8;
+  border-radius: 25px;
+  padding: 26px;
+}
+.wallet {
+  background: #f7edd6;
+  border-radius: 17px;
+  padding: 16px 19px;
+  margin-bottom: 26px;
+}
+.wallet > span {
+  font-size: 23px;
+  color: #9a773b;
+  font-weight: 700;
+}
+.wallet small {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  color: #a48d67;
+}
+.studio-controls > p {
+  font-size: 14px;
+  color: #8d8195;
+}
+.purchase-card {
+  margin-bottom: 25px;
+}
+.purchase-card h2 {
+  font-size: 25px;
+}
+.purchase-card p {
+  font-size: 14px;
+  color: #8b7f94;
+}
+.appearance {
+  border-top: 1px solid #e9e2ec;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+.appearance h3 {
+  font-size: 14px;
+}
+.swatches {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.swatches button {
+  padding: 8px;
+  min-width: 54px;
+  min-height: 54px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #e3dbe8;
+}
+.swatches span {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+.swatches .selected {
+  border-color: #8e6dab !important;
+  background: #eee1f4 !important;
+}
+.shop-heading {
+  margin: 35px 0 20px;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.shop-tile {
+  min-height: 178px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 21px 13px;
+  background: #fffdfb;
+  box-shadow: 0 5px 0 #e7dfeb88;
+  border-color: #e7dfea;
+}
+.shop-item-art {
+  font-size: 40px;
+  display: grid;
+  place-items: center;
+  background: #f3ecf7;
+  border-radius: 20px;
+  width: 73px;
+  height: 73px;
+}
+.shop-tile strong {
+  font-size: 14px;
+}
+.shop-tile small {
+  font-size: 12px;
+  color: #a38453;
+}
+.page {
+  max-width: 1100px;
+}
+.notice {
+  background: #eee8f4;
+}
+.panel {
+  background: #fffdfa;
+  border-color: #e6deea;
+}
+.selected {
+  background: #e7dff0 !important;
+  border-color: #a08ab9 !important;
+}
+.feedback {
+  background: #e7f0e1;
+}
+.row .quiet {
+  box-shadow: none;
+}
+.hero-girl:focus-visible {
+  outline: 3px solid #766399;
+}
+.course-preparation p {
+  max-width: 700px;
+}
+@media (max-width: 1100px) {
+  .rpg-hero {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 20px;
+  }
+  .quest-aside {
+    padding: 24px 20px;
+  }
+  .quest-aside h2 {
+    font-size: 29px;
+  }
+  .rpg-world {
+    min-height: 440px;
+  }
+  .rpg-shortcuts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hero-girl {
+    width: 115px;
+    height: 151px;
+  }
+  .course-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 850px) and (orientation: portrait) {
+  .rpg-hero {
+    grid-template-columns: 1fr;
+  }
+  .rpg-world {
+    min-height: 470px;
+  }
+  .quest-aside {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px 25px;
+  }
+  .quest-luna {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+  .quest-aside h2 {
+    grid-column: 1;
+    margin: 0;
+  }
+  .quest-aside p {
+    grid-column: 1;
+    margin: 0;
+  }
+  .quest-aside .mission-choice {
+    grid-column: 2;
+    grid-row: 1/3;
+    align-self: center;
+  }
+  .quest-aside .quiet,
+  .quest-aside .secondary {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .daily-reward {
+    grid-column: 1/3;
+    margin-top: 3px;
+  }
+  .studio {
+    grid-template-columns: 1fr;
+  }
+  .studio-stage {
+    min-height: 450px;
+  }
+  .castle-stage {
+    min-height: 400px;
+  }
+  .castle-stage .castle-art {
+    max-height: 430px;
+  }
+}
+@media (max-width: 650px) {
+  .shell {
+    padding: 0 16px;
+  }
+  .topbar {
+    height: auto;
+    min-height: 95px;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 15px 0;
+  }
+  .brand {
+    font-size: 17px;
+  }
+  .brand small {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .top-actions {
+    margin-left: auto;
+  }
+  .resources {
+    padding: 9px 14px;
+    font-size: 13px;
+    gap: 15px;
+  }
+  .header-girl {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+  .rpg-welcome {
+    padding: 28px 0 23px;
+  }
+  .rpg-welcome h1 {
+    font-size: 31px;
+  }
+  .rpg-welcome p:not(.eyebrow) {
+    font-size: 13px;
+  }
+  .level-badge {
+    display: none;
+  }
+  .rpg-hero {
+    grid-template-columns: 1fr;
+  }
+  .rpg-world {
+    min-height: 340px;
+  }
+  .island-label {
+    top: 17px;
+    left: 17px;
+    font-size: 8px;
+  }
+  .hero-girl {
+    width: 88px;
+    height: 116px;
+    right: 6%;
+    bottom: 15%;
+  }
+  .island-link {
+    font-size: 11px;
+    min-height: 48px;
+    padding: 8px 10px;
+  }
+  .castle-link {
+    left: 34%;
+    top: 51%;
+  }
+  .garden-link {
+    left: 5%;
+    top: 72%;
+  }
+  .world-caption {
+    font-size: 10px;
+  }
+  .quest-aside {
+    display: flex;
+  }
+  .quest-aside h2 br {
+    display: none;
+  }
+  .quest-aside p {
+    margin: 0 0 20px;
+  }
+  .quest-luna {
+    margin-bottom: 15px;
+  }
+  .daily-reward {
+    width: 100%;
+    margin-top: 10px;
+  }
+  .rpg-shortcuts {
+    gap: 12px;
+  }
+  .rpg-shortcuts button {
+    padding: 17px 13px;
+    display: block;
+  }
+  .shortcut-icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .shortcut-arrow {
+    display: none;
+  }
+  .rpg-shortcuts strong {
+    font-size: 20px;
+  }
+  .rpg-shortcuts small {
+    font-size: 11px;
+  }
+  .story-strip {
+    flex-wrap: wrap;
+    padding: 22px;
+    gap: 15px;
+  }
+  .story-icon {
+    font-size: 32px;
+  }
+  .story-strip .secondary {
+    width: 100%;
+    margin-top: 5px;
+  }
+  .subject-tabs {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .subject-tab {
+    padding: 18px 10px;
+  }
+  .subject-tab strong {
+    font-size: 13px;
+  }
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+  .course-tag {
+    top: 30px;
+  }
+  .lesson-play {
+    padding: 22px 15px;
+  }
+  .lesson-launch {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .lesson-launch button {
+    width: 100%;
+  }
+  .studio {
+    grid-template-columns: 1fr;
+  }
+  .studio-stage {
+    min-height: 400px;
+  }
+  .dressing-stage > .girl-avatar {
+    height: 310px;
+    width: 235px;
+  }
+  .castle-stage {
+    min-height: 320px;
+  }
+  .studio-label {
+    font-size: 9px;
+  }
+  .studio-caption {
+    font-size: 11px;
+    bottom: 15px;
+  }
+  .shop-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .shop-tile {
+    min-height: 170px;
+  }
+  .ten-bars {
+    padding: 12px 0;
+  }
+  .ten-bar i {
+    width: 15px;
+  }
+  .studio-controls {
+    padding: 22px;
+  }
+  .footer {
+    font-size: 10px;
+  }
+  .page-head h1 {
+    font-size: 30px;
+  }
+}
+:root .item-art {
+  display: block;
+  width: 65px;
+  height: 65px;
+}
+.coin-symbol {
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffdfa0, #d7a350);
+  border: 1px solid #b68b40;
+  box-shadow: inset 0 0 0 2px #f6d58c;
+  color: #a77930;
+  font-size: 1em;
+  line-height: 1;
+}
+.resources .coin-symbol {
+  margin-right: 3px;
+}
+.daily-reward .coin-symbol {
+  font-size: 25px;
+}
+.wallet .coin-symbol {
+  font-size: 21px;
+}
+.world-companion {
+  position: absolute;
+  right: 5%;
+  bottom: 13%;
+  font-size: 34px;
+  filter: drop-shadow(0 5px 3px #66706d22);
+  pointer-events: none;
+}
+.learning-clock {
+  display: block;
+  width: 210px;
+  max-width: 100%;
+  height: auto;
+  margin: 15px auto;
+}
+.lesson-play .learning-clock {
+  width: 190px;
+}
+.visual:has(.learning-clock) {
+  background: #f6f1fa;
+  letter-spacing: normal;
+}
