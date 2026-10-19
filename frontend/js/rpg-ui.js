@@ -57,6 +57,9 @@ export function pickerView(state, subject) {
 const SLOT_GROUPS = {
   avatar: [
     ["head", "Sur la tête"],
+    ["face", "Visage"],
+    ["neck", "Autour du cou"],
+    ["back", "Dans le dos"],
     ["cape", "Capes"],
     ["dress", "Tenues"],
     ["feet", "Chaussures"],

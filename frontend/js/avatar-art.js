@@ -30,10 +30,16 @@ const DRESSES = {
   "dress-lilac": { base: "#9685cb", trim: "#e2b866", collar: "#fff3da", deco: "stars" },
   "dress-rose": { base: "#df8b9d", trim: "#f3d27c", collar: "#fff3da", deco: "flowers" },
   "dress-sun": { base: "#f0bf55", trim: "#e98b4a", collar: "#fff6dc", deco: "rays" },
+  "dress-ocean": { base: "#4f93c7", trim: "#f2d58a", collar: "#f4fbff", deco: "waves" },
+  "dress-night": { base: "#3f4a82", trim: "#e9c875", collar: "#e9eaf7", deco: "stars", mark: "#ffe7a6" },
+  "dress-berry": { base: "#c2495f", trim: "#f6d6a0", collar: "#fff3e6", deco: "dots" },
+  "dress-meadow": { base: "#7fbf7a", trim: "#f2d27a", collar: "#fffbe6", deco: "flowers", petal: "#fff3a8" },
 };
 const CAPES = {
   "cape-forest": { base: "#658765", lining: "#8fb28f", deco: "leaves" },
   "cape-night": { base: "#54558c", lining: "#7a7bb3", deco: "stars" },
+  "cape-royal": { base: "#b8435a", lining: "#efe0cf", deco: "ermine" },
+  "cape-rain": { base: "#f2c23e", lining: "#e0a82a", deco: "buttons" },
 };
 
 const star = (x, y, r, fill) => {
@@ -68,11 +74,17 @@ ART["head-flowers"] = () => {
 
 ART["cape-forest"] = () => capeArt(CAPES["cape-forest"]);
 ART["cape-night"] = () => capeArt(CAPES["cape-night"]);
+ART["cape-royal"] = () => capeArt(CAPES["cape-royal"]);
+ART["cape-rain"] = () => capeArt(CAPES["cape-rain"]);
 function capeArt(c) {
   const deco =
     c.deco === "stars"
       ? `${star(86, 246, 7, "#ffe7a6")}${star(178, 266, 6, "#ffe7a6")}${star(100, 286, 4.5, "#ffe7a6")}${star(160, 232, 4, "#ffe7a6")}<circle cx="72" cy="270" r="2.5" fill="#ffe7a6"/><circle cx="188" cy="244" r="2.5" fill="#ffe7a6"/>`
-      : `<path d="M88 232q8-12 20-6-6 12-20 6Zm74 30q10-12 22-4-8 14-22 4Zm-56 28q8-10 18-4-6 11-18 4Z" fill="#a9c9a3"/>`;
+      : c.deco === "ermine"
+        ? `<path d="M90 160Q130 148 170 160L176 182Q130 172 84 182Z" fill="#fbf6ee"/>${[[100, 170], [120, 168], [140, 168], [160, 170]].map(([x, y]) => `<path d="M${x} ${y}l3 8-3-1-3 1Z" fill="#3b3140"/>`).join("")}<path d="M66 286Q130 314 194 286L196 294Q130 324 64 294Z" fill="#fbf6ee"/>`
+        : c.deco === "buttons"
+          ? `<g fill="#fff4c9" stroke="#b98a1f" stroke-width="2"><circle cx="130" cy="196" r="4.5"/><circle cx="130" cy="226" r="4.5"/><circle cx="130" cy="256" r="4.5"/></g><path d="M130 176v110" stroke="#c9961f" stroke-width="2" stroke-dasharray="3 5"/>`
+          : `<path d="M88 232q8-12 20-6-6 12-20 6Zm74 30q10-12 22-4-8 14-22 4Zm-56 28q8-10 18-4-6 11-18 4Z" fill="#a9c9a3"/>`;
   return `<path d="M96 160C74 198 58 246 62 292Q130 320 198 292C202 246 186 198 164 160Z" fill="${c.base}" stroke="${line(c.base)}" stroke-width="3" stroke-linejoin="round"/><path d="M62 292Q130 320 198 292L194 278Q130 304 66 278Z" fill="${c.lining}" opacity=".75"/>${deco}<path d="M96 160Q130 150 164 160" fill="none" stroke="${shade(c.base, 0.25)}" stroke-width="5" stroke-linecap="round"/>`;
 }
 // Fermoir de cape, dessiné devant le cou.
@@ -82,9 +94,13 @@ function dressArt(id) {
   const d = DRESSES[id] ?? DRESSES.default;
   const deco =
     d.deco === "flowers"
-      ? [[108, 198], [150, 206], [122, 226], [158, 232], [100, 236]].map(([x, y]) => flower(x, y, 4, "#fff0f3")).join("")
+      ? [[108, 198], [150, 206], [122, 226], [158, 232], [100, 236]].map(([x, y]) => flower(x, y, 4, d.petal || "#fff0f3")).join("")
+      : d.deco === "waves"
+        ? `<g fill="none" stroke="#e6f6ff" stroke-width="3" stroke-linecap="round" opacity=".9"><path d="M100 224q8-7 16 0t16 0t16 0t16 0"/><path d="M104 240q8-7 16 0t16 0t16 0"/></g><circle cx="108" cy="204" r="3" fill="#e6f6ff"/><circle cx="154" cy="212" r="2.5" fill="#e6f6ff"/>`
+        : d.deco === "dots"
+          ? [[104, 200], [152, 204], [122, 224], [160, 232], [100, 236], [138, 240]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.4" fill="#fff3e6"/>`).join("")
       : d.deco === "stars"
-        ? [[110, 202], [152, 210], [124, 230], [160, 236], [98, 238]].map(([x, y]) => star(x, y, 5, "#f6e9ff")).join("")
+        ? [[110, 202], [152, 210], [124, 230], [160, 236], [98, 238]].map(([x, y]) => star(x, y, 5, d.mark || "#f6e9ff")).join("")
         : d.deco === "rays"
           ? `<g stroke="${d.trim}" stroke-width="3" stroke-linecap="round" opacity=".9"><path d="M130 222v14M112 218l-6 12M148 218l6 12M96 226l-8 8M164 226l8 8"/></g>`
           : "";
@@ -93,6 +109,10 @@ function dressArt(id) {
 ART["dress-lilac"] = () => dressArt("dress-lilac");
 ART["dress-rose"] = () => dressArt("dress-rose");
 ART["dress-sun"] = () => dressArt("dress-sun");
+ART["dress-ocean"] = () => dressArt("dress-ocean");
+ART["dress-night"] = () => dressArt("dress-night");
+ART["dress-berry"] = () => dressArt("dress-berry");
+ART["dress-meadow"] = () => dressArt("dress-meadow");
 
 ART["wand-star"] = () =>
   `<path d="m196 232 30-92" stroke="#b28a52" stroke-width="7" stroke-linecap="round"/><path d="m196 232 30-92" stroke="#e1c08a" stroke-width="2" stroke-linecap="round" transform="translate(-1.5 0)"/>${star(231, 124, 20, "#f8d878").replace("/>", ' stroke="#c9a04a" stroke-width="2.5" stroke-linejoin="round"/>')}<circle cx="231" cy="124" r="5" fill="#fff3bf"/><g fill="#fff3bf"><circle cx="208" cy="106" r="2.5"/><circle cx="252" cy="140" r="2.5"/><circle cx="246" cy="98" r="2"/></g>`;
@@ -111,6 +131,76 @@ ART["boots-trail"] = () =>
 ART["shoes-star"] = () =>
   shoes("#8f78c4", `<path d="M103 296H123" stroke="#d9cdf3" stroke-width="4" stroke-linecap="round"/>${star(96, 302, 5.5, "#ffe7a6")}`);
 ART["feet-default"] = () => shoes(SHOE_BROWN);
+// ───────────────────────── Nouveaux accessoires ─────────────────────────
+const mirror = (g) => `${g}<g transform="translate(260 0) scale(-1 1)">${g}</g>`;
+// Sur la tête
+ART["head-catears"] = () =>
+  `<path d="M86 92Q86 44 130 40Q174 44 174 92" fill="none" stroke="#4a4458" stroke-width="7" stroke-linecap="round"/>${mirror(`<path d="M98 58 94 20 126 42Z" fill="#4a4458" stroke="#2f2a3a" stroke-width="3" stroke-linejoin="round"/><path d="M100 52 98 32 116 44Z" fill="#f2a7bd"/>`)}`;
+ART["head-bunnyears"] = () =>
+  `<path d="M88 90Q90 50 130 48Q170 50 172 90" fill="none" stroke="#f3a7bf" stroke-width="7" stroke-linecap="round"/>${mirror(`<ellipse cx="106" cy="36" rx="11" ry="28" transform="rotate(-10 106 36)" fill="#fffaf5" stroke="#cdbfd0" stroke-width="3"/><ellipse cx="106" cy="38" rx="5" ry="19" transform="rotate(-10 106 38)" fill="#f6bccb"/>`)}`;
+ART["head-beanie"] = () =>
+  `<path d="M86 86Q82 30 130 26Q178 30 174 86Q130 72 86 86Z" fill="#d95d6b" stroke="#a63f4d" stroke-width="3" stroke-linejoin="round"/><path d="M84 80Q130 66 176 80V94Q130 80 84 94Z" fill="#f4e9d6" stroke="#cdbb9b" stroke-width="2.5" stroke-linejoin="round"/><path d="M100 76v18m16-18v18m16-18v18m16-18v18m16-18v18" stroke="#e0cfb2" stroke-width="2"/><circle cx="130" cy="22" r="14" fill="#f8eee0" stroke="#cdbb9b" stroke-width="3"/><path d="M122 18q8-8 16 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
+ART["head-beret"] = () =>
+  `<path d="M90 74Q76 40 124 34Q178 28 186 62Q178 84 128 82Q96 82 90 74Z" fill="#c4474f" stroke="#8f2f38" stroke-width="3" stroke-linejoin="round"/><path d="M100 54Q124 42 156 46" fill="none" stroke="#e98a90" stroke-width="4" stroke-linecap="round" opacity=".7"/><path d="m126 33 5-10" stroke="#8f2f38" stroke-width="5" stroke-linecap="round"/>`;
+ART["head-tiara"] = () =>
+  `<path d="M90 80Q130 46 170 80" fill="none" stroke="#dfe6ee" stroke-width="6" stroke-linecap="round"/><path d="M90 80Q130 46 170 80" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/><path d="M118 58 130 36 142 58Z" fill="#eef3f8" stroke="#aab7c5" stroke-width="2.5" stroke-linejoin="round"/><path d="M98 70 106 52 116 64Z M144 64 154 52 162 70Z" fill="#eef3f8" stroke="#aab7c5" stroke-width="2.5" stroke-linejoin="round"/><circle cx="130" cy="46" r="6" fill="#7cc4e8" stroke="#4f8fb8" stroke-width="2"/><circle cx="106" cy="62" r="3.8" fill="#f4a8b6"/><circle cx="154" cy="62" r="3.8" fill="#f4a8b6"/>`;
+ART["head-sunhat"] = () =>
+  `<ellipse cx="130" cy="70" rx="76" ry="17" fill="#ecd08a" stroke="#b99650" stroke-width="3"/><path d="M92 68Q90 28 130 26Q170 28 168 68Q130 82 92 68Z" fill="#f2dc9c" stroke="#b99650" stroke-width="3" stroke-linejoin="round"/><path d="M92 62Q130 78 168 62" fill="none" stroke="#e56f7f" stroke-width="9" stroke-linecap="round"/>${flower(160, 66, 5, "#fff4d8")}<path d="M60 70Q80 80 130 82" fill="none" stroke="#d6b66c" stroke-width="2"/>`;
+// Visage
+ART["face-glasses"] = () =>
+  `<g fill="#cfe9f544" stroke="#7a5236" stroke-width="3.5"><circle cx="111" cy="112" r="15"/><circle cx="149" cy="112" r="15"/></g><path d="M126 110Q130 106 134 110M96 108 84 104m80 4 12-4" fill="none" stroke="#7a5236" stroke-width="3.5" stroke-linecap="round"/><path d="M102 102q6-4 12-2" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>`;
+ART["face-heartglasses"] = () => {
+  const h = `<path d="M111 128C90 114 92 96 104 97 109 98 111 102 111 105 111 102 113 98 118 97 130 96 132 114 111 128Z" fill="#f48fb166" stroke="#c2577c" stroke-width="3.5" stroke-linejoin="round"/>`;
+  return `${h}<g transform="translate(38 0)">${h}</g><path d="M127 106Q131 102 135 106M92 104 84 100m84 4 8-4" fill="none" stroke="#c2577c" stroke-width="3.5" stroke-linecap="round"/>`;
+};
+ART["face-stars"] = () =>
+  `${star(97, 134, 9, "#f6c94e").replace("/>", ' stroke="#c9902a" stroke-width="1.5" stroke-linejoin="round"/>')}${star(163, 130, 8, "#ee7fb2").replace("/>", ' stroke="#b8527f" stroke-width="1.5" stroke-linejoin="round"/>')}<circle cx="88" cy="122" r="2.4" fill="#ee7fb2"/><circle cx="173" cy="141" r="2.4" fill="#f6c94e"/><circle cx="106" cy="146" r="2" fill="#6fb5d6"/>`;
+ART["face-mask"] = () =>
+  `<path fill-rule="evenodd" d="M88 106Q110 92 130 102Q150 92 172 106Q168 128 148 128Q136 128 130 118Q124 128 112 128Q92 128 88 106ZM103 112a8 10 0 1 0 16 0a8 10 0 1 0-16 0ZM141 112a8 10 0 1 0 16 0a8 10 0 1 0-16 0Z" fill="#7e5fb3" stroke="#59418a" stroke-width="3" stroke-linejoin="round"/>${star(96, 104, 4.5, "#ffe7a6")}${star(164, 104, 4.5, "#ffe7a6")}`;
+// Autour du cou
+ART["neck-scarf"] = () =>
+  `<path d="M138 172 154 218 134 224 122 180Z" fill="#d95d6b" stroke="#a63f4d" stroke-width="3" stroke-linejoin="round"/><path d="m146 198 8 20-14 4-5-14Z" fill="#f4e9d6"/><path d="M141 224l-2 8m8-10-2 8m8-8-2 6" stroke="#d95d6b" stroke-width="3" stroke-linecap="round"/><path d="M102 150Q130 172 158 150L162 168Q130 190 98 168Z" fill="#d95d6b" stroke="#a63f4d" stroke-width="3" stroke-linejoin="round"/><path d="m112 160-2 14m14-12-1 16m17-14 1 14m13-16 2 12" stroke="#f4e9d6" stroke-width="4" stroke-linecap="round"/>`;
+ART["neck-star"] = () =>
+  `<path d="M108 158Q130 198 152 158" fill="none" stroke="#e5c378" stroke-width="3" stroke-linecap="round"/>${star(130, 190, 11, "#f8d878").replace("/>", ' stroke="#c9a04a" stroke-width="2" stroke-linejoin="round"/>')}<circle cx="130" cy="190" r="3" fill="#fff3bf"/>`;
+ART["neck-pearls"] = () => {
+  const pts = Array.from({ length: 9 }, (_, i) => {
+    const t = i / 8,
+      u = 1 - t;
+    return [u * u * 106 + 2 * u * t * 130 + t * t * 154, u * u * 156 + 2 * u * t * 192 + t * t * 156];
+  });
+  return pts.map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.6" fill="#fff8ef" stroke="#d6c4b2" stroke-width="1.6"/>`).join("");
+};
+ART["neck-medal"] = () =>
+  `<path d="M110 156 130 192 150 156 142 154 130 174 118 154Z" fill="#4a8bc4" stroke="#2f6595" stroke-width="2" stroke-linejoin="round"/><circle cx="130" cy="200" r="12" fill="#edc868" stroke="#b98a35" stroke-width="3"/>${star(130, 200, 7, "#fff1b8")}`;
+ART["neck-bow"] = () =>
+  `<path d="M130 172 106 160V184Z" fill="#e2557a" stroke="#a83454" stroke-width="2.5" stroke-linejoin="round"/><path d="M130 172 154 160V184Z" fill="#e2557a" stroke="#a83454" stroke-width="2.5" stroke-linejoin="round"/><circle cx="130" cy="172" r="6" fill="#f08ba5" stroke="#a83454" stroke-width="2.5"/><path d="M112 168v8m-3-10v12M148 168v8m3-10v12" stroke="#f6b4c6" stroke-width="2" stroke-linecap="round"/>`;
+// Dans le dos
+const wingTop = (fill, stroke) => `<path d="M106 172C72 96 4 70 8 140 12 192 68 206 106 190Z" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linejoin="round"/>`;
+const wingLow = (fill, stroke) => `<path d="M106 194C74 204 22 232 40 262 78 278 110 230 112 200Z" fill="${fill}" stroke="${stroke}" stroke-width="3" stroke-linejoin="round"/>`;
+ART["back-fairy"] = () =>
+  mirror(`${wingTop("#e2f4fa", "#8fc6dc")}${wingLow("#d6ecf6", "#8fc6dc")}<path d="M104 174Q56 118 18 106M104 182Q52 150 16 150M104 188Q52 184 20 172M108 204Q70 226 44 256" fill="none" stroke="#bfe0ee" stroke-width="2.5" stroke-linecap="round"/>`);
+ART["back-butterfly"] = () =>
+  mirror(`${wingTop("#f29bb5", "#b8587a")}${wingLow("#f6c36e", "#c58a2c")}<circle cx="36" cy="128" r="10" fill="#fff3f6"/><circle cx="66" cy="168" r="6" fill="#fff3f6"/><circle cx="62" cy="240" r="7" fill="#fff7dd"/>`);
+ART["back-dragon"] = () =>
+  mirror(`<path d="M106 178C80 120 30 90 6 94 24 112 22 132 16 148 34 150 38 166 34 182 54 180 76 188 106 196Z" fill="#7bbf8d" stroke="#3f8a58" stroke-width="3" stroke-linejoin="round"/><path d="M106 180 14 104M106 186 22 150M106 192 36 182" fill="none" stroke="#3f8a58" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>`);
+// Chaussures
+const bootArt = (c, band) =>
+  pair(`<path d="M101 266H123V296Q124 306 130 312H90Q80 312 82 303Q86 295 101 292Z" fill="${c}" stroke="${line(c)}" stroke-width="3" stroke-linejoin="round"/><path d="M101 274H123" stroke="${band}" stroke-width="6" stroke-linecap="round"/><path d="M84 307H128" stroke="${line(c)}" stroke-width="4" stroke-linecap="round"/>`);
+ART["boots-rain"] = () => bootArt("#f0c23c", "#e98a8a");
+ART["shoes-sneakers"] = () =>
+  shoes("#f6f3f8", `<path d="M86 300H124" stroke="#e98a8a" stroke-width="3" stroke-linecap="round"/><path d="M86 305H122" stroke="#f2c76a" stroke-width="3" stroke-linecap="round"/><path d="M90 310H118" stroke="#8cc3e0" stroke-width="3" stroke-linecap="round"/><path d="M106 292l12-2m-12 6 12-2" stroke="#b8a9c9" stroke-width="2" stroke-linecap="round"/>`);
+ART["shoes-ballet"] = () =>
+  shoes("#f3a7bf", `<path d="M96 294 88 289V300Zm0 0 8-5V300Z" fill="#dc7898" stroke="#b9577a" stroke-width="1.5" stroke-linejoin="round"/>`);
+// Dans la main
+ART["hand-balloon"] = () =>
+  `<path d="M190 226Q194 196 206 164" fill="none" stroke="#b9b0c4" stroke-width="2.5" stroke-linecap="round"/><path d="m206 162-5 8h10Z" fill="#b13a4f"/><ellipse cx="206" cy="136" rx="24" ry="29" fill="#e8546a" stroke="#b13a4f" stroke-width="3"/><path d="M193 122q4-12 14-14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".7"/>`;
+ART["hand-bouquet"] = () =>
+  `<path d="M190 214 182 188M190 214 196 186M190 214 208 196" stroke="#6f9d73" stroke-width="4" stroke-linecap="round"/>${flower(181, 184, 6, "#f4a8b6")}${flower(197, 180, 6, "#fff4d8")}${flower(211, 193, 6, "#f6d36e")}<path d="M176 206h28l-14 34Z" fill="#f6e3c0" stroke="#c9b083" stroke-width="2.5" stroke-linejoin="round"/><path d="M180 214h20" stroke="#e56f7f" stroke-width="3" stroke-linecap="round"/>`;
+ART["hand-book"] = () =>
+  `<path d="M42 214 70 220 98 214V246L70 252 42 246Z" fill="#5b78b5" stroke="#3a5588" stroke-width="3" stroke-linejoin="round"/><path d="M47 217 70 223V246L47 241Z M93 217 70 223V246L93 241Z" fill="#fff6e0" stroke="#d8c9a3" stroke-width="1.5" stroke-linejoin="round"/>${star(58, 232, 6, "#f0b94e")}<path d="M78 230h12m-12 6h10" stroke="#c9b27a" stroke-width="2" stroke-linecap="round"/><g fill="#fff3bf"><circle cx="52" cy="200" r="2.5"/><circle cx="86" cy="196" r="2"/><circle cx="70" cy="188" r="3"/></g>`;
+ART["hand-umbrella"] = () =>
+  `<path d="M197 168V222Q197 234 188 232" fill="none" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round"/><path d="M146 172Q146 130 197 124Q248 130 248 172Q235 162 222 172Q210 162 197 172Q184 162 172 172Q159 162 146 172Z" fill="#8fb6e8" stroke="#4f7fb8" stroke-width="3" stroke-linejoin="round"/><path d="M197 124 172 172M197 124 222 172M197 124V172" fill="none" stroke="#4f7fb8" stroke-width="2" opacity=".6"/>`;
+
 
 // Cadrage de chaque icône : [x, y, largeur, hauteur] dans le repère du personnage.
 const VIEW = {
@@ -128,6 +218,37 @@ const VIEW = {
   "lantern-glow": [164, 196, 66, 90],
   "boots-trail": [72, 258, 116, 60],
   "shoes-star": [72, 280, 116, 40],
+  "head-catears": [76, 10, 108, 90],
+  "head-bunnyears": [78, 2, 104, 100],
+  "head-beanie": [66, 4, 128, 96],
+  "head-beret": [72, 22, 124, 66],
+  "head-tiara": [76, 30, 108, 56],
+  "head-sunhat": [48, 14, 164, 80],
+  "face-glasses": [80, 92, 100, 44],
+  "face-heartglasses": [80, 90, 100, 44],
+  "face-stars": [80, 116, 104, 36],
+  "face-mask": [80, 88, 100, 46],
+  "neck-scarf": [90, 144, 82, 96],
+  "neck-star": [96, 150, 68, 54],
+  "neck-pearls": [98, 148, 64, 50],
+  "neck-medal": [98, 148, 64, 72],
+  "neck-bow": [96, 152, 68, 40],
+  "back-fairy": [4, 70, 252, 210],
+  "back-butterfly": [4, 70, 252, 210],
+  "back-dragon": [2, 80, 256, 130],
+  "cape-royal": [50, 150, 160, 176],
+  "cape-rain": [50, 150, 160, 176],
+  "dress-ocean": [72, 140, 120, 130],
+  "dress-night": [72, 140, 120, 130],
+  "dress-berry": [72, 140, 120, 130],
+  "dress-meadow": [72, 140, 120, 130],
+  "boots-rain": [72, 258, 116, 60],
+  "shoes-sneakers": [72, 280, 116, 40],
+  "shoes-ballet": [72, 280, 116, 40],
+  "hand-balloon": [170, 104, 76, 130],
+  "hand-bouquet": [164, 170, 60, 74],
+  "hand-book": [34, 180, 74, 76],
+  "hand-umbrella": [136, 112, 124, 128],
 };
 export const avatarItems = Object.keys(ART).filter((k) => k !== "feet-default");
 
@@ -200,5 +321,5 @@ export function avatarSvg(rpg, label = "Ton aventurière", opts = {}) {
     `<path d="M${x1} ${y1}Q${(x1 + x2) / 2 + (x1 < 130 ? -6 : 6)} ${(y1 + y2) / 2 - 6} ${x2} ${y2}" fill="none" stroke="${skin}" stroke-width="17" stroke-linecap="round"/><circle cx="${x2}" cy="${y2}" r="9.5" fill="${skin}"/><path d="M${x1} ${y1}Q${(x1 + x2) / 2 + (x1 < 130 ? -4 : 4)} ${(y1 + y2) / 2 - 8} ${x1 + (x2 - x1) * 0.45} ${y1 + (y2 - y1) * 0.45}" fill="none" stroke="${sleeve}" stroke-width="19" stroke-linecap="round"/>`;
   const sleeve = DRESSES[dressId].base;
   const pet = opts.pet && petArt(opts.pet) ? `<g transform="translate(196 250) scale(.78)">${petArt(opts.pet)}</g>` : "";
-  return `<svg class="girl-avatar" viewBox="0 0 260 340" role="img" aria-label="${label}"><ellipse cx="130" cy="320" rx="68" ry="11" fill="#4f3b6420"/>${e.cape && ART[e.cape] ? ART[e.cape]() : ""}${hairBack(style, hair)}<path d="M112 238v52m36-52v52" stroke="${skin}" stroke-width="19" stroke-linecap="round"/>${feet}${dressArt(dressId)}${style === 2 ? braids(hair) : ""}${arm(97, 172, 70, 226, sleeve)}${arm(163, 172, 190, 226, sleeve)}<path d="M118 142v22q12 10 24 0v-22" fill="${skin}" stroke="${skinO}" stroke-width="2"/><ellipse cx="83" cy="116" rx="7" ry="10" fill="${skin}" stroke="${skinO}" stroke-width="2"/><ellipse cx="177" cy="116" rx="7" ry="10" fill="${skin}" stroke="${skinO}" stroke-width="2"/><path d="M84 106C84 70 106 54 130 54s46 16 46 52c0 32-20 54-46 54s-46-22-46-54Z" fill="${skin}" stroke="${skinO}" stroke-width="2.5"/><g fill="#fff"><ellipse cx="111" cy="112" rx="8" ry="10"/><ellipse cx="149" cy="112" rx="8" ry="10"/></g><g fill="#5a3b2e"><ellipse cx="111" cy="113" rx="6" ry="8"/><ellipse cx="149" cy="113" rx="6" ry="8"/></g><g fill="#2f2428"><ellipse cx="111" cy="114" rx="3.4" ry="5"/><ellipse cx="149" cy="114" rx="3.4" ry="5"/></g><g fill="#fff"><circle cx="113.5" cy="109.5" r="2.2"/><circle cx="151.5" cy="109.5" r="2.2"/><circle cx="108.5" cy="117.5" r="1.1"/><circle cx="146.5" cy="117.5" r="1.1"/></g><path d="M100 98q11-8 22-1m16 1q11-7 22 1" fill="none" stroke="${shade(hair, -0.1)}" stroke-width="3.2" stroke-linecap="round"/><ellipse cx="100" cy="132" rx="9.5" ry="5.5" fill="#e98f8c" opacity=".42"/><ellipse cx="160" cy="132" rx="9.5" ry="5.5" fill="#e98f8c" opacity=".42"/><path d="M127 126q3 3 6 0" fill="none" stroke="${shade(skin, -0.25)}" stroke-width="2.2" stroke-linecap="round"/><path d="M120 137q10 9 20 0" fill="none" stroke="#a15853" stroke-width="3.2" stroke-linecap="round"/>${hairFront(style, hair)}${e.cape ? clasp : ""}${e.head && ART[e.head] ? ART[e.head]() : ""}${e.hand && ART[e.hand] ? ART[e.hand]() : ""}${pet}</svg>`;
+  return `<svg class="girl-avatar" viewBox="0 0 260 340" role="img" aria-label="${label}"><ellipse cx="130" cy="320" rx="68" ry="11" fill="#4f3b6420"/>${e.back && ART[e.back] ? ART[e.back]() : ""}${e.cape && ART[e.cape] ? ART[e.cape]() : ""}${hairBack(style, hair)}<path d="M112 238v52m36-52v52" stroke="${skin}" stroke-width="19" stroke-linecap="round"/>${feet}${dressArt(dressId)}${style === 2 ? braids(hair) : ""}${arm(97, 172, 70, 226, sleeve)}${arm(163, 172, 190, 226, sleeve)}<path d="M118 142v22q12 10 24 0v-22" fill="${skin}" stroke="${skinO}" stroke-width="2"/><ellipse cx="83" cy="116" rx="7" ry="10" fill="${skin}" stroke="${skinO}" stroke-width="2"/><ellipse cx="177" cy="116" rx="7" ry="10" fill="${skin}" stroke="${skinO}" stroke-width="2"/><path d="M84 106C84 70 106 54 130 54s46 16 46 52c0 32-20 54-46 54s-46-22-46-54Z" fill="${skin}" stroke="${skinO}" stroke-width="2.5"/><g fill="#fff"><ellipse cx="111" cy="112" rx="8" ry="10"/><ellipse cx="149" cy="112" rx="8" ry="10"/></g><g fill="#5a3b2e"><ellipse cx="111" cy="113" rx="6" ry="8"/><ellipse cx="149" cy="113" rx="6" ry="8"/></g><g fill="#2f2428"><ellipse cx="111" cy="114" rx="3.4" ry="5"/><ellipse cx="149" cy="114" rx="3.4" ry="5"/></g><g fill="#fff"><circle cx="113.5" cy="109.5" r="2.2"/><circle cx="151.5" cy="109.5" r="2.2"/><circle cx="108.5" cy="117.5" r="1.1"/><circle cx="146.5" cy="117.5" r="1.1"/></g><path d="M100 98q11-8 22-1m16 1q11-7 22 1" fill="none" stroke="${shade(hair, -0.1)}" stroke-width="3.2" stroke-linecap="round"/><ellipse cx="100" cy="132" rx="9.5" ry="5.5" fill="#e98f8c" opacity=".42"/><ellipse cx="160" cy="132" rx="9.5" ry="5.5" fill="#e98f8c" opacity=".42"/><path d="M127 126q3 3 6 0" fill="none" stroke="${shade(skin, -0.25)}" stroke-width="2.2" stroke-linecap="round"/><path d="M120 137q10 9 20 0" fill="none" stroke="#a15853" stroke-width="3.2" stroke-linecap="round"/>${hairFront(style, hair)}${e.face && ART[e.face] ? ART[e.face]() : ""}${e.cape ? clasp : ""}${e.neck && ART[e.neck] ? ART[e.neck]() : ""}${e.head && ART[e.head] ? ART[e.head]() : ""}${e.hand && ART[e.hand] ? ART[e.hand]() : ""}${pet}</svg>`;
 }

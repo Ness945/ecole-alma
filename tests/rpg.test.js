@@ -165,7 +165,7 @@ test("le personnage se dessine pour toutes les apparences et tous les objets, sa
       for (const st of hairStyles) {
         const r = newRpg();
         r.look = { skin, hair, style: st.id };
-        for (const slot of ["head", "cape", "dress", "feet", "hand"]) {
+        for (const slot of ["head", "face", "neck", "back", "cape", "dress", "feet", "hand"]) {
           const pick = worn.filter((i) => i.slot === slot)[(skin + hair + st.id) % worn.filter((i) => i.slot === slot).length];
           r.owned.push(pick.id);
           r.equipped[slot] = pick.id;
@@ -215,4 +215,29 @@ test("shade éclaircit et assombrit sans sortir de la gamme", () => {
   assert.equal(shade("#000000", 1), "#ffffff");
   assert.equal(shade("#ffffff", -1), "#000000");
   assert.match(shade("#4c9b91", -0.28), /^#[0-9a-f]{6}$/);
+});
+
+test("accessoires : au moins 10 objets par emplacement principal, nouveaux emplacements facultatifs dans les anciennes sauvegardes", () => {
+  const bySlot = {};
+  for (const i of catalog.filter((i) => i.kind === "avatar")) (bySlot[i.slot] ??= []).push(i.id);
+  assert.deepEqual(Object.keys(bySlot).sort(), ["back", "cape", "dress", "face", "feet", "hand", "head", "neck"]);
+  assert.ok(bySlot.head.length >= 10 && bySlot.dress.length >= 6 && bySlot.hand.length >= 7);
+  assert.ok(catalog.filter((i) => i.kind === "avatar").length >= 40);
+  const old = newRpg(3);
+  for (const slot of ["face", "neck", "back"]) delete old.equipped[slot];
+  assert.equal(validRpgState(old), true);
+  const wrong = newRpg();
+  wrong.owned = ["back-fairy"];
+  wrong.equipped.neck = "back-fairy";
+  assert.equal(validRpgState(wrong), false, "des ailes ne se portent pas autour du cou");
+  const s = fresh();
+  s.rpg.coins = 300;
+  for (const id of ["back-fairy", "face-glasses", "neck-scarf", "head-tiara"]) {
+    assert.equal(purchase(s, id), true);
+    assert.equal(equip(s, id), true);
+  }
+  const svg = drawAvatar(s.rpg);
+  assert.ok(svg.includes(drawItem("back-fairy").replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")));
+  validate(JSON.parse(JSON.stringify(s)));
+  assert.equal(takeOff(s, "back-fairy"), true);
 });

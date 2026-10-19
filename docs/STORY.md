@@ -32,4 +32,15 @@
 
 ## Cache hors ligne
 
-`castle-art.js`, `story-data.js`, `story.js` et `story-ui.js` sont dans le cache (`content-v11`). Aucune ressource réseau nouvelle.
+`castle-art.js`, `story-data.js`, `story.js` et `story-ui.js` sont dans le cache (`content-v12`). Aucune ressource réseau nouvelle.
+
+## Accessoires de l'aventurière (0.8)
+
+31 accessoires s'ajoutent aux 14 existants (45 au total), dessinés dans `avatar-art.js` (même source unique pour le personnage et l'icône) :
+- **Sur la tête** (10) : serre-tête chaton, oreilles de lapin, bonnet à pompon, béret, diadème de cristal, chapeau de paille.
+- **Visage** (nouveau) : lunettes rondes, lunettes cœur, étoiles de fête, masque de fée.
+- **Autour du cou** (nouveau) : écharpe rayée, collier d'étoile, collier de perles, médaille d'exploratrice, nœud papillon.
+- **Dans le dos** (nouveau) : ailes de fée, de papillon, de dragon (dessinées derrière la cape).
+- **Capes** : cape royale, ciré jaune. **Tenues** : robes océan, nuit étoilée, cerise, des prés.
+- **Chaussures** : bottes de pluie, baskets arc-en-ciel, ballerines. **Dans la main** : ballon, bouquet, livre magique, parapluie.
+Prix de 8 à 34 pièces. Les emplacements `face`, `neck` et `back` sont facultatifs dans la sauvegarde : les anciennes restent valides.
