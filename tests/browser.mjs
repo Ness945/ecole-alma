@@ -122,7 +122,7 @@ try {
     ),
     2,
   );
-  await page.getByRole("button", { name: "Planter mes graines →" }).click();
+  await page.getByRole("button", { name: "Planter mes graines", exact: true }).click();
   await page.locator('[data-slot="0"]').click();
   s = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("academie.save.v2")),

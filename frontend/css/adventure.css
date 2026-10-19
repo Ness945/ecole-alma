@@ -148,7 +148,7 @@
   border-radius: 16px;
   margin-top: 20px;
 }
-@media (max-width: 650px) {
+@media (max-width: 650px), (pointer: coarse) and (max-width: 812px) {
   .bridge-teaser {
     display: block;
     padding: 23px;

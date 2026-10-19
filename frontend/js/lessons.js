@@ -18,7 +18,7 @@ export const subjects = [
     name: "Questionner le monde",
     title: "Le jardin des découvertes",
     icon: "🌍",
-    className: "world",
+    className: "discover-world",
     text: "Observer le vivant, le temps et les saisons.",
   },
   {

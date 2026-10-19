@@ -139,7 +139,7 @@
     animation: none;
   }
 }
-@media (max-width: 650px) {
+@media (max-width: 650px), (pointer: coarse) and (max-width: 812px) {
   .market-teaser {
     grid-template-columns: 1fr;
     padding: 20px;

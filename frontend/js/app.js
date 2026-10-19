@@ -378,12 +378,12 @@ function finish() {
     const count = bridgeCount(state);
     return page(
       count === 3 ? "Le pont est réparé !" : "Une partie du pont est posée !",
-      `${bridgeScene(count)}<section class="panel celebration"><h2>${count === 3 ? "La clairière t’attend." : "Regarde ce que tes efforts ont construit."}</h2><p>Tu as cherché, manipulé et essayé. La suite peut attendre : rien ne disparaîtra.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p>${button(count === 3 ? "Découvrir la clairière →" : "Revenir au pont →", "bridge-finish", "primary")} ${button("Planter mes graines", "finish")}</section>`,
+      `${bridgeScene(count)}<section class="panel celebration"><h2>${count === 3 ? "La clairière t’attend." : "Regarde ce que tes efforts ont construit."}</h2><p>Tu as cherché, manipulé et essayé. La suite peut attendre : rien ne disparaîtra.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p>${button(count === 3 ? "Découvrir la clairière →" : "Revenir au pont →", "bridge-finish", "primary")} ${button("Retour au menu principal", "finish-home", "secondary")} ${button("Planter mes graines", "finish", "quiet")}</section>`,
     );
   }
   return page(
     "Une aventure de plus !",
-    `<section class="panel celebration"><div class="emoji">🌟</div><h1>Ton royaume a grandi.</h1><p>Tu as pris le temps de chercher, d’essayer et d’apprendre.<br>Tu gagnes <strong>2 graines</strong> à planter dans ton jardin.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p class="sub">Les étoiles racontent tes aventures. Elles ne sont pas une note.</p><p>${button("Planter mes graines →", "finish", "primary")}${new Set(state.session.queue).size === 1 ? " " + button("Encore des défis sur ce thème", "practice", "secondary", `data-id="${state.session.queue[0]}"`) : ""}</p></section>`,
+    `<section class="panel celebration"><div class="emoji">🌟</div><h1>Ton royaume a grandi.</h1><p>Tu as pris le temps de chercher, d’essayer et d’apprendre.<br>Tu gagnes <strong>2 graines</strong> à planter dans ton jardin.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p class="sub">Les étoiles racontent tes aventures. Elles ne sont pas une note.</p><p>${button("Retour au menu principal", "finish-home", "primary")} ${button("Planter mes graines", "finish", "secondary")}${new Set(state.session.queue).size === 1 ? " " + button("Encore des défis sur ce thème", "practice", "secondary", `data-id="${state.session.queue[0]}"`) : ""}</p></section>`,
   );
 }
 function garden() {
@@ -1050,6 +1050,12 @@ app.addEventListener("click", (e) => {
   }
   if (a === "order-check") {
     answer(state.session.order.map((i) => current().words[i]).join(" "));
+    return;
+  }
+  if (a === "finish-home") {
+    state.session = null;
+    persist();
+    go("home");
     return;
   }
   if (a === "finish") {
