@@ -28,7 +28,7 @@ const SKY = {
   night: { top: "#1d2150", bottom: "#3f4580", dim: 0.34 },
 };
 // ───────── Murs : [face claire, face sombre, dessus, tour, ombre de tour, dessus de tour, joints] ─────────
-const WALLS = {
+export const WALLS = {
   default: ["#eedfc0", "#d2bc97", "#fff0ce", "#eddbba", "#c6b28f", "#fff0d1", "#bba88a"],
   "walls-rose": ["#f3d9dc", "#d9b3ba", "#fff0f1", "#f1d5d9", "#d4adb4", "#fff2f3", "#c79fa7"],
   "walls-blue": ["#d6e1ec", "#aebfd0", "#eef5fb", "#d3dfeb", "#a9bbcd", "#f0f6fb", "#93a9be"],

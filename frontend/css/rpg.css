@@ -169,8 +169,9 @@ body {
   padding: 11px 16px;
 }
 .castle-link {
-  left: 42%;
-  top: 54%;
+  left: auto;
+  right: 6%;
+  top: 8%;
 }
 .garden-link {
   left: 9%;
@@ -928,8 +929,9 @@ body {
     padding: 8px 10px;
   }
   .castle-link {
-    left: 34%;
-    top: 51%;
+    left: auto;
+    right: 4%;
+    top: 8%;
   }
   .garden-link {
     left: 5%;
@@ -1790,4 +1792,44 @@ body {
 .castle-stage .castle-art {
   border-radius: 24px;
   margin-top: 36px;
+}
+
+/* ───────── Château en 3D (canvas WebGL par-dessus le dessin de secours) ───────── */
+.castle3d {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.rpg-world > .castle3d {
+  position: absolute;
+  inset: 0;
+}
+.rpg-world > .castle3d > .castle-art {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+.castle-stage .castle3d {
+  border-radius: 24px;
+  margin-top: 36px;
+  overflow: hidden;
+}
+.castle-stage .castle3d > .castle-art {
+  margin: 0;
+}
+.castle3d-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  touch-action: pan-y;
+  cursor: grab;
+  outline-offset: -4px;
+}
+.castle3d.ready > .castle3d-canvas {
+  display: block;
+}
+.castle3d.ready > .castle-art {
+  visibility: hidden;
 }

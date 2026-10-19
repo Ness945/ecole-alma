@@ -6,6 +6,8 @@ export function launch(chromium) {
     process.env.PLAYWRIGHT_CHANNEL ?? (executablePath ? undefined : "msedge");
   return chromium.launch({
     headless: true,
+    // Permet à WebGL de fonctionner sans carte graphique (château 3D) dans les environnements sans GPU.
+    args: ["--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
     ...(executablePath ? { executablePath } : {}),
     ...(channel ? { channel } : {}),
   });

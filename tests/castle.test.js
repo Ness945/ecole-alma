@@ -91,3 +91,15 @@ test("château : anciennes sauvegardes valides, objets faux refusés", () => {
   bad.castle.door = "walls-rose";
   assert.equal(validRpg(bad), false, "mauvais emplacement");
 });
+test("château 3D : module, bibliothèque locale et cache hors ligne présents", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const sw = readFileSync(new URL("../frontend/sw.js", import.meta.url), "utf8");
+  for (const f of ["js/castle-3d.js", "vendor/three.module.min.js", "vendor/three.LICENSE.txt"]) assert.ok(existsSync(new URL(`../frontend/${f}`, import.meta.url)), f);
+  assert.match(sw, /\/js\/castle-3d\.js/);
+  assert.match(sw, /\/vendor\/three\.module\.min\.js/);
+  const src = readFileSync(new URL("../frontend/js/castle-3d.js", import.meta.url), "utf8");
+  assert.doesNotMatch(src, /https?:\/\/(?!www\.w3)/, "aucune adresse externe");
+  assert.doesNotMatch(src, /fetch\(|XMLHttpRequest|sendBeacon/, "aucun envoi de données");
+  // le SVG de secours reste produit pour chaque phase
+  assert.match(castleSvg(fresh0(), "k", { time: "night" }), /castle-night/);
+});
