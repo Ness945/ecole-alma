@@ -53,3 +53,4 @@ La correction du contenu doit aussi être relue par un adulte avant un usage aut
 `tests/room.test.js` et `tests/room-browser.mjs` : chambre (48 objets, icône identique à la scène, achat/équipement/aperçu, anciennes sauvegardes, quatre formats sans débordement, hors ligne).
 `tests/tablet-browser.mjs` : émulation tactile type Galaxy Tab S5e (800×1280 et 1280×800) : neuf écrans sans débordement, cartes de matières de hauteur normale.
 `tests/extras.test.js` et `tests/extras-browser.mjs` : rappel de Luna, défi du jour unique, cadeau tous les 5 missions, album, bilan de la semaine, rappel de sauvegarde, réglages validés, plantes dessinées, chambre de nuit ; parcours réel (mission courte, texte plus grand, export, aucun débordement).
+`tests/castle.test.js` et `tests/castle-browser.mjs` : 15 emplacements, icônes issues de la scène, rendu aux trois moments pour chaque objet, anciennes sauvegardes, achats, animations actives puis coupées, formats et hors ligne.
