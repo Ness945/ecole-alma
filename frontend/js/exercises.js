@@ -47,11 +47,14 @@ export const normalize = (s) =>
     .toLocaleLowerCase("fr")
     .replace(/[.!?]+$/, "")
     .replace(/\s+/g, " ");
-export function exercise(id, seed, level = 2, turn = 0) {
+// ease = true : l'enfant vient d'échouer deux fois sur cette notion. Nombres plus petits, matériel visible
+// (niveau 1) et, pour les autres notions, un petit coup de pouce affiché d'emblée (q.support).
+export function exercise(id, seed, level = 2, turn = 0, ease = false) {
   const r = rng(seed),
-    a = 2 + Math.floor(r() * 8),
-    b = 1 + Math.floor(r() * 8),
+    a = ease ? 1 + Math.floor(r() * 4) : 2 + Math.floor(r() * 8),
+    b = ease ? 1 + Math.floor(r() * 3) : 1 + Math.floor(r() * 8),
     g = group(seed);
+  if (ease) level = 1;
   const choice = turn % 3 === 0;
   const q = {
     skill: id,
@@ -67,8 +70,8 @@ export function exercise(id, seed, level = 2, turn = 0) {
   };
   switch (id) {
     case "multiplication": {
-      const groups = 2 + (seed % 4),
-        each = 2 + (Math.floor(seed / 4) % 4);
+      const groups = 2 + (seed % (ease ? 2 : 4)),
+        each = 2 + (Math.floor(seed / 4) % (ease ? 2 : 4));
       q.prompt =
         turn % 3 === 2
           ? `Pour le goûter, ${groups} paniers contiennent chacun ${each} pommes. Combien y a-t-il de pommes en tout ?`
@@ -86,8 +89,8 @@ export function exercise(id, seed, level = 2, turn = 0) {
       break;
     }
     case "number": {
-      const tens = 1 + Math.floor(r() * 5),
-        units = Math.floor(r() * 10);
+      const tens = 1 + Math.floor(r() * (ease ? 2 : 5)),
+        units = Math.floor(r() * (ease ? 5 : 10));
       q.prompt = `Construis ${tens * 10 + units} avec les dizaines et les unités.`;
       q.type = "blocks";
       q.dimension = "manipulation";
@@ -290,6 +293,10 @@ export function exercise(id, seed, level = 2, turn = 0) {
       String(Math.max(0, Number(q.answer) - 1)),
     ];
   q.options = [...new Set(q.options)].sort(() => r() - 0.5);
+  if (ease) {
+    q.eased = true;
+    if (!["number", "addition", "subtract", "multiplication", "problem"].includes(id) && q.hint) q.support = true;
+  }
   q.fingerprint = id + ":" + (q.passage || "") + q.prompt + ":" + q.answer;
   return q;
 }
@@ -312,7 +319,7 @@ export function diagnostic(q, value) {
   };
 }
 
-export function selectExercise(id, seed, level, turn, history = []) {
+export function selectExercise(id, seed, level, turn, history = [], ease = false) {
   const recent = new Set(
     history
       .filter((e) => e.skill === id)
@@ -322,8 +329,8 @@ export function selectExercise(id, seed, level, turn, history = []) {
   let q;
   for (let i = 0; i < 100; i++) {
     const selectedSeed = (seed + i * 104729) >>> 0;
-    q = exercise(id, selectedSeed, level, turn);
+    q = exercise(id, selectedSeed, level, turn, ease);
     if (!recent.has(q.fingerprint)) return { q, seed: selectedSeed };
   }
-  return { q: exercise(id, seed, level, turn), seed };
+  return { q: exercise(id, seed, level, turn, ease), seed };
 }

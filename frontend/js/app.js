@@ -44,6 +44,8 @@ import {
   ready,
   mastered,
   evidence,
+  easeFor,
+  recallFor,
 } from "./core.js";
 import { exercise, check, diagnostic, selectExercise } from "./exercises.js";
 import { exercise as legacyExercise } from "./exercises-v03.js";
@@ -69,6 +71,7 @@ import {
   giftNote,
 } from "./extras.js";
 import { plantIcon } from "./plant-art.js";
+import { followupView } from "./followup.js";
 import { subjects, lessonActivity } from "./lessons.js";
 import {
   stages,
@@ -182,16 +185,20 @@ function current() {
   if (s.contentRevision !== 2)
     return legacyExercise(id, seed, state.skills[id].level, s.index);
   if (s.questionSeed === undefined) {
+    // Adaptation : après deux échecs de suite sur la notion, exemple plus simple avec soutien (figé pour la question).
+    s.questionEase = easeFor(state, id);
     s.questionSeed = selectExercise(
       id,
       seed,
       state.skills[id].level,
       s.index,
       state.history,
+      s.questionEase,
     ).seed;
+    s.qStart = Date.now();
     persist();
   }
-  return exercise(id, s.questionSeed, state.skills[id].level, s.index);
+  return exercise(id, s.questionSeed, state.skills[id].level, s.index, Boolean(s.questionEase));
 }
 function bridgeTeaser() {
   const n = bridgeCount(state);
@@ -327,7 +334,7 @@ function mission() {
     (state.history.slice(-3).length === 3 &&
       state.history.slice(-3).every((e) => e.skip || !e.correct)) ||
     Date.now() - s.started > 20 * 60000;
-  return `<main class="exercise">${s.adventure !== undefined ? `<div class="adventure-ribbon">🌉 ${stages[s.adventure].title} · ${bridgeCount(state)}/3 parties du pont</div>` : s.chapter !== undefined ? `<div class="adventure-ribbon">📖 Chapitre ${s.chapter} · ${esc(chapterById(s.chapter).title)}</div>` : ""}<div class="row" style="justify-content:space-between">${button("← Faire une pause", "home", "quiet")}<span class="muted">${s.index + 1} / ${s.queue.length} petits défis</span></div><div class="progress" role="progressbar" aria-label="Mission" aria-valuemin="0" aria-valuemax="${s.queue.length}" aria-valuenow="${s.index}"><span style="width:${pct}%"></span></div><section class="panel"><p class="eyebrow">${skill.icon} ${skill.name}</p>${q.passage ? `<div class="passage">${q.passage}</div>` : ""}${q.guided ? `<div class="notice">🦄 On essaie ensemble. ${stages[s.adventure].lesson}</div>` : ""}<h2>${q.prompt}</h2>${button(q.audio ? "▶ Écouter le mot" : "🔊 Écouter la consigne", "read", "small")}${q.audio ? `<details><summary>Si le son ne fonctionne pas · aide adulte</summary><p>Mot à lire : <strong>${q.audio}</strong>. Utiliser cette aide ne valide pas une réussite autonome.</p>${button("Utiliser cette aide", "hint", "small")}</details>` : ""}${q.visual ? `<div class="visual">${q.visual}</div>` : ""}${input}${
+  return `<main class="exercise">${s.adventure !== undefined ? `<div class="adventure-ribbon">🌉 ${stages[s.adventure].title} · ${bridgeCount(state)}/3 parties du pont</div>` : s.chapter !== undefined ? `<div class="adventure-ribbon">📖 Chapitre ${s.chapter} · ${esc(chapterById(s.chapter).title)}</div>` : ""}<div class="row" style="justify-content:space-between">${button("← Faire une pause", "home", "quiet")}<span class="muted">${s.index + 1} / ${s.queue.length} petits défis</span></div><div class="progress" role="progressbar" aria-label="Mission" aria-valuemin="0" aria-valuemax="${s.queue.length}" aria-valuenow="${s.index}"><span style="width:${pct}%"></span></div><section class="panel"><p class="eyebrow">${skill.icon} ${skill.name}</p>${s.note && s.noteAt === s.index ? `<div class="notice recall-note">🦄 ${esc(s.note)}</div>` : ""}${q.eased && !s.answered ? `<div class="notice ease-note">🦄 Cet exemple est un peu plus facile pour repartir doucement.${q.support && q.hint ? ` Petit coup de pouce : ${esc(q.hint)}` : ""}</div>` : ""}${q.passage ? `<div class="passage">${q.passage}</div>` : ""}${q.guided ? `<div class="notice">🦄 On essaie ensemble. ${stages[s.adventure].lesson}</div>` : ""}<h2>${q.prompt}</h2>${button(q.audio ? "▶ Écouter le mot" : "🔊 Écouter la consigne", "read", "small")}${q.audio ? `<details><summary>Si le son ne fonctionne pas · aide adulte</summary><p>Mot à lire : <strong>${q.audio}</strong>. Utiliser cette aide ne valide pas une réussite autonome.</p>${button("Utiliser cette aide", "hint", "small")}</details>` : ""}${q.visual ? `<div class="visual">${q.visual}</div>` : ""}${input}${
     !s.answered
       ? `<fieldset class="confidence"><legend>Si tu veux, dis à Luna comment tu te sens.</legend>${[
           ["unsure", "🤔 Pas sûre"],
@@ -344,7 +351,7 @@ function mission() {
           )
           .join(
             "",
-          )}</fieldset><div class="row">${button("💡 Un indice", "hint", "quiet")}${button("🤷 Je ne sais pas", "skip", "quiet")}</div>`
+          )}</fieldset><div class="row">${button(s.hints ? "💡 Encore un indice" : "💡 Un indice", "hint", "quiet")}${button("🤷 Je ne sais pas", "skip", "quiet")}</div>`
       : ""
   }${s.feedback ? `<div class="feedback" role="status">🦄 ${esc(s.feedback)}${s.answered ? `<br>${button(s.index + 1 === s.queue.length ? "Terminer ma mission →" : "Un autre défi →", "next", "primary")}` : ""}</div>` : ""}${fatigue ? `<div class="notice">On a déjà bien travaillé. Tu peux retourner au royaume et te reposer. Ta mission t’attendra.${button("Faire une pause", "home", "quiet")}</div>` : ""}</section></main>`;
 }
@@ -364,11 +371,20 @@ function answer(value, skip = false) {
     {
       correct,
       skip,
-      assisted: s.assisted || skip || Boolean(q.guided),
+      assisted: s.assisted || skip || Boolean(q.guided) || Boolean(q.support),
       dimension: q.dimension,
       fingerprint: q.fingerprint,
       confidence: s.confidence,
       error: correct ? "" : skip ? "dont_know" : d.code,
+      // Détails pour le suivi parent (jamais envoyés nulle part, restent dans la sauvegarde locale)
+      prompt: String(q.prompt).replace(/<[^>]*>/g, "").slice(0, 140),
+      answer: skip ? "" : String(value).slice(0, 80),
+      expected: String(q.displayAnswer || q.answer).slice(0, 80),
+      ...(s.qStart && Date.now() - s.qStart <= 180000 ? { ms: Date.now() - s.qStart } : {}),
+      hints: s.hints || 0,
+      ease: Boolean(q.eased),
+      mission: String(s.id).slice(0, 60),
+      pos: s.index,
     },
     Date.now(),
   );
@@ -382,6 +398,14 @@ function answer(value, skip = false) {
         : "Tu as trouvé ! Garde cette stratégie pour le prochain défi."
     : `${skip ? "Regardons ensemble. " : ""}${d.text} La réponse est : ${q.displayAnswer || q.answer}. On essaiera un autre exemple.`;
   if (!correct && s.queue.length < 16) s.queue.push(q.skill);
+  // Trois échecs de suite : on revoit d'abord une notion de base déjà abordée, puis on reprend.
+  const pre = !correct && s.adventure === undefined ? recallFor(state, q.skill) : null;
+  if (pre && !(s.recalled || []).includes(pre) && s.queue.length < 16) {
+    s.queue.splice(s.index + 1, 0, pre);
+    s.recalled = [...(s.recalled || []), pre];
+    s.note = `On revoit d’abord « ${skills.find((x) => x.id === pre).name} » pour repartir sur de bonnes bases.`;
+    s.noteAt = s.index + 1;
+  }
   persist();
   render();
 }
@@ -390,7 +414,10 @@ function next() {
   if (!s?.answered) return;
   s.index++;
   delete s.questionSeed;
+  delete s.questionEase;
+  delete s.qStart;
   Object.assign(s, {
+    hints: 0,
     draft: "",
     assisted: false,
     feedback: "",
@@ -568,7 +595,7 @@ function parent() {
         })
         .join("") ||
       "<p>Aucune réponse pour le moment. Indiquez les notions déjà travaillées ou commencez par une découverte.</p>"
-    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
+    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${followupView(state)}${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
       .map((s) => {
         const p = state.skills[s.id];
         return `<section class="skill-row"><div class="skill-top"><h3>${s.icon} ${s.name}</h3><select data-status="${s.id}" aria-label="Statut scolaire : ${s.name}" ${state.session ? "disabled" : ""}>${[
@@ -1086,8 +1113,17 @@ app.addEventListener("click", (e) => {
     return;
   }
   if (a === "hint") {
-    state.session.assisted = true;
-    state.session.feedback = current().hint;
+    const hq = current(),
+      sh = state.session;
+    sh.assisted = true;
+    sh.hints = (sh.hints || 0) + 1;
+    // Indice en deux temps : d'abord un coup de pouce, puis l'aide complète.
+    sh.feedback =
+      sh.hints === 1 && hq.hint && !hq.audio && hq.type !== "blocks"
+        ? ["number", "addition", "subtract", "multiplication", "problem"].includes(hq.skill)
+          ? "Prends ton temps : fais-toi une image dans ta tête, ou compte sur tes doigts. Touche encore « Encore un indice » si tu veux plus d’aide."
+          : "Relis lentement la consigne et cherche le mot important. Touche encore « Encore un indice » si tu veux plus d’aide."
+        : hq.hint;
     persist();
     render();
     return;
@@ -1096,6 +1132,11 @@ app.addEventListener("click", (e) => {
     state.session.confidence = b.dataset.value;
     persist();
     render();
+    return;
+  }
+  if (a === "followup-print") {
+    document.querySelectorAll(".follow-mission").forEach((d) => (d.open = true));
+    window.print();
     return;
   }
   if (a === "next") {
