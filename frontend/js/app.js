@@ -651,6 +651,21 @@ function render() {
       "🪙",
       '<span class="coin-symbol" aria-hidden="true">✦</span>',
     );
+  upgradeCastles();
+}
+// Château 3D : chargé à la demande ; sans WebGL (ou en cas d'erreur) le dessin SVG de secours reste affiché.
+async function upgradeCastles() {
+  if (!document.querySelector(".castle3d")) return;
+  try {
+    const m = await import("./castle-3d.js");
+    if (!m.castle3dSupported()) return;
+    const host = document.querySelector(".castle3d");
+    if (!host) return;
+    const castle = JSON.parse(host.dataset.castle || "{}");
+    m.mountCastle3d(host, { castle }, { time: host.dataset.time || undefined, motion: state.settings.motion });
+  } catch (e) {
+    console.warn("Château 3D indisponible, dessin de secours conservé", e);
+  }
 }
 function discoveryCtx() {
   return {
