@@ -104,7 +104,7 @@ try {
   await page.getByRole("button", { name: "⚙ Espace parent" }).click();
   await page.locator("#gate").fill("56");
   await page.getByRole("button", { name: "Ouvrir", exact: true }).click();
-  await page.getByText("Cette semaine").waitFor();
+  await page.getByText("Cette semaine", { exact: true }).waitFor();
   assert.ok(await page.locator(".week-bars div").count() === 7);
   await page.locator("#length").selectOption("5");
   await page.locator("#slow").check();

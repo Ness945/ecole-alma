@@ -51,6 +51,21 @@ export function fresh() {
     session: null,
   };
 }
+// Détails conservés par réponse pour le suivi parent (tous facultatifs : anciennes sauvegardes valides).
+export const DETAIL_KEYS = ["prompt", "answer", "expected", "ms", "hints", "ease", "mission", "pos"];
+// Adaptation : deux échecs de suite (ou « Je ne sais pas ») sur une notion → exercice plus simple, avec soutien.
+export function easeFor(state, id) {
+  const h = state.history.filter((e) => e.skill === id).slice(-3);
+  let n = 0;
+  for (let i = h.length - 1; i >= 0 && !h[i].correct; i--) n++;
+  return n >= 2;
+}
+// Trois échecs de suite : on revoit d'abord un prérequis déjà abordé (le premier non solide).
+export function recallFor(state, id) {
+  const h = state.history.filter((e) => e.skill === id).slice(-3);
+  if (h.length < 3 || h.some((e) => e.correct)) return null;
+  return missing(state, id).find((p) => state.skills[p].status === "seen") || null;
+}
 export function evidence(s, dimension) {
   return s.evidence.filter(
     (e) => e.dimension === dimension && !e.assisted && !e.skip,
@@ -115,9 +130,13 @@ export function record(state, id, result, now = Date.now()) {
       (e) => now - e.at >= 3 * DAY && e.fingerprint !== result.fingerprint,
     );
   const e = { ...result, at: now };
-  s.evidence.push(e);
+  // Le détail (énoncé, réponse donnée…) ne sert qu'au suivi parent : il reste dans l'historique,
+  // pas dans les preuves par notion, pour garder la sauvegarde légère.
+  const slim = { ...e };
+  for (const k of DETAIL_KEYS) delete slim[k];
+  s.evidence.push(slim);
   if (memory && result.dimension === "production")
-    s.evidence.push({ ...e, dimension: "memory" });
+    s.evidence.push({ ...slim, dimension: "memory" });
   s.evidence = s.evidence.slice(-200);
   if (!result.skip) {
     if (result.correct && !result.assisted) {
@@ -301,6 +320,17 @@ export function validate(raw) {
     e.at >= 0 &&
     typeof e.fingerprint === "string" &&
     e.fingerprint.length < 500;
+  // Détails de suivi parent : facultatifs, jamais bloquants (valeurs invalides simplement retirées).
+  if (Array.isArray(raw.history))
+    for (const e of raw.history) {
+      if (!e || typeof e !== "object") continue;
+      for (const k of ["prompt", "answer", "expected", "mission"])
+        if (k in e) typeof e[k] === "string" ? (e[k] = e[k].slice(0, k === "prompt" ? 140 : 80)) : delete e[k];
+      if ("ms" in e && !(Number.isFinite(e.ms) && e.ms >= 0)) delete e.ms;
+      else if ("ms" in e) e.ms = Math.min(e.ms, 600000);
+      for (const k of ["hints", "pos"]) if (k in e && !(Number.isInteger(e[k]) && e[k] >= 0 && e[k] < 100)) delete e[k];
+      if ("ease" in e && typeof e.ease !== "boolean") delete e.ease;
+    }
   if (
     typeof raw.name !== "string" ||
     raw.name.length > 40 ||
