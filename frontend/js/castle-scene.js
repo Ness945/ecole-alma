@@ -46,6 +46,10 @@ const FLAGS = {
   "flags-blue": ["#6c9bd8", "#41679c", ""],
   "flags-stars": ["#8d78c4", "#5f4d92", "star"],
 };
+// ───────── Géométrie du château (vue de face, base à y = 397 ; le tout est remonté de 28 px dans la scène) ─────────
+// Salle centrale x 338–522, tour haute au centre, deux tours latérales (centres 292 et 568), porte voûtée au milieu.
+const HALL = { x: 338, y: 268, w: 184, base: 397 };
+const arch = (cx, y, w, h) => `M${cx - w / 2} ${y + h}V${y + w / 2}a${w / 2} ${w / 2} 0 0 1 ${w} 0V${y + h}Z`;
 // ───────── Tours ─────────
 function towerHead(style, roof, dark, w) {
   if (style === "towers-square")
@@ -70,80 +74,85 @@ function towerHead(style, roof, dark, w) {
     svg: `<path d="m-43 0 43-76L43 0Q0 25-43 0" fill="${roof}"/><path d="M0-76 43 0Q21 12 11 12Z" fill="${dark}"/>`,
   };
 }
+// Une tour : corps, ombre latérale, toit, joints, bannière. Les fenêtres sont dessinées à part (voir WINDOWS).
 function tower(x, y, s, o) {
   const { w, roof, dark, style, flag } = o,
     head = towerHead(style, roof, dark, w),
     f = FLAGS[flag] || null,
     pole = style === "towers-square" ? 42 : 38;
-  return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cy="125" rx="41" ry="15" fill="#544d6730"/><path d="M-34 0h68v119q-34 21-68 0Z" fill="${w[3]}"/><path d="M10 0h24v119q-12 8-24 10Z" fill="${w[4]}"/><ellipse rx="34" ry="12" fill="${w[5]}"/>${head.svg}<path d="M-8 48q0-17 15-17v31H-8Z" fill="${o.winFill}" stroke="${w[5]}" stroke-width="5"/><path d="M-22 89h13m13 14h16m-3-30h13" stroke="${w[6]}" stroke-width="2"/>${
+  return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-34 0h68v119q-34 21-68 0Z" fill="${w[3]}"/><path d="M12 0h22v119q-11 6-22 9Z" fill="${w[4]}"/><ellipse rx="34" ry="12" fill="${w[5]}"/>${head.svg}<path d="M-26 70h14m22 20h16m-34 18h12M-6 52h14" stroke="${w[6]}" stroke-width="2" stroke-linecap="round"/>${
     f
       ? `<g class="c-flag"><path d="M0 ${head.top}v-${pole}" stroke="#9c805b" stroke-width="2.5"/><path d="M0 ${head.top - pole}l37 9-37 13" fill="${f[0]}" stroke="${f[1]}" stroke-width="2"/>${f[2] === "star" ? `<circle cx="11" cy="${head.top - pole + 9}" r="3" fill="#fff"/>` : ""}</g>`
       : ""
   }</g>`;
 }
-// ───────── Portes ─────────
+// ───────── Portes (voûte au centre de la salle) ─────────
+const DOOR = arch(430, 340, 52, 57);
 const doorShape = (fill, stroke = "#c6af88") =>
-  `<path d="M391 395v-57q13-28 43-21v62Z" fill="${fill}" stroke="${stroke}" stroke-width="7"/><path d="M411 329v56" stroke="#00000030" stroke-width="3"/>`;
+  `<path d="${DOOR}" fill="${fill}" stroke="${stroke}" stroke-width="6" stroke-linejoin="round"/><path d="M430 342V397" stroke="#00000028" stroke-width="2.5"/>`;
 const DOORS = {
-  default: () => `${doorShape("#8d6b57")}<circle cx="424" cy="359" r="3" fill="#efd17f"/>`,
-  "door-red": () => `${doorShape("#c6465a", "#e8c9a0")}<circle cx="424" cy="359" r="3" fill="#ffe08a"/>`,
-  "door-gold": () => `${doorShape("#e3b84f", "#fff0b8")}<path d="M399 372h28M399 352h28" stroke="#c58f22" stroke-width="3"/><circle cx="424" cy="362" r="3" fill="#fff"/>`,
-  "door-blue": () => `${doorShape("#5b84b8", "#dfe9f6")}<circle cx="424" cy="359" r="3" fill="#f2f6ff"/>`,
+  default: () => `${doorShape("#8d6b57")}<circle cx="446" cy="372" r="3" fill="#efd17f"/>`,
+  "door-red": () => `${doorShape("#c6465a", "#e8c9a0")}<circle cx="446" cy="372" r="3" fill="#ffe08a"/>`,
+  "door-gold": () => `${doorShape("#e3b84f", "#fff0b8")}<path d="M410 362h40M410 380h40" stroke="#c58f22" stroke-width="3"/><circle cx="446" cy="372" r="3" fill="#fff"/>`,
+  "door-blue": () => `${doorShape("#5b84b8", "#dfe9f6")}<circle cx="446" cy="372" r="3" fill="#f2f6ff"/>`,
   "door-crystal": () =>
-    `${doorShape("#a8e3ef", "#e9fbff")}<path d="M402 384v-40q10-18 24-14" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/><path d="M416 336v54" stroke="#6fb8cc" stroke-width="2"/><path d="m404 322 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff7c8"/>`,
+    `${doorShape("#a8e3ef", "#e9fbff")}<path d="M413 388v-24q4-14 14-16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/><path class="c-twinkle" d="m452 330 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff7c8"/>`,
   "door-flowers": () =>
-    `${doorShape("#8d6b57")}<circle cx="424" cy="359" r="3" fill="#efd17f"/>${[[388, 372], [388, 350], [396, 331], [411, 320], [428, 314], [440, 322]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="6.5" fill="${["#f4a8b6", "#fff4d8", "#f6d36e"][i % 3]}" stroke="#5f9a63" stroke-width="1.5"/>`).join("")}`,
+    `${doorShape("#8d6b57")}<circle cx="446" cy="372" r="3" fill="#efd17f"/>${[[402, 392], [402, 372], [406, 354], [416, 340], [430, 333], [444, 340], [454, 354], [458, 372], [458, 392]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="6" fill="${["#f4a8b6", "#fff4d8", "#f6d36e"][i % 3]}" stroke="#5f9a63" stroke-width="1.4"/>`).join("")}`,
 };
-// ───────── Fenêtres du corps principal (trois) ─────────
-const WIN = [
-  "M346 311v-39q0-26 26-32v61",
-  "M465 305v-40q0-22 22-16v46",
-  "M492 310v-40q0-22 22-16v46",
+// ───────── Fenêtres : (centre, haut, largeur, hauteur), toutes alignées sur les murs ─────────
+const WSPOTS = [
+  [372, 310, 26, 40],
+  [488, 310, 26, 40],
+  [430, 190, 24, 38],
+  [292, 292, 22, 36],
+  [568, 292, 22, 36],
 ];
+const winSet = (fn) => WSPOTS.map(([cx, y, w, h], i) => fn(arch(cx, y, w, h), cx, y, w, h, i)).join("");
 const WINDOWS = {
-  default: (lit) => WIN.map((d) => `<path d="${d}" fill="${lit ? "#ffd978" : "#728890"}" stroke="#fff1d0" stroke-width="6"/>`).join(""),
-  "windows-golden": () => WIN.map((d) => `<path d="${d}" fill="#f6d36e" stroke="#fff7d6" stroke-width="6"/><path d="${d}" fill="none" stroke="#d9a73a" stroke-width="1.8"/>`).join(""),
+  default: (lit) => winSet((d) => `<path d="${d}" fill="${lit ? "#ffd978" : "#728890"}" stroke="#fff1d0" stroke-width="4" stroke-linejoin="round"/>`),
+  "windows-golden": () => winSet((d) => `<path d="${d}" fill="#f6d36e" stroke="#fff7d6" stroke-width="4" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#d9a73a" stroke-width="1.6"/>`),
   "windows-stained": () =>
-    WIN.map((d, i) => `<path d="${d}" fill="${["#e8546a", "#4d8fc4", "#7fbf7a"][i]}" stroke="#f2c14e" stroke-width="6"/><path d="${d}" fill="none" stroke="#fff6" stroke-width="2"/>`).join(""),
+    winSet((d, cx, y, w, h, i) => `<path d="${d}" fill="${["#e8546a", "#4d8fc4", "#7fbf7a", "#f2c14e", "#a994d6"][i]}" stroke="#f2c14e" stroke-width="4" stroke-linejoin="round"/><path d="M${cx} ${y + 4}V${y + h}M${cx - w / 2} ${y + h * 0.62}h${w}" stroke="#ffffff90" stroke-width="1.6"/>`),
   "windows-shutters": (lit) =>
-    WIN.map((d) => `<path d="${d}" fill="${lit ? "#ffd978" : "#728890"}" stroke="#fff1d0" stroke-width="6"/>`).join("") +
-    [[336, 266], [455, 258], [517, 258]].map(([x, y]) => `<rect x="${x}" y="${y}" width="9" height="42" rx="2" fill="#6fae73" stroke="#4d8452" stroke-width="2"/>`).join(""),
-  "windows-round": () => WIN.map((d) => `<path d="${d}" fill="#ffd978" stroke="#e8b04a" stroke-width="6"/><path d="${d}" fill="none" stroke="#fff6cc" stroke-width="1.6" stroke-dasharray="3 5"/>`).join(""),
+    winSet((d, cx, y, w, h) => `<rect x="${cx - w / 2 - 11}" y="${y + 6}" width="9" height="${h - 6}" rx="2" fill="#6fae73" stroke="#4d8452" stroke-width="1.6"/><rect x="${cx + w / 2 + 2}" y="${y + 6}" width="9" height="${h - 6}" rx="2" fill="#6fae73" stroke="#4d8452" stroke-width="1.6"/><path d="${d}" fill="${lit ? "#ffd978" : "#728890"}" stroke="#fff1d0" stroke-width="4" stroke-linejoin="round"/>`),
+  "windows-round": () =>
+    winSet((d, cx, y, w, h) => `<path d="${d}" fill="#ffd978" stroke="#e8b04a" stroke-width="4" stroke-linejoin="round"/><circle cx="${cx}" cy="${y + h * 0.45}" r="${w * 0.32}" fill="none" stroke="#fff6cc" stroke-width="1.8"/>`),
 };
-// ───────── Douves, chemins ─────────
+// ───────── Douves, pont-levis, chemins ─────────
 const MOATS = {
   "moat-water": () => moat("#8fd0e2", "#c9eef6", ""),
   "moat-lilies": () =>
-    moat("#8fd0e2", "#c9eef6", [[330, 396], [372, 423], [490, 424], [545, 393], [592, 372]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="11" ry="4.5" fill="#79b97a" stroke="#4f8a5d" stroke-width="1.5"/><circle cx="${x + 2}" cy="${y - 4}" r="3" fill="#f6b9c8"/>`).join("")),
+    moat("#8fd0e2", "#c9eef6", [[322, 428], [372, 440], [492, 440], [545, 428], [600, 414]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="11" ry="4.5" fill="#79b97a" stroke="#4f8a5d" stroke-width="1.5"/><circle cx="${x + 2}" cy="${y - 4}" r="3" fill="#f6b9c8"/>`).join("")),
   "moat-magic": () =>
-    moat("#9c8be0", "#d9d0ff", [[340, 400], [440, 446], [530, 410], [584, 380]].map(([x, y]) => `<circle class="c-twinkle" cx="${x}" cy="${y}" r="3" fill="#fff6c8"/>`).join("")),
+    moat("#9c8be0", "#d9d0ff", [[330, 424], [440, 444], [530, 438], [590, 418]].map(([x, y]) => `<circle class="c-twinkle" cx="${x}" cy="${y}" r="3" fill="#fff6c8"/>`).join("")),
 };
 function moat(fill, shine, extra) {
-  return `<path d="M268 346 427 440 604 366l-35-10L427 414 301 343Z" fill="${fill}" stroke="${shine}" stroke-width="4" stroke-linejoin="round"/><path d="M290 352 427 428 586 366" fill="none" stroke="${shine}" stroke-width="2" stroke-dasharray="14 12" opacity=".8"/>${extra}<path d="M400 412 456 410 474 452 386 454Z" fill="#b0794f" stroke="#7d5a3a" stroke-width="2.5" stroke-linejoin="round"/><path d="M398 424h66M394 438h74" stroke="#7d5a3a" stroke-width="2"/>`;
+  return `<path d="M258 398Q430 456 602 398L616 420Q430 492 244 420Z" fill="${fill}" stroke="${shine}" stroke-width="4" stroke-linejoin="round"/><path d="M276 412Q430 470 584 412" fill="none" stroke="${shine}" stroke-width="2" stroke-dasharray="14 12" opacity=".8"/>${extra}<path d="M406 396H454L474 456H386Z" fill="#b0794f" stroke="#7d5a3a" stroke-width="2.5" stroke-linejoin="round"/><path d="M400 412h60M394 428h72M390 442h80" stroke="#7d5a3a" stroke-width="2"/>`;
 }
-const ROAD = "M366 353Q443 383 542 437l-80 36Q405 402 322 378Z";
+const ROAD = "M396 400H464L520 468Q430 490 340 468Z";
 const PATHS = {
   default: () => `<path d="${ROAD}" fill="#e5cfaa"/>`,
-  "path-stone": () => `<path d="${ROAD}" fill="#c4c7cc" stroke="#9fa3aa" stroke-width="2"/>${[[400, 388], [430, 406], [466, 424], [508, 440], [360, 372], [446, 384], [486, 402]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="11" ry="5" fill="#dfe2e6" stroke="#9fa3aa" stroke-width="1.5"/>`).join("")}`,
-  "path-flowers": () => `<path d="${ROAD}" fill="#e5cfaa"/>${[[348, 388], [392, 408], [440, 428], [496, 454], [470, 392], [520, 424]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="5.5" fill="${["#f4a8b6", "#fff4d8", "#f6d36e"][i % 3]}" stroke="#5f9a63" stroke-width="1.4"/>`).join("")}`,
-  "path-gold": () => `<path d="${ROAD}" fill="#f4d884" stroke="#d9a73a" stroke-width="2"/>${[[390, 386], [430, 404], [474, 424], [514, 440]].map(([x, y]) => `<path d="M${x - 14} ${y}l14-7 14 7-14 7Z" fill="#fff1b0" stroke="#d9a73a" stroke-width="1.5"/>`).join("")}<path class="c-twinkle" d="m478 398 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff"/>`,
+  "path-stone": () => `<path d="${ROAD}" fill="#c4c7cc" stroke="#9fa3aa" stroke-width="2"/>${[[430, 414], [412, 438], [450, 440], [392, 460], [430, 462], [470, 458], [352, 470], [506, 468]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="12" ry="5" fill="#dfe2e6" stroke="#9fa3aa" stroke-width="1.5"/>`).join("")}`,
+  "path-flowers": () => `<path d="${ROAD}" fill="#e5cfaa"/>${[[392, 420], [470, 424], [372, 450], [494, 452], [350, 466], [516, 466]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="5.5" fill="${["#f4a8b6", "#fff4d8", "#f6d36e"][i % 3]}" stroke="#5f9a63" stroke-width="1.4"/>`).join("")}`,
+  "path-gold": () => `<path d="${ROAD}" fill="#f4d884" stroke="#d9a73a" stroke-width="2"/>${[[430, 414], [430, 440], [430, 466], [388, 452], [472, 452]].map(([x, y]) => `<path d="M${x - 16} ${y}l16-7 16 7-16 7Z" fill="#fff1b0" stroke="#d9a73a" stroke-width="1.5"/>`).join("")}<path class="c-twinkle" d="m470 424 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#fff"/>`,
 };
 // ───────── Lumières (brillent au soir et la nuit) ─────────
 const lamp = (x, y) =>
   `<g><path d="M${x} ${y}v-44" stroke="#6b5b45" stroke-width="4"/><rect x="${x - 7}" y="${y - 62}" width="14" height="20" rx="4" fill="#ffd978" stroke="#a98f5e" stroke-width="2"/><path d="M${x - 9} ${y - 62}h18l-9-9Z" fill="#6b5b45"/></g>`;
 const flame = (x, y) =>
-  `<g><rect x="${x - 3}" y="${y}" width="6" height="26" rx="2" fill="#7d5a3a"/><path class="c-flicker" d="M${x} ${y + 2}q-9-10-2-22 3 7 8 6 5-10-6-22 16 8 12 30-1 8-12 8Z" transform="translate(0 6)" fill="#f4a43a" stroke="#d9772a" stroke-width="1.5"/></g>`;
+  `<g><rect x="${x - 3}" y="${y}" width="6" height="22" rx="2" fill="#7d5a3a"/><path class="c-flicker" d="M${x} ${y + 2}q-9-10-2-22 3 7 8 6 5-10-6-22 16 8 12 30-1 8-12 8Z" transform="translate(0 4)" fill="#f4a43a" stroke="#d9772a" stroke-width="1.5"/></g>`;
 const LIGHTS = {
-  "lights-lanterns": () => `${lamp(352, 424)}${lamp(528, 462)}${lamp(300, 392)}`,
-  "lights-torches": () => `${flame(382, 336)}${flame(446, 332)}`,
+  "lights-lanterns": () => `${lamp(362, 470)}${lamp(498, 470)}${lamp(318, 422)}${lamp(542, 422)}`,
+  "lights-torches": () => `${flame(386, 338)}${flame(474, 338)}`,
   "lights-fairy": () =>
-    `<path d="M296 252Q427 306 586 258" fill="none" stroke="#9a8a6a" stroke-width="2.5"/>${[[312, 262], [342, 274], [376, 284], [412, 290], [448, 290], [484, 284], [520, 276], [554, 266]].map(([x, y], i) => `<circle class="c-twinkle" style="animation-delay:-${(i * 0.37).toFixed(2)}s" cx="${x}" cy="${y}" r="4.6" fill="${["#ffd978", "#f4a8c0", "#bfe3f4", "#fff4a8"][i % 4]}"/>`).join("")}`,
+    `<path d="M292 262Q430 322 568 262" fill="none" stroke="#9a8a6a" stroke-width="2.5"/>${[[304, 268], [336, 282], [372, 296], [410, 304], [450, 304], [488, 296], [524, 282], [556, 268]].map(([x, y], i) => `<circle class="c-twinkle" style="animation-delay:-${(i * 0.37).toFixed(2)}s" cx="${x}" cy="${y}" r="4.6" fill="${["#ffd978", "#f4a8c0", "#bfe3f4", "#fff4a8"][i % 4]}"/>`).join("")}`,
 };
-// Halo de nuit autour des lumières
+// Halo de nuit autour des lumières (mêmes coordonnées que le groupe du château)
 const GLOW = {
-  "lights-lanterns": [[352, 372], [528, 410], [300, 340]],
-  "lights-torches": [[382, 348], [446, 344]],
-  "lights-fairy": [[427, 280]],
+  "lights-lanterns": [[362, 420], [498, 420], [318, 372], [542, 372]],
+  "lights-torches": [[386, 350], [474, 350]],
+  "lights-fairy": [[430, 290]],
 };
 // ───────── Météo ─────────
 let STILL = false;
@@ -212,7 +221,7 @@ const FLY = {
   "creature-fairy": ["c-orbit", 470, 170],
 };
 // ───────── Scène ─────────
-const shine = (x, y) => `<circle class="c-twinkle" cx="${x}" cy="${y}" r="2.4" fill="#fff"/>`;
+const SHIFT = "translate(0 -28)";
 export function castleSvg(rpg, id = "kingdom", opts = {}) {
   const c = rpg.castle || {},
     phase = phases.includes(opts.time) ? opts.time : phaseNow(),
@@ -221,9 +230,8 @@ export function castleSvg(rpg, id = "kingdom", opts = {}) {
     [roof, dark] = roofColors[c.roof] || defaultRoof,
     w = WALLS[c.walls] || WALLS.default,
     style = c.towers || "",
-    winFill = night ? "#ffd978" : "#728890",
-    t = (x, y, s) => tower(x, y, s, { w, roof, dark, style, flag: c.flags || false, winFill });
-  const sky = castleExtraFragment(c.sky),
+    t = (x, y, s) => tower(x, y, s, { w, roof, dark, style, flag: c.flags || false }),
+    sky = castleExtraFragment(c.sky),
     ground = castleExtraFragment(c.ground),
     cre = CREATURES[c.creature]
       ? `<g class="c-creature ${FLY[c.creature][0]}"><g transform="translate(${FLY[c.creature][1]} ${FLY[c.creature][2]})">${CREATURES[c.creature]()}</g></g>`
@@ -244,48 +252,45 @@ export function castleSvg(rpg, id = "kingdom", opts = {}) {
     cloudFill = phase === "night" ? "#8f95c8" : phase === "dusk" ? "#ffe4d0" : "#fff",
     clouds = `<g fill="${cloudFill}" opacity=".6"><g class="c-cloud c1"><ellipse cx="164" cy="97" rx="71" ry="17"/><ellipse cx="198" cy="82" rx="39" ry="22"/></g><g class="c-cloud c2"><ellipse cx="605" cy="62" rx="55" ry="14"/><ellipse cx="630" cy="50" rx="28" ry="15"/></g><g class="c-cloud c3"><ellipse cx="420" cy="140" rx="48" ry="12"/></g></g>`,
     glows = night
-      ? (GLOW[c.lights] || []).map(([x, y]) => `<circle class="c-glow" cx="${x}" cy="${y}" r="34" fill="#ffe9a0" opacity=".2"/>`).join("")
+      ? (GLOW[c.lights] || []).map(([x, y]) => `<circle class="c-glow" cx="${x}" cy="${y}" r="38" fill="#ffe9a0" opacity=".22"/>`).join("")
       : "",
     pet = opts.pet && petIcon(opts.pet)
-      ? `<g class="c-walk"><g transform="translate(330 400) scale(.62)">${petIcon(opts.pet).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g></g>`
-      : "";
-  return `<svg class="castle-art castle-${phase}" viewBox="0 0 860 590" role="img" aria-label="Ton château personnalisable en perspective"><defs><linearGradient id="${id}-sky" x2="0" y2="1"><stop stop-color="${sk.top}"/><stop offset="1" stop-color="${sk.bottom}"/></linearGradient><linearGradient id="${id}-land" x2="0" y2="1"><stop stop-color="#bfd6a0"/><stop offset="1" stop-color="#89af87"/></linearGradient><filter id="${id}-shadow"><feGaussianBlur stdDeviation="12"/></filter></defs><rect width="860" height="590" rx="30" fill="url(#${id}-sky)"/>${stars}${body}${clouds}${sky}<ellipse cx="438" cy="506" rx="275" ry="35" fill="#66817b33" filter="url(#${id}-shadow)"/><path d="M130 360Q430 190 744 351v52Q432 604 130 409Z" fill="#a5aa85"/><path d="M130 360Q430 190 744 351Q432 557 130 360" fill="url(#${id}-land)"/><path d="M163 396q270 154 544-10" fill="none" stroke="#d2d8ac" stroke-width="9"/>${(PATHS[c.path] || PATHS.default)()}<g fill="#4e725c" opacity=".18"><ellipse cx="422" cy="359" rx="169" ry="46"/></g>${ground}${MOATS[c.moat] ? MOATS[c.moat]() : ""}<path d="M301 201 443 154 569 221v135l-142 58-126-71Z" fill="${w[0]}"/><path d="m443 154 126 67v135l-142 58V233Z" fill="${w[1]}"/><path d="M301 201 443 154 569 221 427 273Z" fill="${w[2]}"/><path d="m285 200 141-119 159 132-158 59Z" fill="${roof}"/><path d="m426 81 159 132-158 59Z" fill="${dark}"/>${windows}${t(285, 244, 0.9)}${t(577, 270, 1)}${t(424, 169, 0.85)}${door}<g stroke="#819b70" stroke-width="4" fill="#779d76"><path d="M214 369v-57m-27 20q-5-52 30-52 37 6 24 46-18 27-54 6M669 360v-56m-29 14q-4-55 30-52 36 3 28 49-24 31-58 3"/></g>${c.garden ? '<g fill="#668e71"><ellipse cx="255" cy="417" rx="35" ry="40"/><ellipse cx="616" cy="409" rx="35" ry="43"/></g><g fill="#e8a6ae"><circle cx="243" cy="405" r="8"/><circle cx="268" cy="426" r="9"/><circle cx="605" cy="398" r="8"/><circle cx="628" cy="421" r="8"/></g>' : ""}${c.fountain ? `<ellipse cx="470" cy="447" rx="48" ry="21" fill="#e9dfcb" stroke="#bdb39e" stroke-width="5"/><ellipse cx="470" cy="444" rx="35" ry="13" fill="#85c7d1"/><path d="M470 445v-43m-24 8q24 22 48 0" fill="none" stroke="#ede1c7" stroke-width="8"/><path d="M470 402q-24-30-28 3m28-3q24-30 28 3" fill="none" stroke="#91cbd4" stroke-width="3"/><g class="c-drop"><circle cx="470" cy="412" r="3.4" fill="#bfe8f0"/></g><g class="c-drop d2"><circle cx="455" cy="418" r="3" fill="#bfe8f0"/></g><g class="c-drop d3"><circle cx="486" cy="418" r="3" fill="#bfe8f0"/></g>` : ""}${LIGHTS[c.lights] ? LIGHTS[c.lights]() : ""}${sky && c.sky === "sky-rainbow" ? shine(430, 100) : ""}<g fill="#f7e1a1"><circle class="c-twinkle" cx="191" cy="367" r="4"/><circle class="c-twinkle" style="animation-delay:-.7s" cx="315" cy="437" r="5"/><circle class="c-twinkle" style="animation-delay:-1.3s" cx="580" cy="434" r="4"/></g>${night ? `<rect width="860" height="590" rx="30" fill="#1b2150" opacity="${sk.dim}"/>` : ""}${litWindows}${cre}${glows}${WEATHER[c.weather] ? `<g class="c-weather">${WEATHER[c.weather]()}</g>` : ""}${pet}</svg>`;
+      ? `<g class="c-walk"><g transform="translate(250 392) scale(.62)">${petIcon(opts.pet).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g></g>`
+      : "",
+    merlons = Array.from({ length: 7 }, (_, i) => `<rect x="${HALL.x + i * 28}" y="${HALL.y - 16}" width="17" height="18" rx="2" fill="${w[0]}" stroke="${w[4]}" stroke-width="2"/>`).join(""),
+    hall = `<rect x="${HALL.x}" y="${HALL.y}" width="${HALL.w}" height="${HALL.base - HALL.y}" fill="${w[0]}"/><rect x="${HALL.x + HALL.w - 26}" y="${HALL.y}" width="26" height="${HALL.base - HALL.y}" fill="${w[1]}" opacity=".7"/>${merlons}<rect x="${HALL.x}" y="${HALL.y}" width="${HALL.w}" height="9" fill="${roof}"/><path d="M${HALL.x + 8} 292h38m34 0h60m34 0h40M${HALL.x + 24} 372h40m88 0h40m-170-38h24m112 0h24" stroke="${w[6]}" stroke-width="2" stroke-linecap="round" opacity=".7"/>`;
+  return `<svg class="castle-art castle-${phase}" viewBox="0 0 860 590" role="img" aria-label="Ton château personnalisable"><defs><linearGradient id="${id}-sky" x2="0" y2="1"><stop stop-color="${sk.top}"/><stop offset="1" stop-color="${sk.bottom}"/></linearGradient><linearGradient id="${id}-land" x2="0" y2="1"><stop stop-color="#bfd6a0"/><stop offset="1" stop-color="#89af87"/></linearGradient><filter id="${id}-shadow"><feGaussianBlur stdDeviation="12"/></filter></defs><rect width="860" height="590" rx="30" fill="url(#${id}-sky)"/>${stars}${body}${clouds}${sky}<ellipse cx="438" cy="506" rx="275" ry="35" fill="#66817b33" filter="url(#${id}-shadow)"/><path d="M130 360Q430 190 744 351v52Q432 604 130 409Z" fill="#a5aa85"/><path d="M130 360Q430 190 744 351Q432 557 130 360" fill="url(#${id}-land)"/><path d="M163 396q270 154 544-10" fill="none" stroke="#d2d8ac" stroke-width="9"/>${ground}<g stroke="#819b70" stroke-width="4" fill="#779d76"><path d="M214 369v-57m-27 20q-5-52 30-52 37 6 24 46-18 27-54 6M669 360v-56m-29 14q-4-55 30-52 36 3 28 49-24 31-58 3"/></g><g transform="${SHIFT}"><ellipse cx="430" cy="404" rx="226" ry="26" fill="#4e725c" opacity=".2"/>${(PATHS[c.path] || PATHS.default)()}${MOATS[c.moat] ? MOATS[c.moat]() : ""}${t(430, 160, 0.95)}${hall}${windows}${door}${t(292, 250, 1.05)}${t(568, 250, 1.05)}${LIGHTS[c.lights] ? LIGHTS[c.lights]() : ""}${night ? `<rect x="-20" y="60" width="900" height="560" fill="#1b2150" opacity="${sk.dim}"/>${litWindows}${glows}` : ""}</g>${c.garden ? '<g fill="#668e71"><ellipse cx="236" cy="420" rx="32" ry="36"/><ellipse cx="632" cy="418" rx="32" ry="38"/></g><g fill="#e8a6ae"><circle cx="226" cy="408" r="8"/><circle cx="248" cy="428" r="9"/><circle cx="622" cy="406" r="8"/><circle cx="644" cy="428" r="8"/></g>' : ""}${c.fountain ? `<g transform="translate(120 -14)"><ellipse cx="470" cy="447" rx="48" ry="21" fill="#e9dfcb" stroke="#bdb39e" stroke-width="5"/><ellipse cx="470" cy="444" rx="35" ry="13" fill="#85c7d1"/><path d="M470 445v-43m-24 8q24 22 48 0" fill="none" stroke="#ede1c7" stroke-width="8"/><path d="M470 402q-24-30-28 3m28-3q24-30 28 3" fill="none" stroke="#91cbd4" stroke-width="3"/><g class="c-drop"><circle cx="470" cy="412" r="3.4" fill="#bfe8f0"/></g><g class="c-drop d2"><circle cx="455" cy="418" r="3" fill="#bfe8f0"/></g><g class="c-drop d3"><circle cx="486" cy="418" r="3" fill="#bfe8f0"/></g></g>` : ""}<g fill="#f7e1a1"><circle class="c-twinkle" cx="191" cy="367" r="4"/><circle class="c-twinkle" style="animation-delay:-.7s" cx="315" cy="460" r="5"/><circle class="c-twinkle" style="animation-delay:-1.3s" cx="590" cy="450" r="4"/></g>${night ? `<rect width="860" height="590" rx="30" fill="#1b2150" opacity="${sk.dim * 0.5}"/>` : ""}${cre}${WEATHER[c.weather] ? `<g class="c-weather">${WEATHER[c.weather]()}</g>` : ""}${pet}</svg>`;
 }
 // ───────── Icônes de la boutique (recadrage de la scène, sans animation) ─────────
+// Repères de recadrage en coordonnées de la scène (le château y est remonté de 28 px).
 const VIEW = {};
 const bg = {};
 const sample = (slot, id) => ({ castle: { [slot]: id } });
-for (const [slot, table] of [
-  ["walls", WALLS],
-  ["towers", { "towers-square": 1, "towers-spire": 1, "towers-onion": 1 }],
-]) {
-  for (const id of Object.keys(table)) if (id !== "default") {
-    VIEW[id] = [520, 150, 120, 250];
-    bg[id] = "#e8edf7";
-  }
+for (const id of [...Object.keys(WALLS).filter((k) => k !== "default"), "towers-square", "towers-spire", "towers-onion"]) {
+  VIEW[id] = [490, 110, 160, 270];
+  bg[id] = "#e8edf7";
 }
-for (const id of Object.keys(DOORS)) if (id !== "default") (VIEW[id] = [372, 300, 90, 120]), (bg[id] = WALLS.default[0]);
-for (const id of Object.keys(WINDOWS)) if (id !== "default") (VIEW[id] = [326, 226, 210, 100]), (bg[id] = WALLS.default[0]);
-for (const id of Object.keys(MOATS)) (VIEW[id] = [250, 340, 380, 125]), (bg[id] = "#bfd6a0");
-for (const id of Object.keys(PATHS)) if (id !== "default") (VIEW[id] = [310, 340, 250, 140]), (bg[id] = "#bfd6a0");
-Object.assign(VIEW, { "lights-lanterns": [280, 340, 270, 130], "lights-torches": [350, 296, 130, 90], "lights-fairy": [290, 236, 310, 80] });
-Object.assign(bg, { "lights-lanterns": "#bfd6a0", "lights-torches": "#d2bc97", "lights-fairy": "#e8edf7" });
+for (const id of Object.keys(DOORS)) if (id !== "default") (VIEW[id] = [380, 290, 100, 100]), (bg[id] = WALLS.default[0]);
+for (const id of Object.keys(WINDOWS)) if (id !== "default") (VIEW[id] = [336, 150, 190, 200]), (bg[id] = WALLS.default[0]);
+for (const id of Object.keys(MOATS)) (VIEW[id] = [240, 340, 380, 120]), (bg[id] = "#bfd6a0");
+for (const id of Object.keys(PATHS)) if (id !== "default") (VIEW[id] = [320, 350, 220, 130]), (bg[id] = "#bfd6a0");
+Object.assign(VIEW, { "lights-lanterns": [290, 340, 270, 130], "lights-torches": [350, 270, 160, 120], "lights-fairy": [270, 210, 320, 100] });
+Object.assign(bg, { "lights-lanterns": "#bfd6a0", "lights-torches": WALLS.default[0], "lights-fairy": "#e8edf7" });
 for (const id of Object.keys(WEATHER)) (VIEW[id] = [110, 40, 400, 250]), (bg[id] = id === "weather-fireflies" ? "#4b5588" : "#dbe6f2");
 for (const id of Object.keys(CREATURES)) {
   const [, x, y] = FLY[id];
   VIEW[id] = [x - 6, y - 10, 110, 90];
   bg[id] = "#e8edf7";
 }
-for (const id of ["flags-rose", "flags-blue", "flags-stars"]) (VIEW[id] = [545, 100, 100, 110]), (bg[id] = "#e8edf7");
+for (const id of ["flags-rose", "flags-blue", "flags-stars"]) (VIEW[id] = [520, 80, 110, 120]), (bg[id] = "#e8edf7");
 export const castleSceneItems = Object.keys(VIEW);
 export function castleSceneIcon(id) {
   const v = VIEW[id];
   if (!v) return null;
-  const slot = id.split("-")[0] === "flags" ? "flags" : id.split("-")[0];
+  const slot = id.split("-")[0];
   STILL = true;
   const svg = castleSvg(sample(slot, id), "ico" + id.replace(/[^a-z]/g, ""), { time: id === "weather-fireflies" ? "night" : "day" });
   STILL = false;
-  // On garde le dessin complet mais on le recadre ; les halos de nuit et animations sont évités (jour).
   return svg
     .replace(/<ellipse cx="438" cy="506"[^>]*filter="[^"]*"\/>/, "")
     .replace(/^<svg class="castle-art castle-\w+" viewBox="[^"]+" role="img" aria-label="[^"]*">/, `<svg viewBox="${v.join(" ")}" class="item-art castle-icon castle-icon-still" aria-hidden="true" focusable="false">`)

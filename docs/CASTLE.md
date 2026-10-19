@@ -16,3 +16,6 @@ Toits (couleurs), **murs** (8 matières), **tours** (cône, créneaux, flèche, 
 **Dessin** : source unique — l'icône de la boutique est un recadrage de la même scène (figée). Aucun identifiant SVG hors dégradés préfixés.
 
 Limites : dessin fait à la main, non vérifié sur une vraie tablette ; la scène complète est redessinée à chaque changement (rapide, mais à surveiller sur une tablette très ancienne).
+
+## Géométrie (v0.11.1)
+Le château est dessiné de face et symétrique : salle centrale à créneaux, tour haute au centre, deux tours latérales, porte voûtée au milieu. Les cinq fenêtres sont des arcades placées sur les murs (liste `WSPOTS` dans `castle-scene.js`), identiques pour tous les styles de fenêtres. Douves, pont-levis, chemin et lumières sont alignés sur la porte.
