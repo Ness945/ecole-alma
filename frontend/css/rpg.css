@@ -1137,3 +1137,255 @@ body {
   width: 220px;
   height: auto;
 }
+
+@media (pointer: coarse) and (min-width: 651px) and (max-width: 1400px) {
+  .topbar {
+    height: auto;
+    min-height: 100px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+  }
+}
+
+/* ───────── Le Grand Livre des Lucioles ───────── */
+.book-head h2 {
+  margin: 4px 0 6px;
+}
+.book-progress {
+  margin: 14px 0 22px;
+}
+.book-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.book-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  background: #fff;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 0 #e8e2ee;
+}
+.book-tab > span {
+  font-size: 30px;
+}
+.book-tab strong {
+  font-size: 14px;
+}
+.book-tab small {
+  color: #7c8975;
+  font-size: 12px;
+}
+.book-tab.active {
+  border-color: #9180ae;
+  background: #f1eaf7;
+}
+.book-tab.complete small {
+  color: #4f8a5d;
+  font-weight: 700;
+}
+.book-intro p:last-child {
+  margin-bottom: 0;
+}
+.chapter-list {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.chapter-card {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+  background: #fffdfb;
+  border: 1px solid #e7dfea;
+  border-radius: 20px;
+}
+.chapter-card h3 {
+  margin: 2px 0;
+  font-size: 18px;
+}
+.chapter-card .eyebrow {
+  margin: 0;
+  font-size: 11px;
+}
+.chapter-card p {
+  margin: 4px 0 0;
+}
+.chapter-card.featured {
+  background: #f1eaf7;
+  border-color: #9180ae;
+  padding: 22px 24px;
+}
+.chapter-num {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9e1f1;
+  color: #5d4a80;
+  font-weight: 800;
+}
+.chapter-new {
+  color: #9b6b1f;
+  font-weight: 800;
+}
+.book-journal {
+  margin: 18px 0;
+  color: #6d6a78;
+}
+.book-journal summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.book-journal ol {
+  columns: 2;
+  margin: 8px 0 0;
+  padding-left: 40px;
+}
+.chapter-skill {
+  margin: 20px 0;
+  padding: 18px 22px;
+  background: #f4f0e6;
+  border-radius: 18px;
+}
+.chapter-skill h3 {
+  margin: 2px 0 6px;
+}
+.chapter-text {
+  font-size: 1.1em;
+}
+.prep-advice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.chapter-finish .notice {
+  margin: 14px auto;
+  max-width: 520px;
+}
+@media (max-width: 650px) {
+  .book-tabs {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .book-tab {
+    padding: 10px 2px;
+  }
+  .book-tab strong {
+    font-size: 11px;
+  }
+  .chapter-card {
+    grid-template-columns: 40px 1fr;
+  }
+  .chapter-card button {
+    grid-column: 1 / -1;
+  }
+  .book-journal ol {
+    columns: 1;
+  }
+}
+
+/* ───────── Jardin extensible et compagnons ───────── */
+.garden-side {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+.plots {
+  min-height: 0;
+}
+.plots button {
+  position: relative;
+}
+.plots .plot {
+  border-style: solid;
+  border-color: #b7c19b;
+  background: #f7efd9;
+}
+.plots .plot.selected {
+  outline: 3px solid #9180ae;
+  outline-offset: 2px;
+}
+.plots .plot.lv1 {
+  background: #fbf1d4;
+  border-color: #e7bf6a;
+}
+.plots .plot.lv2 {
+  background: radial-gradient(circle, #fff8cf 20%, #f6dfa0 100%);
+  border-color: #dfa93e;
+  box-shadow: 0 0 14px #f3d27a;
+}
+.plant-lv1 {
+  filter: drop-shadow(0 0 6px #f3d27a);
+}
+.plant-lv2 {
+  filter: drop-shadow(0 0 10px #f0b93e);
+  font-size: 1.15em;
+}
+.plant-star {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 16px;
+  font-style: normal;
+}
+.garden-pet {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.pet-art {
+  width: 74px;
+  height: 74px;
+  display: block;
+}
+.garden-pet .pet-art {
+  width: 90px;
+  height: 90px;
+}
+.shop-item-art .pet-art {
+  width: 66px;
+  height: 66px;
+}
+.pet-emoji .pet-art {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+}
+.shop-tile.locked {
+  opacity: 0.65;
+}
+.plant-care h2 {
+  margin-top: 0;
+}
+.garden-expand p {
+  margin-top: 0;
+}
+.shop.rare {
+  grid-template-columns: 1fr 1fr;
+}
+.shop.rare button {
+  padding: 10px;
+  font-size: 14px;
+}
+@media (max-width: 650px) {
+  .shop.rare {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 900px) {
+  .garden-layout {
+    grid-template-columns: 1fr;
+  }
+  .plots {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

@@ -5,13 +5,14 @@ import {
   preview,
   itemArt,
   avatarSvg,
+  petIcon,
   castleSvg,
   skins,
   hairs,
   styles,
 } from "./rpg.js";
 import { subjects } from "./lessons.js";
-import { bridgeCount } from "./adventure.js";
+import { storyTeaser } from "./story-ui.js";
 const esc = (x) =>
   String(x).replace(
     /[&<>"']/g,
@@ -23,8 +24,7 @@ const esc = (x) =>
 const btn = (label, action, cls = "", extra = "") =>
   `<button data-action="${action}" class="${cls}" ${extra}>${label}</button>`;
 export function homeView(state) {
-  const count = bridgeCount(state);
-  return `<main class="rpg-home"><div class="rpg-welcome"><div><p class="eyebrow">TON HISTOIRE COMMENCE ICI</p><h1>Bienvenue dans ton royaume,<br><em>${esc(state.name)}.</em></h1><p>Un petit défi. Un nouveau pouvoir. Un monde à toi.</p></div><span class="level-badge">✦ ${state.completed.length} aventure${state.completed.length > 1 ? "s" : ""}<small>À ton rythme, toujours.</small></span></div><div class="rpg-hero"><section class="rpg-world" aria-label="Ton royaume personnalisable">${castleSvg(state.rpg, "home")}<div class="island-label">✦ LE DOMAINE DES LUCIOLES</div>${btn("🏰 Décorer mon château", "castle", "island-link castle-link")}${btn("🌱 Mon jardin", "garden", "island-link garden-link")}<button class="hero-girl" data-action="avatar" aria-label="Habiller mon aventurière">${avatarSvg(state.rpg, "Ton aventurière", { pet: state.pet })}</button><div class="world-caption">Ton royaume grandit avec tes découvertes.</div></section><aside class="quest-aside"><div class="quest-luna">🦄 <span>LUNA<small>Ta compagne d’aventure</small></span></div><h2>Où partons-nous<br>aujourd’hui ?</h2><p>Des nombres à explorer, des mots à apprivoiser… Choisis ton prochain petit pouvoir.</p>${btn("Choisir ma mission →", "missions", "primary mission-choice")}${state.session ? btn("Reprendre ma mission →", "resume", "secondary") : btn("Ma mission →", "start", "quiet")}<div class="daily-reward"><span>🪙</span><div><strong>10 pièces par mission</strong><small>Pour choisir tes trésors à la boutique.</small></div></div></aside></div><nav class="rpg-shortcuts" aria-label="Les lieux de ton royaume">${[
+  return `<main class="rpg-home"><div class="rpg-welcome"><div><p class="eyebrow">TON HISTOIRE COMMENCE ICI</p><h1>Bienvenue dans ton royaume,<br><em>${esc(state.name)}.</em></h1><p>Un petit défi. Un nouveau pouvoir. Un monde à toi.</p></div><span class="level-badge">✦ ${state.completed.length} aventure${state.completed.length > 1 ? "s" : ""}<small>À ton rythme, toujours.</small></span></div><div class="rpg-hero"><section class="rpg-world" aria-label="Ton royaume personnalisable">${castleSvg(state.rpg, "home")}<div class="island-label">✦ LE DOMAINE DES LUCIOLES</div>${btn("🏰 Décorer mon château", "castle", "island-link castle-link")}${btn("🌱 Mon jardin", "garden", "island-link garden-link")}<button class="hero-girl" data-action="avatar" aria-label="Habiller mon aventurière">${avatarSvg(state.rpg, "Ton aventurière", { pet: state.pet })}</button><div class="world-caption">Ton royaume grandit avec tes découvertes.</div></section><aside class="quest-aside"><div class="quest-luna">🦄 <span>LUNA<small>Ta compagne d’aventure</small></span></div><h2>Où partons-nous<br>aujourd’hui ?</h2><p>Des nombres à explorer, des mots à apprivoiser… Choisis ton prochain petit pouvoir.</p>${btn("Choisir ma mission →", "missions", "primary mission-choice")}${state.session ? btn("Reprendre ma mission →", "resume", "secondary") : btn("Laisser Luna choisir", "start", "quiet")}<div class="daily-reward"><span>🪙</span><div><strong>10 pièces par mission</strong><small>Pour choisir tes trésors à la boutique.</small></div></div></aside></div><nav class="rpg-shortcuts" aria-label="Les lieux de ton royaume">${[
     ["🗺️", "Mes missions", "Une matière, un petit pouvoir", "missions"],
     ["🎀", "Mon aventurière", "Tenues, coiffure et accessoires", "avatar"],
     ["🏰", "Mon château", "Des détails qui changent tout", "castle"],
@@ -38,7 +38,7 @@ export function homeView(state) {
     )
     .join(
       "",
-    )}</nav><section class="story-strip" data-bridge-count="${count}"><span class="story-icon">🌉</span><div><p class="eyebrow">LA GRANDE AVENTURE · ${count}/3</p><h2>${count === 3 ? "La clairière du renard" : "Le pont des petits pouvoirs"}</h2><p>${count === 3 ? "Le chemin est ouvert. Ton nouvel ami t’attend." : "Trois parties à construire pour découvrir un nouveau lieu."}</p></div>${btn(count === 3 ? "Traverser le pont →" : "Partir avec Luna →", count === 3 ? "clearing" : "bridge", "secondary")}</section></main>`;
+    )}</nav>${storyTeaser(state)}</main>`;
 }
 export function pickerView(state, subject) {
   const info = subjects.find((s) => s.name === subject) || subjects[0];
@@ -67,12 +67,35 @@ const SLOT_GROUPS = {
     ["flags", "Bannières"],
     ["garden", "Jardin"],
     ["fountain", "Fontaine"],
+    ["sky", "Dans le ciel"],
+    ["ground", "Autour du château"],
   ],
 };
+function petCard(state, pet) {
+  const own = state.inventory.includes(pet.id),
+    worn = state.pet === pet.id;
+  return `<div class="purchase-card"><h2>${pet.name}</h2><p>${own ? (worn ? "Il te suit partout dans ton royaume." : "Il est à toi : il t’attend dans ta collection.") : pet.price ? `${pet.price} pièces pour l’adopter.` : "Un cadeau de mission : il t’attend au bout d’une aventure."}</p>${own ? (worn ? btn("Le laisser se reposer", "pet-unequip", "secondary", `data-id="${pet.id}"`) : btn("✓ Le prendre avec moi", "pet-equip", "primary", `data-id="${pet.id}"`)) : pet.price ? btn(state.rpg.coins >= pet.price ? `Adopter · ${pet.price} 🪙` : `Il manque ${pet.price - state.rpg.coins} pièces`, "pet-adopt", "primary", `data-id="${pet.id}" ${state.rpg.coins < pet.price ? "disabled" : ""}`) : ""} ${btn("Fermer l’aperçu", "preview-clear", "quiet small")}</div>`;
+}
+function companionShelf(state, selected) {
+  return `<section class="shop-group companions" aria-label="Compagnons"><h3>Compagnons</h3><div class="shop-grid">${items
+    .filter((i) => i.kind === "pet")
+    .map((i) => {
+      const own = state.inventory.includes(i.id);
+      return btn(
+        `<span class="shop-item-art">${petIcon(i.id)}</span><strong>${i.name}</strong><small>${state.pet === i.id ? "✓ Avec toi" : own ? "Dans ta collection" : i.price ? i.price + " 🪙" : "Cadeau de mission"}</small>`,
+        "rpg-preview",
+        `shop-tile ${selected === i.id ? "selected" : ""} ${own || i.price ? "" : "locked"}`,
+        `data-id="${i.id}"`,
+      );
+    })
+    .join("")}</div></section>`;
+}
 export function customizationView(state, kind, selected) {
-  const chosen = shop.find((i) => i.id === selected && i.kind === kind),
+  const chosenPet =
+      kind === "avatar" ? items.find((i) => i.id === selected && i.kind === "pet") : null,
+    chosen = shop.find((i) => i.id === selected && i.kind === kind),
     r = chosen ? preview(state.rpg, chosen.id) : state.rpg;
-  return `<div class="studio"><section class="studio-stage ${kind === "avatar" ? "dressing-stage" : "castle-stage"}"><div class="studio-label">${chosen ? "APERÇU · " + chosen.name : kind === "avatar" ? "TON AVENTURIÈRE, TON UNIVERS" : "TON CHÂTEAU, TON UNIVERS"}</div>${kind === "avatar" ? avatarSvg(r, "Ton aventurière", { pet: state.pet }) : castleSvg(r, "studio")}<div class="studio-caption">${chosen ? "Essaie librement. Tes pièces ne sont dépensées que si tu achètes." : "Les objets équipés apparaissent aussi dans ton royaume."}</div></section><section class="studio-controls"><div class="wallet"><span>🪙 ${state.rpg.coins} pièces</span><small>Gagnées dans tes missions · aucun achat réel</small></div>${chosen ? `<div class="purchase-card"><h2>${chosen.name}</h2><p>${state.rpg.owned.includes(chosen.id) ? (state.rpg[kind === "avatar" ? "equipped" : "castle"][chosen.slot] === chosen.id ? "Tu le portes en ce moment." : "Cet objet est à toi.") : `${chosen.price} pièces pour l’ajouter à ta collection.`}</p>${state.rpg.owned.includes(chosen.id) ? (state.rpg[kind === "avatar" ? "equipped" : "castle"][chosen.slot] === chosen.id ? btn("Retirer cet objet", "rpg-unequip", "secondary", `data-id="${chosen.id}"`) : btn("✓ Équiper", "rpg-equip", "primary", `data-id="${chosen.id}"`)) : btn(state.rpg.coins >= chosen.price ? `Acheter · ${chosen.price} 🪙` : `Il manque ${chosen.price - state.rpg.coins} pièces`, "rpg-buy", "primary", `data-id="${chosen.id}" ${state.rpg.coins < chosen.price ? "disabled" : ""}`)} ${btn("Fermer l’aperçu", "preview-clear", "quiet small")}</div>` : `<h2>${kind === "avatar" ? "Le dressing de l’aventurière" : "L’atelier du château"}</h2><p>Touche un objet pour le voir sur ${kind === "avatar" ? "ton personnage" : "ton château"}.</p>`}${kind === "avatar" ? `<div class="appearance"><h3>Mon apparence</h3><p class="appearance-label" id="lbl-skin">Teint</p><div class="swatches" role="group" aria-labelledby="lbl-skin">${skins.map((c, i) => btn(`<span style="background:${c}"></span>`, "look", state.rpg.look.skin === i ? "selected" : "", `data-part="skin" data-index="${i}" aria-label="Teint ${i + 1}" aria-pressed="${state.rpg.look.skin === i}"`)).join("")}</div><p class="appearance-label" id="lbl-hair">Couleur des cheveux</p><div class="swatches" role="group" aria-labelledby="lbl-hair">${hairs.map((c, i) => btn(`<span style="background:${c}"></span>`, "look", state.rpg.look.hair === i ? "selected" : "", `data-part="hair" data-index="${i}" aria-label="Cheveux ${i + 1}" aria-pressed="${state.rpg.look.hair === i}"`)).join("")}</div><p class="appearance-label" id="lbl-style">Coiffure</p><div class="styles" role="group" aria-labelledby="lbl-style">${styles.map((st) => btn(st.name, "look", `style-choice ${(state.rpg.look.style ?? 0) === st.id ? "selected" : ""}`, `data-part="style" data-index="${st.id}" aria-pressed="${(state.rpg.look.style ?? 0) === st.id}"`)).join("")}</div></div>` : ""}${btn(kind === "avatar" ? "Remettre ma tenue de départ" : "Revenir au château de départ", "rpg-reset", "quiet small", `data-kind="${kind}"`)}<p class="sub">Tous tes objets restent dans ta collection.</p></section></div><h2 class="shop-heading">${kind === "avatar" ? "La boutique des accessoires" : "Les décorations du royaume"}</h2>${SLOT_GROUPS[kind]
+  return `<div class="studio"><section class="studio-stage ${kind === "avatar" ? "dressing-stage" : "castle-stage"}"><div class="studio-label">${chosenPet ? "APERÇU · " + chosenPet.name : chosen ? "APERÇU · " + chosen.name : kind === "avatar" ? "TON AVENTURIÈRE, TON UNIVERS" : "TON CHÂTEAU, TON UNIVERS"}</div>${kind === "avatar" ? avatarSvg(r, "Ton aventurière", { pet: chosenPet ? chosenPet.id : state.pet }) : castleSvg(r, "studio")}<div class="studio-caption">${chosen ? "Essaie librement. Tes pièces ne sont dépensées que si tu achètes." : "Les objets équipés apparaissent aussi dans ton royaume."}</div></section><section class="studio-controls"><div class="wallet"><span>🪙 ${state.rpg.coins} pièces</span><small>Gagnées dans tes missions · aucun achat réel</small></div>${chosenPet ? petCard(state, chosenPet) : chosen ? `<div class="purchase-card"><h2>${chosen.name}</h2><p>${state.rpg.owned.includes(chosen.id) ? (state.rpg[kind === "avatar" ? "equipped" : "castle"][chosen.slot] === chosen.id ? "Tu le portes en ce moment." : "Cet objet est à toi.") : `${chosen.price} pièces pour l’ajouter à ta collection.`}</p>${state.rpg.owned.includes(chosen.id) ? (state.rpg[kind === "avatar" ? "equipped" : "castle"][chosen.slot] === chosen.id ? btn("Retirer cet objet", "rpg-unequip", "secondary", `data-id="${chosen.id}"`) : btn("✓ Équiper", "rpg-equip", "primary", `data-id="${chosen.id}"`)) : btn(state.rpg.coins >= chosen.price ? `Acheter · ${chosen.price} 🪙` : `Il manque ${chosen.price - state.rpg.coins} pièces`, "rpg-buy", "primary", `data-id="${chosen.id}" ${state.rpg.coins < chosen.price ? "disabled" : ""}`)} ${btn("Fermer l’aperçu", "preview-clear", "quiet small")}</div>` : `<h2>${kind === "avatar" ? "Le dressing de l’aventurière" : "L’atelier du château"}</h2><p>Touche un objet pour le voir sur ${kind === "avatar" ? "ton personnage" : "ton château"}.</p>`}${kind === "avatar" ? `<div class="appearance"><h3>Mon apparence</h3><p class="appearance-label" id="lbl-skin">Teint</p><div class="swatches" role="group" aria-labelledby="lbl-skin">${skins.map((c, i) => btn(`<span style="background:${c}"></span>`, "look", state.rpg.look.skin === i ? "selected" : "", `data-part="skin" data-index="${i}" aria-label="Teint ${i + 1}" aria-pressed="${state.rpg.look.skin === i}"`)).join("")}</div><p class="appearance-label" id="lbl-hair">Couleur des cheveux</p><div class="swatches" role="group" aria-labelledby="lbl-hair">${hairs.map((c, i) => btn(`<span style="background:${c}"></span>`, "look", state.rpg.look.hair === i ? "selected" : "", `data-part="hair" data-index="${i}" aria-label="Cheveux ${i + 1}" aria-pressed="${state.rpg.look.hair === i}"`)).join("")}</div><p class="appearance-label" id="lbl-style">Coiffure</p><div class="styles" role="group" aria-labelledby="lbl-style">${styles.map((st) => btn(st.name, "look", `style-choice ${(state.rpg.look.style ?? 0) === st.id ? "selected" : ""}`, `data-part="style" data-index="${st.id}" aria-pressed="${(state.rpg.look.style ?? 0) === st.id}"`)).join("")}</div></div>` : ""}${btn(kind === "avatar" ? "Remettre ma tenue de départ" : "Revenir au château de départ", "rpg-reset", "quiet small", `data-kind="${kind}"`)}<p class="sub">Tous tes objets restent dans ta collection.</p></section></div><h2 class="shop-heading">${kind === "avatar" ? "La boutique des accessoires" : "Les décorations du royaume"}</h2>${SLOT_GROUPS[kind]
     .map(([slot, title]) => {
       const list = shop.filter((i) => i.kind === kind && i.slot === slot);
       return `<section class="shop-group" aria-label="${title}"><h3>${title}</h3><div class="shop-grid">${list
@@ -88,5 +111,5 @@ export function customizationView(state, kind, selected) {
         })
         .join("")}</div></section>`;
     })
-    .join("")}`;
+    .join("")}${kind === "avatar" ? companionShelf(state, selected) : ""}`;
 }

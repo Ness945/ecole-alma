@@ -33,6 +33,14 @@ import {
   record,
   reward,
   plant,
+  expandGarden,
+  upgradePlant,
+  plantLevel,
+  nextGardenSize,
+  adopt,
+  EXPAND_COST,
+  UPGRADE_COST,
+  PLANT_LEVELS,
   ready,
   mastered,
   evidence,
@@ -46,6 +54,7 @@ import {
   equip as equipRpg,
   unequip as unequipRpg,
   avatarSvg,
+  petIcon,
 } from "./rpg.js";
 import { homeView, pickerView, customizationView } from "./rpg-ui.js";
 import { subjects, lessonActivity } from "./lessons.js";
@@ -58,6 +67,14 @@ import {
   adventureExercise,
   bridgeScene,
 } from "./adventure.js";
+import {
+  chapterById,
+  chapterDone,
+  nextChapter,
+  createChapter,
+  BRIDGE_CHAPTERS,
+} from "./story.js";
+import { bookView, chapterView, chapterFinish } from "./story-ui.js";
 const app = document.querySelector("#app");
 const esc = (x) =>
   String(x).replace(
@@ -76,6 +93,9 @@ let state,
   parentUnlocked = false;
 let selectedSubject = "Mathématiques",
   lessonStep = 0,
+  selectedBook = null,
+  chapterId = null,
+  selectedPlot = null,
   previewItem = null;
 try {
   state = load(localStorage);
@@ -182,13 +202,13 @@ function clearing() {
     `<section class="clearing-scene"><span>🌲</span><span>🦊</span><span>🌳</span><h2>Tu as trouvé mon petit refuge !</h2></section><article class="panel"><p class="eyebrow">Un nouveau lieu dans ton royaume</p><h2>Le renard et les trois passages</h2><p class="passage">Le renard attendait près de la rivière. « Je voyais le château, mais je ne pouvais pas le rejoindre. »<br>Luna lui montre le pont : « Nous avons compté, cherché les mots et essayé encore. »<br>Le renard pose une petite graine dans sa main. « Alors, plantons une histoire ensemble. »</p>${button("🔊 Écouter l’histoire", "clearing-audio")} ${button("Retrouver mon jardin", "garden", "primary")}</article>`,
   );
 }
-function start(mode = "normal", id = null) {
+function start(mode = "normal", id = null, count = 5) {
   if (state.session) {
     route = "mission";
     render();
     return;
   }
-  const queue = id ? Array(5).fill(id) : plan(state, mode === "mini" ? 5 : 12);
+  const queue = id ? Array(count).fill(id) : plan(state, mode === "mini" ? 5 : 12);
   if (!queue.length) {
     route = "discover";
     render();
@@ -220,17 +240,20 @@ function lesson() {
   const skill = skills.find((s) => s.id === lessonId);
   const blocked =
     state.skills[lessonId].status === "seen" ? [] : missing(state, lessonId);
-  if (blocked.length) {
-    const first = skills.find((s) => s.id === blocked[0]);
-    return page(
-      skill.name,
-      `<section class="panel course-preparation"><div class="course-icon">${skill.icon}</div><p class="eyebrow">LE CHEMIN VERS UN NOUVEAU POUVOIR</p><h2>Préparons cette aventure ensemble.</h2><p>Pour découvrir « ${skill.name} », commençons par « ${first.name} ». Ce petit pouvoir va nous aider.</p>${button("Préparer : " + first.name, "lesson", "primary", `data-id="${first.id}"`)} ${button("Choisir une autre mission", "missions", "quiet")}</section>`,
-    );
-  }
+  const first = blocked.length ? skills.find((s) => s.id === blocked[0]) : null;
+  const seen = state.skills[lessonId].status === "seen";
   return page(
     skill.name,
-    `<div class="lesson-path"><span>1 · Je découvre</span><span>2 · J’essaie</span><span>3 · Je pars en mission</span></div><section class="panel ludic-lesson"><p class="eyebrow">${skill.icon} ${skill.subject} · AVEC LUNA</p><h2>Un petit pouvoir à comprendre.</h2><p class="intro-lesson">${skill.lesson}</p>${button("🔊 Écouter", "lesson-audio")}${lessonActivity(lessonId, lessonStep)}<div class="lesson-launch"><div><h3>Prête à essayer ?</h3><p>5 petits défis · des indices si tu en as besoin · 🪙 10 pièces</p></div>${button(state.session ? "Reprendre ma mission →" : "À moi d’essayer →", state.session ? "resume" : "lesson-start", "primary")}</div>${button("← Toutes les missions", "missions", "quiet")}</section>`,
+    `<div class="lesson-path"><span>1 · Je découvre</span><span>2 · J’essaie</span><span>3 · Je pars en mission</span></div><section class="panel ludic-lesson"><p class="eyebrow">${skill.icon} ${skill.subject} · AVEC LUNA</p><h2>Un petit pouvoir à comprendre.</h2>${first ? `<div class="notice prep-advice">🦄 Luna te conseille de commencer par « ${first.name} », mais c’est toi qui choisis. ${button("Préparer : " + first.name, "lesson", "small", `data-id="${first.id}"`)}</div>` : ""}<p class="intro-lesson">${skill.lesson}</p>${button("🔊 Écouter", "lesson-audio")}${lessonActivity(lessonId, lessonStep)}<div class="lesson-launch"><div><h3>Prête à essayer ?</h3><p>5 petits défis · des indices si tu en as besoin · 🪙 10 pièces</p></div>${button(state.session ? "Reprendre ma mission →" : "À moi d’essayer →", state.session ? "resume" : "lesson-start", "primary")}${seen && !state.session ? button("S’entraîner davantage →", "practice", "secondary", `data-id="${lessonId}"`) : ""}</div>${button("← Toutes les missions", "missions", "quiet")}</section>`,
   );
+}
+function bookPage() {
+  return page("Le Grand Livre des Lucioles", bookView(state, selectedBook || undefined));
+}
+function chapterPage() {
+  const c = chapterById(chapterId);
+  if (!c || chapterDone(state, c.n)) return bookPage();
+  return page(c.title, chapterView(state, c.n, lessonStep));
 }
 function mission() {
   const s = state.session;
@@ -272,7 +295,7 @@ function mission() {
     (state.history.slice(-3).length === 3 &&
       state.history.slice(-3).every((e) => e.skip || !e.correct)) ||
     Date.now() - s.started > 20 * 60000;
-  return `<main class="exercise">${s.adventure !== undefined ? `<div class="adventure-ribbon">🌉 ${stages[s.adventure].title} · ${bridgeCount(state)}/3 parties du pont</div>` : ""}<div class="row" style="justify-content:space-between">${button("← Faire une pause", "home", "quiet")}<span class="muted">${s.index + 1} / ${s.queue.length} petits défis</span></div><div class="progress" role="progressbar" aria-label="Mission" aria-valuemin="0" aria-valuemax="${s.queue.length}" aria-valuenow="${s.index}"><span style="width:${pct}%"></span></div><section class="panel"><p class="eyebrow">${skill.icon} ${skill.name}</p>${q.passage ? `<div class="passage">${q.passage}</div>` : ""}${q.guided ? `<div class="notice">🦄 On essaie ensemble. ${stages[s.adventure].lesson}</div>` : ""}<h2>${q.prompt}</h2>${button(q.audio ? "▶ Écouter le mot" : "🔊 Écouter la consigne", "read", "small")}${q.audio ? `<details><summary>Si le son ne fonctionne pas · aide adulte</summary><p>Mot à lire : <strong>${q.audio}</strong>. Utiliser cette aide ne valide pas une réussite autonome.</p>${button("Utiliser cette aide", "hint", "small")}</details>` : ""}${q.visual ? `<div class="visual">${q.visual}</div>` : ""}${input}${
+  return `<main class="exercise">${s.adventure !== undefined ? `<div class="adventure-ribbon">🌉 ${stages[s.adventure].title} · ${bridgeCount(state)}/3 parties du pont</div>` : s.chapter !== undefined ? `<div class="adventure-ribbon">📖 Chapitre ${s.chapter} · ${esc(chapterById(s.chapter).title)}</div>` : ""}<div class="row" style="justify-content:space-between">${button("← Faire une pause", "home", "quiet")}<span class="muted">${s.index + 1} / ${s.queue.length} petits défis</span></div><div class="progress" role="progressbar" aria-label="Mission" aria-valuemin="0" aria-valuemax="${s.queue.length}" aria-valuenow="${s.index}"><span style="width:${pct}%"></span></div><section class="panel"><p class="eyebrow">${skill.icon} ${skill.name}</p>${q.passage ? `<div class="passage">${q.passage}</div>` : ""}${q.guided ? `<div class="notice">🦄 On essaie ensemble. ${stages[s.adventure].lesson}</div>` : ""}<h2>${q.prompt}</h2>${button(q.audio ? "▶ Écouter le mot" : "🔊 Écouter la consigne", "read", "small")}${q.audio ? `<details><summary>Si le son ne fonctionne pas · aide adulte</summary><p>Mot à lire : <strong>${q.audio}</strong>. Utiliser cette aide ne valide pas une réussite autonome.</p>${button("Utiliser cette aide", "hint", "small")}</details>` : ""}${q.visual ? `<div class="visual">${q.visual}</div>` : ""}${input}${
     !s.answered
       ? `<fieldset class="confidence"><legend>Si tu veux, dis à Luna comment tu te sens.</legend>${[
           ["unsure", "🤔 Pas sûre"],
@@ -348,6 +371,8 @@ function next() {
   render();
 }
 function finish() {
+  if (state.session.chapter !== undefined)
+    return page("Chapitre terminé !", chapterFinish(state, state.session));
   if (state.session.adventure !== undefined) {
     const count = bridgeCount(state);
     return page(
@@ -357,23 +382,45 @@ function finish() {
   }
   return page(
     "Une aventure de plus !",
-    `<section class="panel celebration"><div class="emoji">🌟</div><h1>Ton royaume a grandi.</h1><p>Tu as pris le temps de chercher, d’essayer et d’apprendre.<br>Tu gagnes <strong>2 graines</strong> à planter dans ton jardin.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p class="sub">Les étoiles racontent tes aventures. Elles ne sont pas une note.</p><p>${button("Planter mes graines →", "finish", "primary")}</p></section>`,
+    `<section class="panel celebration"><div class="emoji">🌟</div><h1>Ton royaume a grandi.</h1><p>Tu as pris le temps de chercher, d’essayer et d’apprendre.<br>Tu gagnes <strong>2 graines</strong> à planter dans ton jardin.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p class="sub">Les étoiles racontent tes aventures. Elles ne sont pas une note.</p><p>${button("Planter mes graines →", "finish", "primary")}${new Set(state.session.queue).size === 1 ? " " + button("Encore des défis sur ce thème", "practice", "secondary", `data-id="${state.session.queue[0]}"`) : ""}</p></section>`,
   );
 }
 function garden() {
+  const size = state.garden.length,
+    next = nextGardenSize(state),
+    cost = EXPAND_COST[size],
+    sel = selectedPlot !== null && state.garden[selectedPlot] ? selectedPlot : null,
+    seedItems = items.filter((i) => i.kind === "garden" && !i.coins),
+    coinItems = items.filter((i) => i.kind === "garden" && i.coins);
+  const tile = (i, price) =>
+    button(
+      `<span class="emoji">${i.icon}</span><span>${i.name}<br><small>${price}</small></span>`,
+      "pick",
+      picked === i.id ? "selected" : "",
+      `data-id="${i.id}" aria-pressed="${picked === i.id}"`,
+    );
+  const plots = state.garden
+    .map((id, i) => {
+      if (!id)
+        return button("＋", "plant", "", `data-slot="${i}" aria-label="Parcelle libre ${i + 1}"`);
+      const lv = plantLevel(state, i);
+      return button(
+        `<span class="plant plant-lv${lv}">${item(id).icon}</span>${lv ? `<i class="plant-star" aria-hidden="true">${lv === 2 ? "🌟" : "✨"}</i>` : ""}`,
+        "plot-select",
+        `plot lv${lv} ${sel === i ? "selected" : ""}`,
+        `data-slot="${i}" aria-label="${item(id).name}, ${PLANT_LEVELS[lv].toLowerCase()}" aria-pressed="${sel === i}"`,
+      );
+    })
+    .join("");
+  let care = "";
+  if (sel !== null) {
+    const lv = plantLevel(state, sel),
+      up = UPGRADE_COST[lv];
+    care = `<section class="panel plant-care"><h2>${item(state.garden[sel]).icon} ${item(state.garden[sel]).name}</h2><p>${PLANT_LEVELS[lv]} · ${lv === 0 ? "elle peut fleurir" : lv === 1 ? "elle peut devenir magique" : "elle brille de mille feux"}</p>${up !== undefined ? button(state.rpg.coins >= up ? `${lv === 0 ? "Faire fleurir" : "Rendre magique"} · ${up} 🪙` : `Il manque ${up - state.rpg.coins} pièces`, "plant-upgrade", "primary", `data-slot="${sel}" ${state.rpg.coins < up ? "disabled" : ""}`) : '<p class="muted">Cette plante a atteint sa plus belle forme.</p>'} ${button("Fermer", "plot-close", "quiet small")}</section>`;
+  }
   return page(
     "Mon jardin magique",
-    `<p class="sub">Choisis une plante, puis touche une parcelle libre. Rien ne disparaît pendant tes pauses.</p><div class="garden-layout"><div class="plots">${state.garden.map((id, i) => button(id ? item(id).icon : "＋", "plant", "", `data-slot="${i}" aria-label="${id ? item(id).name : "Parcelle libre " + (i + 1)}" ${id ? "disabled" : ""}`)).join("")}</div><section class="panel"><h2>Une graine, une découverte.</h2><p>🌱 ${state.seeds} graines dans ta poche</p><div class="shop">${items
-      .filter((i) => i.kind === "garden")
-      .map((i) =>
-        button(
-          `<span class="emoji">${i.icon}</span><span>${i.name}<br><small>🌱 ${i.cost} graine${i.cost > 1 ? "s" : ""}</small></span>`,
-          "pick",
-          picked === i.id ? "selected" : "",
-          `data-id="${i.id}" aria-pressed="${picked === i.id}"`,
-        ),
-      )
-      .join("")}</div></section></div>`,
+    `<p class="sub">Touche une parcelle libre pour planter. Touche une plante pour la faire fleurir. Rien ne disparaît pendant tes pauses.</p><div class="garden-layout"><div><div class="plots" data-plots="${size}">${plots}</div>${state.pet ? `<div class="garden-pet">${petIcon(state.pet, "Ton compagnon se promène dans le jardin")}</div>` : ""}</div><div class="garden-side">${care}<section class="panel"><h2>Une graine, une découverte.</h2><p>🌱 ${state.seeds} graines dans ta poche · 🪙 ${state.rpg.coins} pièces</p><div class="shop">${seedItems.map((i) => tile(i, `🌱 ${i.cost} graine${i.cost > 1 ? "s" : ""}`)).join("")}</div></section><section class="panel"><h2>Les plantes rares</h2><p class="sub">Elles s’achètent avec des pièces.</p><div class="shop rare">${coinItems.map((i) => tile(i, `🪙 ${i.coins} pièces`)).join("")}</div></section><section class="panel garden-expand"><h2>Agrandir mon jardin</h2><p>${size} parcelles${next ? ` · +${next - size} parcelles possibles` : " · la taille maximale est atteinte"}</p>${next ? button(state.rpg.coins >= cost ? `Agrandir · ${cost} 🪙` : `Il manque ${cost - state.rpg.coins} pièces`, "garden-expand", "primary", state.rpg.coins < cost ? "disabled" : "") : ""}</section></div></div>`,
   );
 }
 function castleRooms() {
@@ -396,10 +443,10 @@ function legacyOutfits() {
   return page(
     "Mon personnage",
     `<div class="avatar-preview legacy-avatar">${avatarSvg(state.rpg, "Ton personnage et son compagnon", { pet: state.pet })}</div><div class="collection">${items
-      .filter((i) => i.kind !== "garden")
+      .filter((i) => i.kind !== "garden" && !i.price)
       .map(
         (i) =>
-          `<div class="collect-item"><span class="emoji">${i.icon}</span><h3>${i.name}</h3>${state.inventory.includes(i.id) ? button(i.kind === "pet" ? (state.pet === i.id ? "✓ Équipé" : "Équiper") : (state.rpg.equipped.head === ({ hat: "head-hat", crown: "head-crown" })[i.id] ? "✓ Équipé" : "Équiper"), "equip", "small", `data-id="${i.id}"`) : '<p class="sub">À découvrir dans une aventure</p>'}</div>`,
+          `<div class="collect-item">${i.kind === "pet" ? `<span class="emoji pet-emoji">${petIcon(i.id)}</span>` : `<span class="emoji">${i.icon}</span>`}<h3>${i.name}</h3>${state.inventory.includes(i.id) ? button(i.kind === "pet" ? (state.pet === i.id ? "✓ Équipé" : "Équiper") : (state.rpg.equipped.head === ({ hat: "head-hat", crown: "head-crown" })[i.id] ? "✓ Équipé" : "Équiper"), "equip", "small", `data-id="${i.id}"`) : '<p class="sub">À découvrir dans une aventure</p>'}</div>`,
       )
       .join("")}</div>`,
   );
@@ -532,6 +579,8 @@ function render() {
         "legacy-outfits": legacyOutfits,
         bridge,
         clearing,
+        book: bookPage,
+        chapter: chapterPage,
         discover,
         lesson,
         mission,
@@ -1008,14 +1057,138 @@ app.addEventListener("click", (e) => {
     return;
   }
   if (a === "plant") {
-    if (plant(state, picked, Number(b.dataset.slot))) {
+    const slot = Number(b.dataset.slot),
+      it = item(picked);
+    if (plant(state, picked, slot)) {
       persist();
       render();
       toast("Une nouvelle pousse dans ton jardin !");
-    } else
+    } else if (it && state.seeds < it.cost)
       toast(
-        "Cette plante attend encore quelques graines. Tu peux les gagner dans une mission.",
+        `Il te manque ${it.cost - state.seeds} graine${it.cost - state.seeds > 1 ? "s" : ""}. Tu les gagnes dans une mission.`,
       );
+    else if (it?.coins && state.rpg.coins < it.coins)
+      toast(`Il te manque ${it.coins - state.rpg.coins} pièces pour cette plante.`);
+    else toast("Choisis une plante, puis une parcelle libre.");
+    return;
+  }
+  if (a === "plot-select") {
+    selectedPlot = Number(b.dataset.slot);
+    render();
+    return;
+  }
+  if (a === "plot-close") {
+    selectedPlot = null;
+    render();
+    return;
+  }
+  if (a === "plant-upgrade") {
+    if (upgradePlant(state, Number(b.dataset.slot))) {
+      persist();
+      render();
+      toast("Ta plante a grandi : elle est encore plus belle !");
+    } else toast("Il manque quelques pièces pour cette amélioration.");
+    return;
+  }
+  if (a === "garden-expand") {
+    if (expandGarden(state)) {
+      persist();
+      render();
+      toast("Ton jardin s’agrandit : de nouvelles parcelles t’attendent !");
+    } else toast("Il manque quelques pièces pour agrandir le jardin.");
+    return;
+  }
+  if (a === "pet-adopt") {
+    if (adopt(state, b.dataset.id)) {
+      state.pet = b.dataset.id;
+      persist();
+      render();
+      toast("Un nouveau compagnon te suit désormais !");
+    } else toast("Il manque quelques pièces pour adopter ce compagnon.");
+    return;
+  }
+  if (a === "pet-equip") {
+    if (state.inventory.includes(b.dataset.id)) {
+      state.pet = b.dataset.id;
+      persist();
+      render();
+    }
+    return;
+  }
+  if (a === "pet-unequip") {
+    if (state.pet === b.dataset.id) {
+      state.pet = null;
+      persist();
+      render();
+      toast("Ton compagnon se repose. Il reste dans ta collection.");
+    }
+    return;
+  }
+  if (a === "practice") {
+    if (state.session && state.session.index < state.session.queue.length) {
+      go("mission");
+      return;
+    }
+    state.session = null;
+    const id = b.dataset.id;
+    if (skills.some((x) => x.id === id) && state.skills[id].status === "seen")
+      start("normal", id, 6);
+    else go("missions");
+    return;
+  }
+  if (a === "book" || a === "book-select" || a === "book-next") {
+    if (a === "book-next") {
+      state.session = null;
+      persist();
+      const n = nextChapter(state);
+      if (n && n.n > BRIDGE_CHAPTERS) {
+        chapterId = n.n;
+        lessonId = n.skill;
+        lessonStep = 0;
+        go("chapter");
+      } else go(n ? "bridge" : "book");
+      return;
+    }
+    if (a === "book-select") selectedBook = Number(b.dataset.book) || null;
+    else selectedBook = null;
+    go("book");
+    return;
+  }
+  if (a === "chapter-to-book") {
+    state.session = null;
+    persist();
+    selectedBook = null;
+    go("book");
+    return;
+  }
+  if (a === "chapter-open") {
+    const c = chapterById(Number(b.dataset.n));
+    if (c && c.n > BRIDGE_CHAPTERS && !chapterDone(state, c.n)) {
+      chapterId = c.n;
+      lessonId = c.skill;
+      lessonStep = 0;
+      go("chapter");
+    }
+    return;
+  }
+  if (a === "chapter-audio") {
+    const c = chapterById(chapterId);
+    if (c) speak(c.text);
+    return;
+  }
+  if (a === "chapter-start") {
+    if (state.session) {
+      go("mission");
+      return;
+    }
+    createChapter(
+      state,
+      Number(b.dataset.n),
+      crypto.getRandomValues(new Uint32Array(1))[0],
+      crypto.randomUUID(),
+    );
+    persist();
+    go("mission");
     return;
   }
   if (a === "equip") {

@@ -18,6 +18,8 @@ Une mission terminée apporte des étoiles de participation, deux graines, dix p
 
 ## Fonctionnalités présentes
 
+**Nouveau — le Grand Livre des Lucioles (0.8) :** une histoire de 100 chapitres en 5 livres, chapitres au choix (même pour une notion jamais vue) et masqués une fois terminés, entraînement « encore des défis » après une leçon, jardin extensible jusqu'à 24 parcelles avec plantes à faire fleurir, 5 compagnons à adopter et nouveaux décors de château. Voir [le détail](docs/STORY.md).
+
 **Nouveau — « À la découverte de tes pouvoirs » (0.6, enrichi en 0.7) :** un bilan de départ ludique en quatre petites explorations (nombres et calcul, lecture, mots et phrases, repères et mesures), avec aides, « Je ne sais pas encore » / « Je ne l’ai pas appris », reprise exacte, récompense de participation unique et rapport parent prudent avec recommandations vers les leçons et missions, impression/export et évolution entre deux bilans. Ce n’est pas un diagnostic et il ne modifie pas la maîtrise. Voir [le fonctionnement du bilan](docs/DISCOVERY.md).
 
 **Nouveau — le marché du royaume (0.5) :** une quête en quatre étapes avec lecture de commandes, paniers à remplir, pièces à composer et horloge à régler. Difficulté adaptée aux essais, étal personnalisable, sac à gagner et suivi parent enrichi. Voir [le fonctionnement du marché](docs/MARKET.md).
@@ -53,7 +55,7 @@ npm test
 npm run check
 ```
 
-Le test navigateur facultatif nécessite Playwright et Microsoft Edge : démarrer le serveur, puis `node tests/browser.mjs CHEMIN_DU_MODULE_PLAYWRIGHT` (et de même `tests/discovery-browser.mjs` pour le bilan de départ). Avec un autre Chromium : `PLAYWRIGHT_EXECUTABLE=/chemin/chrome`. Aucune dépendance Playwright n’est nécessaire pour utiliser l’application.
+Le test navigateur facultatif nécessite Playwright et Microsoft Edge : démarrer le serveur, puis `node tests/browser.mjs CHEMIN_DU_MODULE_PLAYWRIGHT` (et de même `tests/discovery-browser.mjs` pour le bilan de départ, `tests/story-browser.mjs` pour le Grand Livre). Avec un autre Chromium : `PLAYWRIGHT_EXECUTABLE=/chemin/chrome`. Aucune dépendance Playwright n’est nécessaire pour utiliser l’application.
 
 ## Périmètre de cette version
 

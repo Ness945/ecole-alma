@@ -862,3 +862,11 @@ main {
     margin-bottom: 8px;
   }
 }
+
+/* Tablette tactile : tout est agrandi d'un quart pour une lecture confortable
+   (les tailles sont en px, on agrandit donc l'ensemble de l'interface). */
+@media (pointer: coarse) and (min-width: 651px) and (max-width: 1400px) {
+  html {
+    zoom: 1.25;
+  }
+}

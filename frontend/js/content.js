@@ -215,6 +215,18 @@ export const items = [
     kind: "garden",
     cost: 3,
   },
+  // Plantes rares : elles s'achètent avec des pièces (les graines restent rares).
+  { id: "sunflower", name: "Tournesol du soleil", icon: "🌻", kind: "garden", cost: 0, coins: 6 },
+  { id: "rose", name: "Rose enchantée", icon: "🌹", kind: "garden", cost: 0, coins: 6 },
+  { id: "pumpkin", name: "Citrouille de lune", icon: "🎃", kind: "garden", cost: 0, coins: 8 },
+  { id: "lantern", name: "Lanterne des lucioles", icon: "🏮", kind: "garden", cost: 0, coins: 10 },
+  { id: "cherry", name: "Cerisier rose", icon: "🌸", kind: "garden", cost: 0, coins: 12 },
+  { id: "hibiscus", name: "Hibiscus des îles", icon: "🌺", kind: "garden", cost: 0, coins: 12 },
+  { id: "apple", name: "Pommier doré", icon: "🍏", kind: "garden", cost: 0, coins: 14 },
+  { id: "hive", name: "Ruche dorée", icon: "🐝", kind: "garden", cost: 0, coins: 16 },
+  { id: "butterfly", name: "Papillons de feu", icon: "🦋", kind: "garden", cost: 0, coins: 18 },
+  { id: "crystal", name: "Cristal d’étoile", icon: "💎", kind: "garden", cost: 0, coins: 25 },
+  { id: "rainbow", name: "Arc-en-ciel de poche", icon: "🌈", kind: "garden", cost: 0, coins: 30 },
   { id: "hat", name: "Chapeau de voyage", icon: "🧙", kind: "outfit", cost: 0 },
   {
     id: "crown",
@@ -225,4 +237,10 @@ export const items = [
   },
   { id: "fox", name: "Renard des bois", icon: "🦊", kind: "pet", cost: 0 },
   { id: "dragon", name: "Petit dragon", icon: "🐉", kind: "pet", cost: 0 },
+  // Compagnons à adopter avec des pièces (les deux premiers sont des cadeaux de mission).
+  { id: "bunny", name: "Lapin des prés", icon: "🐰", kind: "pet", cost: 0, price: 24 },
+  { id: "hedgehog", name: "Épine le hérisson", icon: "🦔", kind: "pet", cost: 0, price: 28 },
+  { id: "owl", name: "Plume la chouette", icon: "🦉", kind: "pet", cost: 0, price: 28 },
+  { id: "turtle", name: "Mousse la tortue", icon: "🐢", kind: "pet", cost: 0, price: 32 },
+  { id: "beaver", name: "Brindille le castor", icon: "🦫", kind: "pet", cost: 0, price: 32 },
 ];

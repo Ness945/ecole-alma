@@ -45,3 +45,8 @@ Formats vérifiés pour le débordement horizontal de l’accueil et de l’exer
 Ces essais sont effectués dans Edge sur Windows. Safari/iPad, Android réel, lecteurs d’écran, clavier virtuel réel, synthèse vocale, installation sur écran d’accueil, impressions et mises à jour entre plusieurs versions ne sont pas encore vérifiés. La présence des ressources dans le cache et un vrai rechargement hors ligne sont vérifiés ; cela ne garantit pas les voix hors ligne.
 
 La correction du contenu doit aussi être relue par un adulte avant un usage autonome durable. Les tests automatiques vérifient des invariants, pas la qualité d’une séquence d’enseignement complète.
+
+## Grand Livre, jardin, compagnons (0.8)
+
+`tests/story.test.js` (13 tests, 99 au total) : 100 chapitres en 5 livres de 20, tous liés à un petit pouvoir existant, titres uniques, chapitres 1 à 3 identiques aux trois parties du pont, défis valides à plusieurs niveaux pour chaque chapitre, ouverture libre sans prérequis (multiplication jamais vue), récompense et validation uniques, chapitres terminés absents des listes, suite proposée, livre terminé, sauvegarde de mission de chapitre incohérente refusée, jardin 8→24 parcelles payé en pièces, plantes rares, niveaux de plantes, sauvegardes antérieures valides, adoption de compagnons sans doublon ni cadeau automatique.
+`tests/story-browser.mjs` : parcours réel (chapitre choisi sans prérequis, reprise après rechargement, fin de chapitre, chapitre masqué, entraînement « encore des défis », jardin 8→24, amélioration d'une plante, adoption d'un compagnon, décor de château, quatre formats sans débordement, hors ligne). Les sept parcours précédents passent toujours.

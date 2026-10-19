@@ -1,5 +1,5 @@
 const CACHE_PREFIX = `academie-${self.registration.scope}-`;
-const CACHE = `${CACHE_PREFIX}content-v9`;
+const CACHE = `${CACHE_PREFIX}content-v11`;
 const scopedUrl = (path) => new URL(path.replace(/^\//, ""), self.registration.scope).href;
 const FILES = [
   "/",
@@ -13,6 +13,10 @@ const FILES = [
   "/js/discovery.js",
   "/js/discovery-bank.js",
   "/js/avatar-art.js",
+  "/js/castle-art.js",
+  "/js/story-data.js",
+  "/js/story.js",
+  "/js/story-ui.js",
   "/js/discovery-model.js",
   "/js/discovery-ui.js",
   "/js/rpg.js",
