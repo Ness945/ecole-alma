@@ -53,9 +53,11 @@ try {
     .getByRole("button", { name: "Choisir ma mission →", exact: true })
     .click();
   await page.locator('[data-id="multiplication"]').click();
+  // Le choix reste libre : la leçon s'ouvre, Luna conseille seulement une préparation.
   await page
-    .getByRole("heading", { name: "Préparons cette aventure ensemble." })
+    .getByRole("heading", { name: "Un petit pouvoir à comprendre." })
     .waitFor();
+  await page.locator(".prep-advice").waitFor();
   // Genuine v1 fixture in an isolated browser profile, never the user's browser.
   await page.evaluate(async () => {
     const { fresh } = await import("/js/core.js");

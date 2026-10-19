@@ -1,5 +1,18 @@
-import { skins, hairs, styles, avatarSvg, avatarItemArt } from "./avatar-art.js";
-export { skins, hairs, styles, avatarSvg };
+import {
+  skins,
+  hairs,
+  styles,
+  avatarSvg,
+  avatarItemArt,
+  petIcon,
+} from "./avatar-art.js";
+import {
+  roofColors,
+  defaultRoof,
+  castleExtraFragment,
+  castleExtraIcon,
+} from "./castle-art.js";
+export { skins, hairs, styles, avatarSvg, petIcon };
 export const shop = [
   {
     id: "head-hat",
@@ -172,6 +185,78 @@ export const shop = [
     kind: "castle",
     value: "water",
   },
+  {
+    id: "roof-gold",
+    slot: "roof",
+    name: "Toits dorés",
+    icon: "✨",
+    price: 36,
+    kind: "castle",
+    value: "gold",
+  },
+  {
+    id: "roof-emerald",
+    slot: "roof",
+    name: "Toits d’émeraude",
+    icon: "💚",
+    price: 36,
+    kind: "castle",
+    value: "emerald",
+  },
+  {
+    id: "sky-rainbow",
+    slot: "sky",
+    name: "Arc-en-ciel",
+    icon: "🌈",
+    price: 28,
+    kind: "castle",
+    value: "rainbow",
+  },
+  {
+    id: "sky-balloon",
+    slot: "sky",
+    name: "Montgolfière",
+    icon: "🎈",
+    price: 30,
+    kind: "castle",
+    value: "balloon",
+  },
+  {
+    id: "sky-aurora",
+    slot: "sky",
+    name: "Aurore des lucioles",
+    icon: "🌌",
+    price: 34,
+    kind: "castle",
+    value: "aurora",
+  },
+  {
+    id: "ground-windmill",
+    slot: "ground",
+    name: "Moulin du royaume",
+    icon: "🌾",
+    price: 40,
+    kind: "castle",
+    value: "windmill",
+  },
+  {
+    id: "ground-village",
+    slot: "ground",
+    name: "Petit village",
+    icon: "🏘️",
+    price: 48,
+    kind: "castle",
+    value: "village",
+  },
+  {
+    id: "ground-tent",
+    slot: "ground",
+    name: "Tente de fête",
+    icon: "🎪",
+    price: 55,
+    kind: "castle",
+    value: "tent",
+  },
 ];
 export function defaultRpg(coins = 0) {
   return {
@@ -179,7 +264,14 @@ export function defaultRpg(coins = 0) {
     owned: [],
     look: { skin: 0, hair: 0, style: 0 },
     equipped: { head: null, cape: null, dress: null, feet: null, hand: null },
-    castle: { roof: null, flags: null, garden: null, fountain: null },
+    castle: {
+      roof: null,
+      flags: null,
+      garden: null,
+      fountain: null,
+      sky: null,
+      ground: null,
+    },
   };
 }
 export function validRpg(r) {
@@ -199,13 +291,15 @@ export function validRpg(r) {
     return false;
   for (const [group, kind, slots] of [
     ["equipped", "avatar", ["head", "cape", "dress", "feet", "hand"]],
-    ["castle", "castle", ["roof", "flags", "garden", "fountain"]],
+    ["castle", "castle", ["roof", "flags", "garden", "fountain", "sky", "ground"]],
   ]) {
     if (!r[group]) return false;
     for (const slot of slots) {
       const id = r[group][slot];
-      // Emplacement « feet » absent des sauvegardes antérieures (équivaut à vide).
-      if (id === undefined && slot === "feet") continue;
+      // Emplacements ajoutés après coup (chaussures, ciel, alentours) : absents
+      // des sauvegardes antérieures, ce qui équivaut à vide.
+      if (id === undefined && ["feet", "sky", "ground"].includes(slot))
+        continue;
       if (
         id !== null &&
         (!r.owned.includes(id) ||
@@ -245,11 +339,11 @@ export function preview(rpg, id) {
   return r;
 }
 export function itemArt(id) {
-  const worn = avatarItemArt(id);
+  const worn = avatarItemArt(id) || castleExtraIcon(id);
   if (worn) return worn;
   let body = "";
   if (id.startsWith("roof"))
-    body = `<path d="M17 42v26l23 9 24-13V38Z" fill="#e6d2ab"/><path d="m10 41 30-31 33 31-33 13Z" fill="${id === "roof-rose" ? "#c6889d" : "#9485be"}"/><path d="m40 10 33 31-33 13Z" fill="${id === "roof-rose" ? "#a66680" : "#71629a"}"/>`;
+    body = `<path d="M17 42v26l23 9 24-13V38Z" fill="#e6d2ab"/><path d="m10 41 30-31 33 31-33 13Z" fill="${(roofColors[id] || defaultRoof)[0]}"/><path d="m40 10 33 31-33 13Z" fill="${(roofColors[id] || defaultRoof)[1]}"/>`;
   else if (id === "castle-flags")
     body =
       '<path d="M24 71V10" stroke="#9c805b" stroke-width="5"/><path d="m26 12 40 10-11 13 11 13-40-8Z" fill="#e9c16b" stroke="#bb9652" stroke-width="2"/>';
@@ -263,19 +357,10 @@ export function itemArt(id) {
 }
 export function castleSvg(rpg, id = "kingdom") {
   const c = rpg.castle,
-    roof =
-      c.roof === "roof-rose"
-        ? "#ca8397"
-        : c.roof === "roof-lilac"
-          ? "#9381bd"
-          : "#668fae",
-    dark =
-      c.roof === "roof-rose"
-        ? "#a6657d"
-        : c.roof === "roof-lilac"
-          ? "#6d6099"
-          : "#476c8a";
+    [roof, dark] = roofColors[c.roof] || defaultRoof,
+    sky = castleExtraFragment(c.sky),
+    ground = castleExtraFragment(c.ground);
   const tower = (x, y, s = 1) =>
     `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cy="125" rx="41" ry="15" fill="#544d6730"/><path d="M-34 0h68v119q-34 21-68 0Z" fill="#eddbba"/><path d="M10 0h24v119q-12 8-24 10Z" fill="#c6b28f"/><ellipse rx="34" ry="12" fill="#fff0d1"/><path d="m-43 0 43-76L43 0Q0 25-43 0" fill="${roof}"/><path d="M0-76 43 0Q21 12 11 12Z" fill="${dark}"/><path d="M-8 48q0-17 15-17v31H-8Z" fill="#657b88" stroke="#fff0d1" stroke-width="5"/><path d="M-22 89h13m13 14h16m-3-30h13" stroke="#bba88a" stroke-width="2"/>${c.flags ? '<path d="M0-76v-38l37 9-37 13" fill="#e9bd5e" stroke="#ac8152" stroke-width="2"/>' : ""}</g>`;
-  return `<svg class="castle-art" viewBox="0 0 860 590" role="img" aria-label="Ton château personnalisable en perspective"><defs><linearGradient id="${id}-sky" x2="0" y2="1"><stop stop-color="#e8edf7"/><stop offset="1" stop-color="#f4eddc"/></linearGradient><linearGradient id="${id}-land" x2="0" y2="1"><stop stop-color="#bfd6a0"/><stop offset="1" stop-color="#89af87"/></linearGradient><filter id="${id}-shadow"><feGaussianBlur stdDeviation="12"/></filter></defs><rect width="860" height="590" rx="30" fill="url(#${id}-sky)"/><circle cx="709" cy="94" r="43" fill="#fff4cb"/><g fill="#fff" opacity=".6"><ellipse cx="164" cy="97" rx="71" ry="17"/><ellipse cx="198" cy="82" rx="39" ry="22"/><ellipse cx="605" cy="62" rx="55" ry="14"/></g><ellipse cx="438" cy="506" rx="275" ry="35" fill="#66817b33" filter="url(#${id}-shadow)"/><path d="M130 360Q430 190 744 351v52Q432 604 130 409Z" fill="#a5aa85"/><path d="M130 360Q430 190 744 351Q432 557 130 360" fill="url(#${id}-land)"/><path d="M163 396q270 154 544-10" fill="none" stroke="#d2d8ac" stroke-width="9"/><path d="M366 353Q443 383 542 437l-80 36Q405 402 322 378Z" fill="#e5cfaa"/><g fill="#4e725c" opacity=".18"><ellipse cx="422" cy="359" rx="169" ry="46"/></g><path d="M301 201 443 154 569 221v135l-142 58-126-71Z" fill="#eedfc0"/><path d="m443 154 126 67v135l-142 58V233Z" fill="#d2bc97"/><path d="M301 201 443 154 569 221 427 273Z" fill="#fff0ce"/><path d="m285 200 141-119 159 132-158 59Z" fill="${roof}"/><path d="m426 81 159 132-158 59Z" fill="${dark}"/><path d="M346 311v-39q0-26 26-32v61m93-6v-40q0-22 22-16v46m27 5v-40q0-22 22-16v46" fill="#728890" stroke="#fff1d0" stroke-width="6"/>${tower(285, 244, 0.9)}${tower(577, 270, 1)}${tower(424, 169, 0.85)}<path d="M391 395v-57q13-28 43-21v62Z" fill="#8d6b57" stroke="#c6af88" stroke-width="7"/><path d="M411 329v56" stroke="#b18b62" stroke-width="3"/><circle cx="424" cy="359" r="3" fill="#efd17f"/><g stroke="#819b70" stroke-width="4" fill="#779d76"><path d="M214 369v-57m-27 20q-5-52 30-52 37 6 24 46-18 27-54 6M669 360v-56m-29 14q-4-55 30-52 36 3 28 49-24 31-58 3"/></g>${c.garden ? '<g fill="#668e71"><ellipse cx="255" cy="417" rx="35" ry="40"/><ellipse cx="616" cy="409" rx="35" ry="43"/></g><g fill="#e8a6ae"><circle cx="243" cy="405" r="8"/><circle cx="268" cy="426" r="9"/><circle cx="605" cy="398" r="8"/><circle cx="628" cy="421" r="8"/></g>' : ""}${c.fountain ? '<ellipse cx="470" cy="447" rx="48" ry="21" fill="#e9dfcb" stroke="#bdb39e" stroke-width="5"/><ellipse cx="470" cy="444" rx="35" ry="13" fill="#85c7d1"/><path d="M470 445v-43m-24 8q24 22 48 0" fill="none" stroke="#ede1c7" stroke-width="8"/><path d="M470 402q-24-30-28 3m28-3q24-30 28 3" fill="none" stroke="#91cbd4" stroke-width="3"/>' : ""}<g fill="#f7e1a1"><circle cx="191" cy="367" r="4"/><circle cx="315" cy="437" r="5"/><circle cx="580" cy="434" r="4"/></g></svg>`;
+  return `<svg class="castle-art" viewBox="0 0 860 590" role="img" aria-label="Ton château personnalisable en perspective"><defs><linearGradient id="${id}-sky" x2="0" y2="1"><stop stop-color="#e8edf7"/><stop offset="1" stop-color="#f4eddc"/></linearGradient><linearGradient id="${id}-land" x2="0" y2="1"><stop stop-color="#bfd6a0"/><stop offset="1" stop-color="#89af87"/></linearGradient><filter id="${id}-shadow"><feGaussianBlur stdDeviation="12"/></filter></defs><rect width="860" height="590" rx="30" fill="url(#${id}-sky)"/><circle cx="709" cy="94" r="43" fill="#fff4cb"/><g fill="#fff" opacity=".6"><ellipse cx="164" cy="97" rx="71" ry="17"/><ellipse cx="198" cy="82" rx="39" ry="22"/><ellipse cx="605" cy="62" rx="55" ry="14"/></g>${sky}<ellipse cx="438" cy="506" rx="275" ry="35" fill="#66817b33" filter="url(#${id}-shadow)"/><path d="M130 360Q430 190 744 351v52Q432 604 130 409Z" fill="#a5aa85"/><path d="M130 360Q430 190 744 351Q432 557 130 360" fill="url(#${id}-land)"/><path d="M163 396q270 154 544-10" fill="none" stroke="#d2d8ac" stroke-width="9"/><path d="M366 353Q443 383 542 437l-80 36Q405 402 322 378Z" fill="#e5cfaa"/><g fill="#4e725c" opacity=".18"><ellipse cx="422" cy="359" rx="169" ry="46"/></g>${ground}<path d="M301 201 443 154 569 221v135l-142 58-126-71Z" fill="#eedfc0"/><path d="m443 154 126 67v135l-142 58V233Z" fill="#d2bc97"/><path d="M301 201 443 154 569 221 427 273Z" fill="#fff0ce"/><path d="m285 200 141-119 159 132-158 59Z" fill="${roof}"/><path d="m426 81 159 132-158 59Z" fill="${dark}"/><path d="M346 311v-39q0-26 26-32v61m93-6v-40q0-22 22-16v46m27 5v-40q0-22 22-16v46" fill="#728890" stroke="#fff1d0" stroke-width="6"/>${tower(285, 244, 0.9)}${tower(577, 270, 1)}${tower(424, 169, 0.85)}<path d="M391 395v-57q13-28 43-21v62Z" fill="#8d6b57" stroke="#c6af88" stroke-width="7"/><path d="M411 329v56" stroke="#b18b62" stroke-width="3"/><circle cx="424" cy="359" r="3" fill="#efd17f"/><g stroke="#819b70" stroke-width="4" fill="#779d76"><path d="M214 369v-57m-27 20q-5-52 30-52 37 6 24 46-18 27-54 6M669 360v-56m-29 14q-4-55 30-52 36 3 28 49-24 31-58 3"/></g>${c.garden ? '<g fill="#668e71"><ellipse cx="255" cy="417" rx="35" ry="40"/><ellipse cx="616" cy="409" rx="35" ry="43"/></g><g fill="#e8a6ae"><circle cx="243" cy="405" r="8"/><circle cx="268" cy="426" r="9"/><circle cx="605" cy="398" r="8"/><circle cx="628" cy="421" r="8"/></g>' : ""}${c.fountain ? '<ellipse cx="470" cy="447" rx="48" ry="21" fill="#e9dfcb" stroke="#bdb39e" stroke-width="5"/><ellipse cx="470" cy="444" rx="35" ry="13" fill="#85c7d1"/><path d="M470 445v-43m-24 8q24 22 48 0" fill="none" stroke="#ede1c7" stroke-width="8"/><path d="M470 402q-24-30-28 3m28-3q24-30 28 3" fill="none" stroke="#91cbd4" stroke-width="3"/>' : ""}<g fill="#f7e1a1"><circle cx="191" cy="367" r="4"/><circle cx="315" cy="437" r="5"/><circle cx="580" cy="434" r="4"/></g></svg>`;
 }

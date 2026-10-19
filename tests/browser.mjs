@@ -39,7 +39,7 @@ try {
       `Débordement ${w}×${h}`,
     );
   }
-  await page.getByRole("button", { name: "Ma mission →", exact: true }).click();
+  await page.getByRole("button", { name: "Laisser Luna choisir", exact: true }).click();
   await page.locator('[data-id="number"]').click();
   await page.getByRole("button", { name: "À moi d’essayer →" }).click();
   for (const [w, h] of [
@@ -148,7 +148,7 @@ try {
   await page
     .getByRole("heading", { name: /Bienvenue dans ton royaume/ })
     .waitFor();
-  await page.getByRole("button", { name: "Ma mission →", exact: true }).click();
+  await page.getByRole("button", { name: "Laisser Luna choisir", exact: true }).click();
   await page.locator(".exercise").waitFor();
   await page
     .getByRole("button", { name: "🤷 Je ne sais pas", exact: true })

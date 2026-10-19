@@ -3,7 +3,14 @@ import { defaultRpg, validRpg } from "./rpg.js";
 import { extraSkills } from "./expansion.js";
 import { validMarket } from "./market.js";
 import { validDiscovery } from "./discovery-model.js";
+import { validChapterSession } from "./story-data.js";
 export const DAY = 86400000;
+// Le jardin s'agrandit par paliers de 4 parcelles, payés en pièces.
+export const GARDEN_SIZES = [8, 12, 16, 20, 24];
+export const EXPAND_COST = { 8: 15, 12: 25, 16: 35, 20: 50 };
+// Une plante peut fleurir (niveau 1) puis devenir magique (niveau 2).
+export const UPGRADE_COST = [10, 20];
+export const PLANT_LEVELS = ["Pousse", "Fleurie", "Magique"];
 export const dimensions = [
   "recognition",
   "manipulation",
@@ -26,7 +33,8 @@ export function fresh() {
     stars: 0,
     seeds: 0,
     inventory: [],
-    garden: Array(8).fill(null),
+    garden: Array(GARDEN_SIZES[0]).fill(null),
+    gardenLevels: Array(GARDEN_SIZES[0]).fill(0),
     outfit: null,
     pet: null,
     completed: [],
@@ -136,7 +144,7 @@ export function reward(state, session) {
   state.seeds += 2;
   state.rpg.coins += 10;
   const gifts = items.filter(
-    (i) => i.kind !== "garden" && !state.inventory.includes(i.id),
+    (i) => i.kind !== "garden" && !i.price && !state.inventory.includes(i.id),
   );
   const gift = gifts[0];
   if (gift) state.inventory.push(gift.id);
@@ -152,18 +160,62 @@ export function reward(state, session) {
 }
 export function plant(state, id, slot) {
   const item = items.find((i) => i.id === id && i.kind === "garden");
+  const coins = item?.coins || 0;
   if (
     !item ||
     !Number.isInteger(slot) ||
     slot < 0 ||
-    slot >= 8 ||
+    slot >= state.garden.length ||
     state.garden[slot] ||
-    state.seeds < item.cost
+    state.seeds < item.cost ||
+    state.rpg.coins < coins
   )
     return false;
   state.seeds -= item.cost;
+  state.rpg.coins -= coins;
   state.garden[slot] = id;
+  state.gardenLevels ??= Array(state.garden.length).fill(0);
+  state.gardenLevels[slot] = 0;
   if (!state.inventory.includes(id)) state.inventory.push(id);
+  return true;
+}
+export const nextGardenSize = (state) =>
+  GARDEN_SIZES[GARDEN_SIZES.indexOf(state.garden.length) + 1] || null;
+export function expandGarden(state) {
+  const next = nextGardenSize(state),
+    cost = EXPAND_COST[state.garden.length];
+  if (!next || state.rpg.coins < cost) return false;
+  state.rpg.coins -= cost;
+  state.gardenLevels ??= Array(state.garden.length).fill(0);
+  while (state.garden.length < next) {
+    state.garden.push(null);
+    state.gardenLevels.push(0);
+  }
+  return true;
+}
+export const plantLevel = (state, slot) => state.gardenLevels?.[slot] ?? 0;
+export function upgradePlant(state, slot) {
+  const level = plantLevel(state, slot),
+    cost = UPGRADE_COST[level];
+  if (
+    !Number.isInteger(slot) ||
+    !state.garden[slot] ||
+    cost === undefined ||
+    state.rpg.coins < cost
+  )
+    return false;
+  state.rpg.coins -= cost;
+  state.gardenLevels ??= Array(state.garden.length).fill(0);
+  state.gardenLevels[slot] = level + 1;
+  return true;
+}
+// Adopter un compagnon avec des pièces (il rejoint l'inventaire, l'équiper reste libre).
+export function adopt(state, id) {
+  const pet = items.find((i) => i.id === id && i.kind === "pet" && i.price);
+  if (!pet || state.inventory.includes(id) || state.rpg.coins < pet.price)
+    return false;
+  state.rpg.coins -= pet.price;
+  state.inventory.push(id);
   return true;
 }
 export function validate(raw) {
@@ -242,10 +294,20 @@ export function validate(raw) {
     fail();
   if (
     !Array.isArray(raw.garden) ||
-    raw.garden.length !== 8 ||
+    !GARDEN_SIZES.includes(raw.garden.length) ||
     raw.garden.some(
       (x) =>
         x !== null && !items.some((i) => i.id === x && i.kind === "garden"),
+    )
+  )
+    fail();
+  // Niveaux des plantes : absents des sauvegardes antérieures (tous à 0).
+  raw.gardenLevels ??= Array(raw.garden.length).fill(0);
+  if (
+    !Array.isArray(raw.gardenLevels) ||
+    raw.gardenLevels.length !== raw.garden.length ||
+    raw.gardenLevels.some(
+      (x, i) => !Number.isInteger(x) || x < 0 || x > 2 || (x > 0 && !raw.garden[i]),
     )
   )
     fail();
@@ -299,6 +361,7 @@ export function validate(raw) {
         ))
     )
       fail();
+    if (s && typeof s.id === "string" && !validChapterSession(s)) fail();
     if (
       !s ||
       typeof s.id !== "string" ||
