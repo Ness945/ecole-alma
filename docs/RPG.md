@@ -61,7 +61,7 @@ Trois parcours navigateur passent : anciennes missions, pont et RPG. Le parcours
 - Nouveaux objets : couronne de fleurs, robe soleil, bottes de sentier, chaussons étoilés (nouvel emplacement « Chaussures »), lanterne lumineuse.
 - Les compagnons (renard, dragon) et les tenues de mission (chapeau, couronne) sont dessinés en SVG partout : accueil, dressing, page « objets » ; l'état « équipé » vient de `rpg.equipped`.
 - Boutique groupée par emplacement ; bouton « Retirer cet objet » (l'objet reste dans la collection).
-- Compatibilité : `look.style` et `equipped.feet` sont facultatifs ; les anciennes sauvegardes restent valides, rien n'est perdu. Aucune ressource réseau nouvelle ; `avatar-art.js` est dans le cache hors ligne (`content-v11`).
+- Compatibilité : `look.style` et `equipped.feet` sont facultatifs ; les anciennes sauvegardes restent valides, rien n'est perdu. Aucune ressource réseau nouvelle ; `avatar-art.js` est dans le cache hors ligne (`content-v12`).
 
 ## Lisibilité sur tablette
 
