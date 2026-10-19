@@ -18,6 +18,8 @@ Une mission terminée apporte des étoiles de participation, deux graines, dix p
 
 ## Fonctionnalités présentes
 
+**Nouveau — rappel de Luna, défi du jour, album et bilan parent (0.10) :** notions à revoir au bon moment, un défi par jour sans série, 25 autocollants, cadeau de chambre toutes les 5 missions, plantes dessinées, chambre qui s’endort le soir, réglages parent (longueur de mission, texte plus grand, voix lente) et rappel de sauvegarde. Voir [le détail](docs/EXTRAS.md).
+
 **Nouveau — Ma chambre (0.9) :** une pièce à décorer (48 objets : murs, sol, lit, tapis, fenêtre, lumières, étagères, bureau, jouets, décor, plantes), plusieurs choix par catégorie. Voir [le détail](docs/ROOM.md).
 
 **Nouveau — le Grand Livre des Lucioles (0.8) :** une histoire de 100 chapitres en 5 livres, chapitres au choix (même pour une notion jamais vue) et masqués une fois terminés, entraînement « encore des défis » après une leçon, jardin extensible jusqu'à 24 parcelles avec plantes à faire fleurir, 5 compagnons à adopter et nouveaux décors de château. Voir [le détail](docs/STORY.md).

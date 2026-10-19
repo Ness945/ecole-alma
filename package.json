@@ -1,12 +1,12 @@
 {
   "name": "academie-des-aventuriers",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server/server.js",
     "test": "node --test tests/*.test.js",
-    "check": "node --check frontend/js/app.js && node --check frontend/js/core.js && node --check frontend/js/exercises.js && node --check frontend/js/adventure.js && node --check frontend/js/avatar-art.js && node --check frontend/js/castle-art.js && node --check frontend/js/room-art.js && node --check frontend/js/story-data.js && node --check frontend/js/story.js && node --check frontend/js/story-ui.js && node --check frontend/js/rpg.js && node --check frontend/js/rpg-ui.js && node --check frontend/js/lessons.js && node --check frontend/js/expansion.js && node --check frontend/js/exercises-v03.js && node --check frontend/js/market.js && node --check frontend/js/discovery-bank.js && node --check frontend/js/discovery-model.js && node --check frontend/js/discovery.js && node --check frontend/js/discovery-ui.js && node --check frontend/sw.js"
+    "check": "node --check frontend/js/app.js && node --check frontend/js/core.js && node --check frontend/js/exercises.js && node --check frontend/js/adventure.js && node --check frontend/js/avatar-art.js && node --check frontend/js/castle-art.js && node --check frontend/js/room-art.js && node --check frontend/js/extras.js && node --check frontend/js/plant-art.js && node --check frontend/js/story-data.js && node --check frontend/js/story.js && node --check frontend/js/story-ui.js && node --check frontend/js/rpg.js && node --check frontend/js/rpg-ui.js && node --check frontend/js/lessons.js && node --check frontend/js/expansion.js && node --check frontend/js/exercises-v03.js && node --check frontend/js/market.js && node --check frontend/js/discovery-bank.js && node --check frontend/js/discovery-model.js && node --check frontend/js/discovery.js && node --check frontend/js/discovery-ui.js && node --check frontend/sw.js"
   },
   "engines": {
     "node": ">=20"

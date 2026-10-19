@@ -1,10 +1,19 @@
 import { skills, items } from "./content.js";
-import { defaultRpg, validRpg, defaultRoom, roomSlots } from "./rpg.js";
+import { defaultRpg, validRpg, defaultRoom, roomSlots, shop } from "./rpg.js";
 import { extraSkills } from "./expansion.js";
 import { validMarket } from "./market.js";
 import { validDiscovery } from "./discovery-model.js";
 import { validChapterSession } from "./story-data.js";
 export const DAY = 86400000;
+// Durées de mission proposées aux parents (nombre de petits défis).
+export const SESSION_LENGTHS = [5, 8, 12];
+// Jour local au format AAAA-MM-JJ (le défi du jour change à minuit, heure de l'appareil).
+export const dayKey = (now = Date.now()) => {
+  const d = new Date(now);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+// Toutes les 5 missions terminées, un objet de chambre est offert (le moins cher pas encore possédé).
+export const ROOM_GIFT_EVERY = 5;
 // Le jardin s'agrandit par paliers de 4 parcelles, payés en pièces.
 export const GARDEN_SIZES = [8, 12, 16, 20, 24];
 export const EXPAND_COST = { 8: 15, 12: 25, 16: 35, 20: 50 };
@@ -143,6 +152,16 @@ export function reward(state, session) {
   state.stars += session.queue.length;
   state.seeds += 2;
   state.rpg.coins += 10;
+  if (session.mode === "daily") state.daily = { day: dayKey(), done: true };
+  if (state.completed.length % ROOM_GIFT_EVERY === 0) {
+    const gift = shop
+      .filter((i) => i.kind === "room" && !state.rpg.owned.includes(i.id))
+      .sort((a, b) => a.price - b.price)[0];
+    if (gift) {
+      state.rpg.owned.push(gift.id);
+      state.newRoomGift = gift.id;
+    }
+  }
   const gifts = items.filter(
     (i) => i.kind !== "garden" && !i.price && !state.inventory.includes(i.id),
   );
@@ -336,6 +355,39 @@ export function validate(raw) {
     typeof raw.settings.motion !== "boolean"
   )
     fail();
+  // Réglages et suivis ajoutés après coup : tous facultatifs.
+  const st = raw.settings;
+  if (
+    (st.length !== undefined && !SESSION_LENGTHS.includes(st.length)) ||
+    (st.textSize !== undefined && !["normal", "large"].includes(st.textSize)) ||
+    (st.slow !== undefined && typeof st.slow !== "boolean") ||
+    (st.lastExport !== undefined && !(Number.isFinite(st.lastExport) && st.lastExport >= 0)) ||
+    (st.exportSnooze !== undefined && !(Number.isFinite(st.exportSnooze) && st.exportSnooze >= 0))
+  )
+    fail();
+  if (
+    raw.daily !== undefined &&
+    !(
+      typeof raw.daily?.day === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(raw.daily.day) &&
+      typeof raw.daily.done === "boolean"
+    )
+  )
+    fail();
+  if (
+    raw.stickersSeen !== undefined &&
+    !(
+      Array.isArray(raw.stickersSeen) &&
+      raw.stickersSeen.length <= 100 &&
+      raw.stickersSeen.every((x) => typeof x === "string" && x.length < 40)
+    )
+  )
+    fail();
+  if (
+    raw.newRoomGift !== undefined &&
+    !shop.some((i) => i.id === raw.newRoomGift && i.kind === "room")
+  )
+    fail();
   for (const [key, kind] of [
     ["outfit", "outfit"],
     ["pet", "pet"],
@@ -378,7 +430,7 @@ export function validate(raw) {
       s.index > s.queue.length ||
       !integer(s.seed) ||
       !integer(s.started) ||
-      !["normal", "discovery", "mini"].includes(s.mode) ||
+      !["normal", "discovery", "mini", "daily", "review"].includes(s.mode) ||
       typeof s.draft !== "string" ||
       s.draft.length > 500 ||
       typeof s.assisted !== "boolean" ||

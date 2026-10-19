@@ -1404,3 +1404,183 @@ body {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* ───────── Invitations du jour, album, bilan de la semaine ───────── */
+.home-extras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin: 8px 0 20px;
+}
+.extra-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: center;
+  text-align: left;
+  padding: 14px 16px;
+  background: #fff7e3;
+  border-color: #efe0b8;
+  border-radius: 18px;
+}
+.extra-card span {
+  grid-row: span 2;
+  font-size: 28px;
+}
+.extra-card small {
+  font-size: 11px;
+  font-weight: 400;
+  color: #7a7388;
+}
+.extra-card.has-new {
+  background: #fde6ee;
+  border-color: #f2bccd;
+}
+.backup-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  background: #eaf0f4;
+  border-radius: 16px;
+  font-size: 13px;
+}
+.backup-note span {
+  flex: 1 1 260px;
+}
+.gift-note {
+  margin: 14px 0;
+}
+.album {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 18px 0 30px;
+}
+.sticker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 18px 10px 14px;
+  background: #fffdf8;
+  border: 2px dashed #e5d9bf;
+  border-radius: 18px;
+}
+.sticker.got {
+  background: #fff;
+  border: 2px solid #f0dca4;
+  box-shadow: 0 4px 0 #efe2bd;
+  transform: rotate(-1.5deg);
+}
+.sticker.got:nth-child(even) {
+  transform: rotate(1.5deg);
+}
+.sticker.locked {
+  opacity: 0.6;
+}
+.sticker-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+.sticker strong {
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: normal;
+}
+.sticker small {
+  font-size: 11px;
+  color: #8a8394;
+}
+.sticker-new {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  background: #e8546a;
+  color: #fff;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+.week-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 84px;
+  margin: 14px 0;
+}
+.week-bars div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.week-bars span {
+  width: 100%;
+  max-width: 34px;
+  background: #a994d6;
+  border-radius: 6px 6px 2px 2px;
+}
+.week-bars small {
+  font-size: 10px;
+  color: #8a8394;
+}
+/* Plantes dessinées */
+.plant-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.plots .plot .plant {
+  display: block;
+  width: 78%;
+  height: 78%;
+  margin: auto;
+  font-size: 0;
+}
+.shop .emoji .plant-art,
+.collect-item .emoji .plant-art,
+.plant-care h2 .plant-art {
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  vertical-align: middle;
+}
+/* Chambre vivante : le compagnon respire, la lueur de la lampe palpite */
+.room-pet {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: room-breathe 3.4s ease-in-out infinite;
+}
+.room-glow {
+  animation: room-glow 4s ease-in-out infinite;
+}
+@keyframes room-breathe {
+  50% {
+    transform: scale(1.03, 0.97);
+  }
+}
+@keyframes room-glow {
+  50% {
+    opacity: 0.2;
+  }
+}
+/* Texte plus grand (réglage parent) : s'ajoute à l'agrandissement des tablettes */
+@media (min-width: 651px) {
+  body.text-large {
+    zoom: 1.15;
+  }
+}
+@media (max-width: 650px) {
+  body.text-large {
+    font-size: 112%;
+  }
+}

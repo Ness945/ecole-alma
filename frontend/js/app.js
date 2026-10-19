@@ -58,6 +58,17 @@ import {
   groupOf,
 } from "./rpg.js";
 import { homeView, pickerView, customizationView } from "./rpg-ui.js";
+import {
+  reviewQueue,
+  dailyQueue,
+  dailyAvailable,
+  stickers,
+  earnedStickers,
+  newStickers,
+  weekSummary,
+  giftNote,
+} from "./extras.js";
+import { plantIcon } from "./plant-art.js";
 import { subjects, lessonActivity } from "./lessons.js";
 import {
   stages,
@@ -141,7 +152,7 @@ function speak(text, lang = "fr-FR") {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang;
-  u.rate = 0.85;
+  u.rate = state.settings.slow ? 0.65 : 0.85;
   u.onerror = () =>
     toast(
       "La voix n’est pas disponible. Pour l’anglais, faites lire le mot par un adulte.",
@@ -209,7 +220,13 @@ function start(mode = "normal", id = null, count = 5) {
     render();
     return;
   }
-  const queue = id ? Array(count).fill(id) : plan(state, mode === "mini" ? 5 : 12);
+  const queue = id
+    ? Array(count).fill(id)
+    : mode === "review"
+      ? reviewQueue(state)
+      : mode === "daily"
+        ? dailyQueue(state)
+        : plan(state, mode === "mini" ? 5 : (state.settings.length ?? 12));
   if (!queue.length) {
     route = "discover";
     render();
@@ -233,6 +250,19 @@ function start(mode = "normal", id = null, count = 5) {
   persist();
   route = "mission";
   render();
+}
+let albumNew = [];
+function album() {
+  const got = earnedStickers(state);
+  return page(
+    "Mon album d’autocollants",
+    `<p class="sub">${got.length} autocollant${got.length > 1 ? "s" : ""} sur ${stickers.length}. Ils se collent tout seuls quand tu accomplis quelque chose de beau.</p><div class="album">${stickers
+      .map((s) => {
+        const has = got.includes(s.id);
+        return `<div class="sticker ${has ? "got" : "locked"} ${albumNew.includes(s.id) ? "fresh" : ""}"><span class="sticker-icon" aria-hidden="true">${has ? s.icon : "◇"}</span><strong>${has ? s.name : "À découvrir"}</strong><small>${s.how}</small>${albumNew.includes(s.id) ? '<i class="sticker-new">Nouveau !</i>' : ""}</div>`;
+      })
+      .join("")}</div>`,
+  );
 }
 function discover() {
   return page("Choisir ma mission", pickerView(state, selectedSubject));
@@ -378,12 +408,12 @@ function finish() {
     const count = bridgeCount(state);
     return page(
       count === 3 ? "Le pont est réparé !" : "Une partie du pont est posée !",
-      `${bridgeScene(count)}<section class="panel celebration"><h2>${count === 3 ? "La clairière t’attend." : "Regarde ce que tes efforts ont construit."}</h2><p>Tu as cherché, manipulé et essayé. La suite peut attendre : rien ne disparaîtra.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p>${button(count === 3 ? "Découvrir la clairière →" : "Revenir au pont →", "bridge-finish", "primary")} ${button("Retour au menu principal", "finish-home", "secondary")} ${button("Planter mes graines", "finish", "quiet")}</section>`,
+      `${bridgeScene(count)}<section class="panel celebration"><h2>${count === 3 ? "La clairière t’attend." : "Regarde ce que tes efforts ont construit."}</h2><p>Tu as cherché, manipulé et essayé. La suite peut attendre : rien ne disparaîtra.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p>${giftNote(state)}${button(count === 3 ? "Découvrir la clairière →" : "Revenir au pont →", "bridge-finish", "primary")} ${button("Retour au menu principal", "finish-home", "secondary")} ${button("Planter mes graines", "finish", "quiet")}</section>`,
     );
   }
   return page(
     "Une aventure de plus !",
-    `<section class="panel celebration"><div class="emoji">🌟</div><h1>Ton royaume a grandi.</h1><p>Tu as pris le temps de chercher, d’essayer et d’apprendre.<br>Tu gagnes <strong>2 graines</strong> à planter dans ton jardin.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p class="sub">Les étoiles racontent tes aventures. Elles ne sont pas une note.</p><p>${button("Retour au menu principal", "finish-home", "primary")} ${button("Planter mes graines", "finish", "secondary")}${new Set(state.session.queue).size === 1 ? " " + button("Encore des défis sur ce thème", "practice", "secondary", `data-id="${state.session.queue[0]}"`) : ""}</p></section>`,
+    `<section class="panel celebration"><div class="emoji">🌟</div><h1>Ton royaume a grandi.</h1><p>Tu as pris le temps de chercher, d’essayer et d’apprendre.<br>Tu gagnes <strong>2 graines</strong> à planter dans ton jardin.</p><p>⭐ ${state.session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p>${giftNote(state)}<p class="sub">Les étoiles racontent tes aventures. Elles ne sont pas une note.</p><p>${button("Retour au menu principal", "finish-home", "primary")} ${button("Planter mes graines", "finish", "secondary")}${new Set(state.session.queue).size === 1 ? " " + button("Encore des défis sur ce thème", "practice", "secondary", `data-id="${state.session.queue[0]}"`) : ""}</p></section>`,
   );
 }
 function garden() {
@@ -395,7 +425,7 @@ function garden() {
     coinItems = items.filter((i) => i.kind === "garden" && i.coins);
   const tile = (i, price) =>
     button(
-      `<span class="emoji">${i.icon}</span><span>${i.name}<br><small>${price}</small></span>`,
+      `<span class="emoji">${plantIcon(i.id) || i.icon}</span><span>${i.name}<br><small>${price}</small></span>`,
       "pick",
       picked === i.id ? "selected" : "",
       `data-id="${i.id}" aria-pressed="${picked === i.id}"`,
@@ -406,7 +436,7 @@ function garden() {
         return button("＋", "plant", "", `data-slot="${i}" aria-label="Parcelle libre ${i + 1}"`);
       const lv = plantLevel(state, i);
       return button(
-        `<span class="plant plant-lv${lv}">${item(id).icon}</span>${lv ? `<i class="plant-star" aria-hidden="true">${lv === 2 ? "🌟" : "✨"}</i>` : ""}`,
+        `<span class="plant plant-lv${lv}">${plantIcon(id) || item(id).icon}</span>${lv ? `<i class="plant-star" aria-hidden="true">${lv === 2 ? "🌟" : "✨"}</i>` : ""}`,
         "plot-select",
         `plot lv${lv} ${sel === i ? "selected" : ""}`,
         `data-slot="${i}" aria-label="${item(id).name}, ${PLANT_LEVELS[lv].toLowerCase()}" aria-pressed="${sel === i}"`,
@@ -417,7 +447,7 @@ function garden() {
   if (sel !== null) {
     const lv = plantLevel(state, sel),
       up = UPGRADE_COST[lv];
-    care = `<section class="panel plant-care"><h2>${item(state.garden[sel]).icon} ${item(state.garden[sel]).name}</h2><p>${PLANT_LEVELS[lv]} · ${lv === 0 ? "elle peut fleurir" : lv === 1 ? "elle peut devenir magique" : "elle brille de mille feux"}</p>${up !== undefined ? button(state.rpg.coins >= up ? `${lv === 0 ? "Faire fleurir" : "Rendre magique"} · ${up} 🪙` : `Il manque ${up - state.rpg.coins} pièces`, "plant-upgrade", "primary", `data-slot="${sel}" ${state.rpg.coins < up ? "disabled" : ""}`) : '<p class="muted">Cette plante a atteint sa plus belle forme.</p>'} ${button("Fermer", "plot-close", "quiet small")}</section>`;
+    care = `<section class="panel plant-care"><h2>${plantIcon(state.garden[sel]) || item(state.garden[sel]).icon} ${item(state.garden[sel]).name}</h2><p>${PLANT_LEVELS[lv]} · ${lv === 0 ? "elle peut fleurir" : lv === 1 ? "elle peut devenir magique" : "elle brille de mille feux"}</p>${up !== undefined ? button(state.rpg.coins >= up ? `${lv === 0 ? "Faire fleurir" : "Rendre magique"} · ${up} 🪙` : `Il manque ${up - state.rpg.coins} pièces`, "plant-upgrade", "primary", `data-slot="${sel}" ${state.rpg.coins < up ? "disabled" : ""}`) : '<p class="muted">Cette plante a atteint sa plus belle forme.</p>'} ${button("Fermer", "plot-close", "quiet small")}</section>`;
   }
   return page(
     "Mon jardin magique",
@@ -486,7 +516,7 @@ function collection() {
         })
         .join("") ||
       '<p class="muted">Tes premiers objets t’attendent au fil des missions.</p>'
-    }</div><h2 class="shop-heading">Mon jardin et mes compagnons</h2><div class="collection">${items.map((i) => `<div class="collect-item ${state.inventory.includes(i.id) ? "" : "locked"}"><span class="emoji">${state.inventory.includes(i.id) ? i.icon : "◇"}</span><h3>${i.name}</h3><p class="sub">${state.inventory.includes(i.id) ? "Dans ta collection" : "À découvrir"}</p></div>`).join("")}</div>`,
+    }</div><h2 class="shop-heading">Mon jardin et mes compagnons</h2><div class="collection">${items.map((i) => `<div class="collect-item ${state.inventory.includes(i.id) ? "" : "locked"}"><span class="emoji">${state.inventory.includes(i.id) ? (i.kind === "garden" && plantIcon(i.id)) || i.icon : "◇"}</span><h3>${i.name}</h3><p class="sub">${state.inventory.includes(i.id) ? "Dans ta collection" : "À découvrir"}</p></div>`).join("")}</div>`,
   );
 }
 function adventureReport() {
@@ -516,6 +546,13 @@ function discoveryParentPage() {
     ? discoveryParentView(state, { sessionActive: Boolean(state.session) })
     : gatePanel();
 }
+function weekPanel() {
+  const w = weekSummary(state),
+    max = Math.max(1, ...w.days.map((d) => d.answered)),
+    name = (id) => skills.find((s) => s.id === id)?.name ?? id,
+    day = (t) => new Date(t).toLocaleDateString("fr-FR", { weekday: "short" });
+  return `<section class="panel week-panel"><p class="eyebrow">Cette semaine</p><h2>${w.answered ? `${w.answered} petits défis, ${w.solo} réussis sans aide.` : "Pas encore de défis cette semaine."}</h2><div class="week-bars" role="img" aria-label="Défis par jour sur 7 jours : ${w.days.map((d) => day(d.start) + " " + d.answered).join(", ")}">${w.days.map((d) => `<div><span style="height:${Math.round((d.answered / max) * 56) + (d.answered ? 4 : 2)}px"></span><small>${day(d.start)}</small></div>`).join("")}</div>${w.solid.length ? `<p>🌷 <strong>Solide :</strong> ${w.solid.map((r) => name(r.skill)).join(", ")}.</p>` : ""}${w.toRevisit.length ? `<p>🌱 <strong>À reprendre tranquillement :</strong> ${w.toRevisit.map((r) => name(r.skill)).join(", ")}.</p>` : ""}${!w.solid.length && !w.toRevisit.length && w.answered ? "<p>Il faut encore quelques défis par notion pour dire ce qui est solide.</p>" : ""}<p class="sub">Un repère pour en parler ensemble, pas une note. Les aides et les « Je ne sais pas » ne comptent pas comme des réussites.</p></section>`;
+}
 function parent() {
   if (!parentUnlocked) return gatePanel();
   const recent = state.history.slice(-12),
@@ -530,7 +567,7 @@ function parent() {
         })
         .join("") ||
       "<p>Aucune réponse pour le moment. Indiquez les notions déjà travaillées ou commencez par une découverte.</p>"
-    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
+    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
       .map((s) => {
         const p = state.skills[s.id];
         return `<section class="skill-row"><div class="skill-top"><h3>${s.icon} ${s.name}</h3><select data-status="${s.id}" aria-label="Statut scolaire : ${s.name}" ${state.session ? "disabled" : ""}>${[
@@ -566,6 +603,7 @@ function parent() {
 }
 function render() {
   document.body.classList.toggle("no-motion", !state.settings.motion);
+  document.body.classList.toggle("text-large", state.settings.textSize === "large");
   let body;
   if (fatal) {
     body = page(
@@ -590,6 +628,7 @@ function render() {
         lesson,
         mission,
         garden,
+        album,
         castle,
         room,
         avatar,
@@ -628,6 +667,10 @@ function discoveryCtx() {
   };
 }
 function go(to) {
+  if (state.newRoomGift && route === "mission") {
+    delete state.newRoomGift;
+    persist();
+  }
   route = to;
   render();
   scrollTo({ top: 0, behavior: "instant" });
@@ -945,6 +988,23 @@ app.addEventListener("click", (e) => {
     start(a === "mini" ? "mini" : "normal");
     return;
   }
+  if (a === "review" || a === "daily") {
+    start(a);
+    return;
+  }
+  if (a === "album") {
+    albumNew = newStickers(state);
+    state.stickersSeen = earnedStickers(state);
+    persist();
+    go("album");
+    return;
+  }
+  if (a === "export-later") {
+    state.settings.exportSnooze = Date.now();
+    persist();
+    render();
+    return;
+  }
   if (a === "resume") {
     go(state.session ? "mission" : "home");
     return;
@@ -1050,6 +1110,12 @@ app.addEventListener("click", (e) => {
   }
   if (a === "order-check") {
     answer(state.session.order.map((i) => current().words[i]).join(" "));
+    return;
+  }
+  if (a === "gift-room") {
+    state.session = null;
+    persist();
+    go("room");
     return;
   }
   if (a === "finish-home") {
@@ -1220,6 +1286,8 @@ app.addEventListener("click", (e) => {
     return;
   }
   if (a === "export") {
+    state.settings.lastExport = Date.now();
+    persist();
     download(JSON.stringify(state, null, 2), "academie-sauvegarde.json");
     return;
   }
@@ -1265,6 +1333,19 @@ app.addEventListener("change", async (e) => {
     state.settings.motion = e.target.checked;
     persist();
     render();
+  }
+  if (e.target.id === "textsize") {
+    state.settings.textSize = e.target.checked ? "large" : "normal";
+    persist();
+    render();
+  }
+  if (e.target.id === "slow") {
+    state.settings.slow = e.target.checked;
+    persist();
+  }
+  if (e.target.id === "length") {
+    state.settings.length = Number(e.target.value);
+    persist();
   }
   if (e.target.id === "import-file") {
     const file = e.target.files[0];
