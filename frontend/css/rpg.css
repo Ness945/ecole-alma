@@ -1584,3 +1584,210 @@ body {
     font-size: 112%;
   }
 }
+
+/* ───────── Le royaume en mouvement (uniquement en CSS : « Animations douces » les coupe) ───────── */
+.castle-art * {
+  transform-box: fill-box;
+}
+.c-cloud {
+  animation: c-drift 46s ease-in-out infinite alternate;
+}
+.c-cloud.c2 {
+  animation-duration: 58s;
+  animation-direction: alternate-reverse;
+}
+.c-cloud.c3 {
+  animation-duration: 38s;
+}
+@keyframes c-drift {
+  to {
+    transform: translateX(90px);
+  }
+}
+.c-flag {
+  transform-origin: 0 100%;
+  animation: c-wave 2.6s ease-in-out infinite;
+}
+@keyframes c-wave {
+  50% {
+    transform: skewY(-4deg) scaleX(0.94);
+  }
+}
+.c-twinkle {
+  animation: c-twinkle 2.8s ease-in-out infinite;
+}
+@keyframes c-twinkle {
+  50% {
+    opacity: 0.25;
+  }
+}
+.c-flicker {
+  transform-origin: 50% 100%;
+  animation: c-flicker 0.9s ease-in-out infinite;
+}
+@keyframes c-flicker {
+  50% {
+    transform: scale(0.9, 1.1);
+  }
+}
+.c-glow {
+  animation: c-glow 3.6s ease-in-out infinite;
+}
+@keyframes c-glow {
+  50% {
+    opacity: 0.18;
+  }
+}
+.c-drop {
+  animation: c-drop 1.6s ease-in infinite;
+}
+.c-drop.d2 {
+  animation-delay: -0.5s;
+}
+.c-drop.d3 {
+  animation-delay: -1s;
+}
+@keyframes c-drop {
+  from {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+}
+.c-spin {
+  transform-origin: 50% 50%;
+  animation: c-spin 14s linear infinite;
+}
+@keyframes c-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.c-float {
+  animation: c-float 6s ease-in-out infinite;
+}
+@keyframes c-float {
+  50% {
+    transform: translateY(-14px);
+  }
+}
+.c-wing {
+  transform-origin: 50% 80%;
+  animation: c-wing 0.7s ease-in-out infinite alternate;
+}
+@keyframes c-wing {
+  to {
+    transform: scaleY(0.55);
+  }
+}
+.c-flap {
+  transform-origin: 50% 50%;
+  animation: c-flap 0.5s ease-in-out infinite alternate;
+}
+@keyframes c-flap {
+  to {
+    transform: scaleX(0.5);
+  }
+}
+.c-creature {
+  animation: c-bob 5s ease-in-out infinite alternate;
+}
+.c-creature.c-fly {
+  animation: c-fly 34s linear -14s infinite;
+}
+.c-creature.c-fly2 {
+  animation: c-fly 22s linear -9s infinite reverse;
+}
+.c-creature.c-orbit {
+  animation: c-orbit 14s ease-in-out infinite alternate;
+}
+@keyframes c-bob {
+  to {
+    transform: translate(18px, -16px);
+  }
+}
+@keyframes c-fly {
+  from {
+    transform: translateX(-260px);
+  }
+  to {
+    transform: translateX(780px);
+  }
+}
+@keyframes c-orbit {
+  25% {
+    transform: translate(150px, -50px);
+  }
+  50% {
+    transform: translate(240px, 60px);
+  }
+  to {
+    transform: translate(-200px, 10px);
+  }
+}
+.c-rain {
+  animation: c-rain 0.9s linear infinite;
+}
+@keyframes c-rain {
+  to {
+    transform: translate(-40px, 470px);
+  }
+}
+.c-snow {
+  animation: c-snow 9s linear infinite;
+}
+@keyframes c-snow {
+  50% {
+    transform: translate(26px, 240px);
+  }
+  to {
+    transform: translate(-10px, 480px);
+  }
+}
+.c-fire {
+  animation: c-fire 6s ease-in-out infinite alternate;
+}
+@keyframes c-fire {
+  33% {
+    transform: translate(20px, -24px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translate(-16px, 14px);
+  }
+}
+.c-walk {
+  animation: c-walk 16s ease-in-out infinite alternate;
+}
+@keyframes c-walk {
+  to {
+    transform: translate(190px, 52px);
+  }
+}
+/* Icônes de la boutique : le dessin est figé */
+.castle-icon-still *,
+.castle-icon-still {
+  animation: none !important;
+}
+/* Sélecteur de moment de la journée */
+.time-picker {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.time-picker button {
+  min-height: 40px;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+.castle-stage {
+  padding-bottom: 52px;
+}
+.castle-stage .castle-art {
+  border-radius: 24px;
+  margin-top: 36px;
+}

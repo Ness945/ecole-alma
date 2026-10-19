@@ -252,6 +252,7 @@ function start(mode = "normal", id = null, count = 5) {
   render();
 }
 let albumNew = [];
+let castleTime = "auto";
 function album() {
   const got = earnedStickers(state);
   return page(
@@ -486,7 +487,7 @@ function legacyOutfits() {
 function castle() {
   return page(
     "Mon château",
-    customizationView(state, "castle", previewItem) +
+    customizationView(state, "castle", previewItem, { time: castleTime }) +
       `<p>${button("Entrer dans les pièces du château", "rooms", "secondary")}</p>`,
   );
 }
@@ -990,6 +991,11 @@ app.addEventListener("click", (e) => {
   }
   if (a === "review" || a === "daily") {
     start(a);
+    return;
+  }
+  if (a === "castle-time") {
+    if (["auto", "day", "dusk", "night"].includes(b.dataset.time)) castleTime = b.dataset.time;
+    render();
     return;
   }
   if (a === "album") {
