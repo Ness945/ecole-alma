@@ -18,6 +18,8 @@ Une mission terminée apporte des étoiles de participation, deux graines, dix p
 
 ## Fonctionnalités présentes
 
+**Nouveau — Ma chambre (0.9) :** une pièce à décorer (48 objets : murs, sol, lit, tapis, fenêtre, lumières, étagères, bureau, jouets, décor, plantes), plusieurs choix par catégorie. Voir [le détail](docs/ROOM.md).
+
 **Nouveau — le Grand Livre des Lucioles (0.8) :** une histoire de 100 chapitres en 5 livres, chapitres au choix (même pour une notion jamais vue) et masqués une fois terminés, entraînement « encore des défis » après une leçon, jardin extensible jusqu'à 24 parcelles avec plantes à faire fleurir, 5 compagnons à adopter et nouveaux décors de château. Voir [le détail](docs/STORY.md).
 
 **Nouveau — « À la découverte de tes pouvoirs » (0.6, enrichi en 0.7) :** un bilan de départ ludique en quatre petites explorations (nombres et calcul, lecture, mots et phrases, repères et mesures), avec aides, « Je ne sais pas encore » / « Je ne l’ai pas appris », reprise exacte, récompense de participation unique et rapport parent prudent avec recommandations vers les leçons et missions, impression/export et évolution entre deux bilans. Ce n’est pas un diagnostic et il ne modifie pas la maîtrise. Voir [le fonctionnement du bilan](docs/DISCOVERY.md).

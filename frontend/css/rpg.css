@@ -278,7 +278,7 @@ body {
 }
 .rpg-shortcuts {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 15px;
   margin: 25px 0;
 }
@@ -301,6 +301,9 @@ body {
   background: #eaf0f4;
 }
 .rpg-shortcuts button:nth-child(4) {
+  background: #fbe9ee;
+}
+.rpg-shortcuts button:nth-child(5) {
   background: #f6eddf;
 }
 .shortcut-icon {
@@ -619,6 +622,17 @@ body {
 .castle-stage .castle-art {
   width: 100%;
   margin: 20px 0;
+}
+.room-stage {
+  background: #f3e9db;
+}
+.room-stage .room-art {
+  width: 100%;
+  margin: 24px 0 12px;
+  border-radius: 14px;
+}
+.room-art-icon {
+  border-radius: 8px;
 }
 .studio-label {
   position: absolute;
