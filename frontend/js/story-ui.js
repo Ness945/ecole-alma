@@ -83,5 +83,5 @@ export function chapterFinish(state, session) {
     b = books[c.book - 1],
     full = bookDone(state, c.book),
     next = nextChapter(state);
-  return `<section class="panel celebration chapter-finish"><div class="emoji">${full ? "🏆" : "📖"}</div><h1>Chapitre ${c.n} terminé !</h1><p><strong>${esc(c.title)}</strong> rejoint ton journal. Il ne réapparaîtra plus dans ta liste.</p>${full ? `<div class="notice">${b.end}</div>` : ""}<p>⭐ ${session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p>${next ? btn(`Chapitre suivant : ${esc(next.title)} →`, "book-next", "primary") : ""} ${btn("Voir le Grand Livre", "chapter-to-book", "secondary")} ${btn("Planter mes graines", "finish")}</p></section>`;
+  return `<section class="panel celebration chapter-finish"><div class="emoji">${full ? "🏆" : "📖"}</div><h1>Chapitre ${c.n} terminé !</h1><p><strong>${esc(c.title)}</strong> rejoint ton journal. Il ne réapparaîtra plus dans ta liste.</p>${full ? `<div class="notice">${b.end}</div>` : ""}<p>⭐ ${session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p>${next ? btn(`Chapitre suivant : ${esc(next.title)} →`, "book-next", "primary") : ""} ${btn("Voir le Grand Livre", "chapter-to-book", "secondary")} ${btn("Retour au menu principal", "finish-home", "secondary")} ${btn("Planter mes graines", "finish", "quiet")}</p></section>`;
 }

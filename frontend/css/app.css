@@ -696,7 +696,7 @@ main {
     min-height: 510px;
   }
 }
-@media (max-width: 1050px) {
+@media (max-width: 1050px), (pointer: coarse) and (max-width: 1312px) {
   .shell {
     padding: 0 24px;
   }
@@ -724,7 +724,7 @@ main {
     font-size: 11px;
   }
 }
-@media (max-width: 850px) and (orientation: portrait) {
+@media (max-width: 850px) and (orientation: portrait), (pointer: coarse) and (max-width: 1062px) and (orientation: portrait) {
   .home-grid {
     grid-template-columns: 1fr;
   }
@@ -762,7 +762,7 @@ main {
     padding-top: 27px;
   }
 }
-@media (max-width: 650px) {
+@media (max-width: 650px), (pointer: coarse) and (max-width: 812px) {
   .shell {
     padding: 0 16px;
   }

@@ -88,7 +88,11 @@ try {
   assert.ok(s.completed.some((id) => id.startsWith("story:44:")));
   assert.equal(s.rpg.coins, 10);
   await noOverflow("Fin de chapitre");
-  await page.getByRole("button", { name: "Voir le Grand Livre" }).click();
+  assert.equal(await page.getByRole("button", { name: "Retour au menu principal" }).count(), 1);
+  await page.getByRole("button", { name: "Retour au menu principal" }).click();
+  await page.getByRole("heading", { name: /Bienvenue dans ton royaume/ }).waitFor();
+  assert.equal((await state()).session, null);
+  await page.getByRole("button", { name: "Ouvrir le Grand Livre", exact: true }).click();
   await page.getByRole("heading", { name: "1 chapitre sur 100" }).waitFor();
   assert.equal(await page.locator('[data-chapter="44"]').count(), 0, "chapitre terminé : plus proposé");
   await page.locator('[data-action="book-select"][data-book="3"]').click();

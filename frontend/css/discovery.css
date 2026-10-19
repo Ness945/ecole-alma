@@ -208,7 +208,7 @@
   line-height: 1.6;
   padding-left: 20px;
 }
-@media (max-width: 650px) {
+@media (max-width: 650px), (pointer: coarse) and (max-width: 812px) {
   .disc-teaser {
     grid-template-columns: 1fr;
     padding: 20px;
