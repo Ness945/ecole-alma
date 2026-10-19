@@ -236,6 +236,6 @@ export function roomSvg(rpg, label = "Ta chambre", opts = {}) {
     floor = pick("floor", FLOORS)(),
     win = pick("window", WINDOWS)(),
     bed = pick("bed", BEDS)();
-  const pet = opts.pet && petIcon(opts.pet) ? `<g transform="translate(448 398) scale(.95)">${petIcon(opts.pet).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g>` : "";
-  return `<svg class="room-art" viewBox="0 0 800 520" role="img" aria-label="${label}"><g>${wall}</g><rect y="322" width="800" height="14" fill="#ffffffaa"/><g>${floor}</g>${win}${some("deco", DECOS)}${some("shelf", SHELVES)}${some("rug", RUGS)}${some("toy", TOYS)}${bed}${some("desk", DESKS)}${some("plant", PLANTS)}${some("lamp", LAMPS)}${pet}</svg>`;
+  const pet = opts.pet && petIcon(opts.pet) ? `<g transform="translate(448 398) scale(.95)"><g class="room-pet">${petIcon(opts.pet).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g></g>` : "";
+  return `<svg class="room-art" viewBox="0 0 800 520" role="img" aria-label="${label}"><g>${wall}</g><rect y="322" width="800" height="14" fill="#ffffffaa"/><g>${floor}</g>${win}${some("deco", DECOS)}${some("shelf", SHELVES)}${some("rug", RUGS)}${some("toy", TOYS)}${bed}${some("desk", DESKS)}${some("plant", PLANTS)}${opts.night ? '<rect width="800" height="520" fill="#1b2150" opacity=".32"/>' : ""}${some("lamp", LAMPS)}${opts.night && r.lamp ? '<circle class="room-glow" cx="244" cy="262" r="120" fill="#ffe9a0" opacity=".3"/>' : ""}${pet}</svg>`;
 }
