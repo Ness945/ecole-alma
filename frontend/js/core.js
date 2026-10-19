@@ -1,5 +1,5 @@
 import { skills, items } from "./content.js";
-import { defaultRpg, validRpg } from "./rpg.js";
+import { defaultRpg, validRpg, defaultRoom, roomSlots } from "./rpg.js";
 import { extraSkills } from "./expansion.js";
 import { validMarket } from "./market.js";
 import { validDiscovery } from "./discovery-model.js";
@@ -258,6 +258,9 @@ export function validate(raw) {
     raw.version = 2;
   }
   if (!validRpg(raw.rpg)) fail();
+  // Chambre : sauvegardes antérieures sans chambre.
+  raw.rpg.room ??= defaultRoom();
+  for (const s of roomSlots) raw.rpg.room[s] ??= null;
   if (!validMarket(raw.market)) fail();
   if (!validDiscovery(raw.discovery)) fail();
   if (

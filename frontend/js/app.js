@@ -55,6 +55,7 @@ import {
   unequip as unequipRpg,
   avatarSvg,
   petIcon,
+  groupOf,
 } from "./rpg.js";
 import { homeView, pickerView, customizationView } from "./rpg-ui.js";
 import { subjects, lessonActivity } from "./lessons.js";
@@ -427,6 +428,7 @@ function castleRooms() {
   return page(
     "Mon château",
     `<div class="panel"><h2>Chaque aventure ouvre une porte.</h2><p>Le château garde les souvenirs de tes découvertes.</p></div><div class="collection">${[
+      ["🛏️", "Ma chambre", -1],
       ["📚", "Bibliothèque", 0],
       ["👗", "Dressing", 1],
       ["🏆", "Salle des trésors", 3],
@@ -434,7 +436,7 @@ function castleRooms() {
     ]
       .map(
         ([icon, name, n]) =>
-          `<div class="collect-item ${state.completed.length < n ? "locked" : ""}"><span class="emoji">${icon}</span><h3>${name}</h3>${state.completed.length >= n ? button("Entrer", name === "Dressing" ? "avatar" : name === "Salle des trésors" ? "collection" : name === "Observatoire" ? "science" : "story", "small") : `<p>Après ${n} aventures</p>`}</div>`,
+          `<div class="collect-item ${state.completed.length < n ? "locked" : ""}"><span class="emoji">${icon}</span><h3>${name}</h3>${state.completed.length >= n ? button("Entrer", name === "Ma chambre" ? "room" : name === "Dressing" ? "avatar" : name === "Salle des trésors" ? "collection" : name === "Observatoire" ? "science" : "story", "small") : `<p>Après ${n} aventures</p>`}</div>`,
       )
       .join("")}</div>`,
   );
@@ -457,6 +459,9 @@ function castle() {
     customizationView(state, "castle", previewItem) +
       `<p>${button("Entrer dans les pièces du château", "rooms", "secondary")}</p>`,
   );
+}
+function room() {
+  return page("Ma chambre", customizationView(state, "room", previewItem));
 }
 function avatar() {
   return page(
@@ -586,6 +591,7 @@ function render() {
         mission,
         garden,
         castle,
+        room,
         avatar,
         collection,
         parent,
@@ -795,7 +801,7 @@ app.addEventListener("click", (e) => {
     const i = shop.find((i) => i.id === b.dataset.id);
     if (i) {
       previewItem = i.id;
-      go(i.kind === "avatar" ? "avatar" : "castle");
+      go(i.kind === "avatar" ? "avatar" : i.kind === "room" ? "room" : "castle");
     }
     return;
   }
@@ -847,8 +853,8 @@ app.addEventListener("click", (e) => {
     return;
   }
   if (a === "rpg-reset") {
-    const group = b.dataset.kind === "castle" ? "castle" : "equipped";
-    for (const slot of Object.keys(state.rpg[group]))
+    const group = groupOf(b.dataset.kind);
+    for (const slot of Object.keys(state.rpg[group] || {}))
       state.rpg[group][slot] = null;
     previewItem = null;
     persist();
@@ -924,6 +930,7 @@ app.addEventListener("click", (e) => {
       "home",
       "garden",
       "castle",
+      "room",
       "avatar",
       "collection",
       "discover",

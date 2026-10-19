@@ -12,7 +12,11 @@ import {
   castleExtraFragment,
   castleExtraIcon,
 } from "./castle-art.js";
-export { skins, hairs, styles, avatarSvg, petIcon };
+import { roomItems, roomItemArt, roomSvg, roomSlots } from "./room-art.js";
+export { skins, hairs, styles, avatarSvg, petIcon, roomSvg, roomSlots };
+// Groupe de l'état qui porte les objets équipés selon le type d'objet.
+export const groupOf = (kind) =>
+  kind === "avatar" ? "equipped" : kind === "room" ? "room" : "castle";
 export const shop = [
   {
     id: "head-hat",
@@ -537,6 +541,69 @@ export const shop = [
     value: "tent",
   },
 ];
+const ROOM_DATA = {
+  "wall-rose": ["Murs rose pâle", 8],
+  "wall-sky": ["Murs ciel", 8],
+  "wall-mint": ["Murs menthe", 8],
+  "wall-lilac": ["Murs lilas", 8],
+  "wall-stripes": ["Murs rayés", 14],
+  "wall-clouds": ["Murs nuages", 16],
+  "wall-forest": ["Murs forêt", 16],
+  "wall-stars": ["Murs étoilés", 20],
+  "floor-pale": ["Parquet clair", 8],
+  "floor-checker": ["Carreaux roses", 14],
+  "floor-blue": ["Moquette bleue", 14],
+  "floor-meadow": ["Sol prairie", 20],
+  "bed-flower": ["Lit fleuri", 18],
+  "bed-star": ["Lit des étoiles", 22],
+  "bed-cloud": ["Lit nuage", 28],
+  "bed-hut": ["Lit cabane", 34],
+  "bed-princess": ["Lit de princesse", 45],
+  "rug-round": ["Tapis rond rose", 8],
+  "rug-clover": ["Tapis trèfle", 12],
+  "rug-star": ["Tapis étoile", 16],
+  "rug-rainbow": ["Tapis arc-en-ciel", 22],
+  "window-pink": ["Rideaux roses", 10],
+  "window-garden": ["Fenêtre sur le jardin", 14],
+  "window-rainbow": ["Fenêtre arc-en-ciel", 18],
+  "window-snow": ["Fenêtre de Noël", 18],
+  "window-night": ["Fenêtre de nuit", 20],
+  "lamp-mushroom": ["Lampe champignon", 10],
+  "lamp-lantern": ["Lanterne", 12],
+  "lamp-moon": ["Lampe lune", 16],
+  "lamp-stars": ["Guirlande d’étoiles", 22],
+  "shelf-books": ["Étagère à livres", 12],
+  "shelf-plants": ["Étagère fleurie", 14],
+  "shelf-toys": ["Étagère à jouets", 16],
+  "desk-study": ["Bureau d’étude", 16],
+  "desk-easel": ["Chevalet de peintre", 24],
+  "desk-vanity": ["Coiffeuse", 30],
+  "toy-blocks": ["Cubes en bois", 8],
+  "toy-teddy": ["Gros nounours", 14],
+  "toy-train": ["Petit train", 18],
+  "toy-horse": ["Cheval à bascule", 24],
+  "toy-dollhouse": ["Maison de poupée", 32],
+  "deco-garland": ["Guirlande de fanions", 8],
+  "deco-clock": ["Horloge", 10],
+  "deco-mirror": ["Miroir doré", 14],
+  "deco-poster-castle": ["Affiche du château", 12],
+  "deco-poster-unicorn": ["Affiche licorne", 12],
+  "plant-cactus": ["Petit cactus", 8],
+  "plant-flowers": ["Pot de fleurs", 10],
+  "plant-tall": ["Grande plante", 14],
+};
+for (const id of roomItems)
+  shop.push({
+    id,
+    slot: id.split("-")[0],
+    name: ROOM_DATA[id][0],
+    icon: "🛏️",
+    price: ROOM_DATA[id][1],
+    kind: "room",
+    value: id,
+  });
+export const defaultRoom = () =>
+  Object.fromEntries(roomSlots.map((s) => [s, null]));
 export function defaultRpg(coins = 0) {
   return {
     coins,
@@ -560,6 +627,7 @@ export function defaultRpg(coins = 0) {
       sky: null,
       ground: null,
     },
+    room: defaultRoom(),
   };
 }
 export function validRpg(r) {
@@ -596,6 +664,16 @@ export function validRpg(r) {
         return false;
     }
   }
+  // Chambre : absente des sauvegardes antérieures (équivaut à vide).
+  if (r.room !== undefined) {
+    if (!r.room || typeof r.room !== "object") return false;
+    for (const slot of roomSlots) {
+      const id = r.room[slot];
+      if (id === undefined || id === null) continue;
+      if (!r.owned.includes(id) || !shop.some((i) => i.id === id && i.kind === "room" && i.slot === slot))
+        return false;
+    }
+  }
   return true;
 }
 export function purchase(state, id) {
@@ -609,13 +687,13 @@ export function purchase(state, id) {
 export function equip(state, id) {
   const i = shop.find((i) => i.id === id);
   if (!i || !state.rpg.owned.includes(id)) return false;
-  state.rpg[i.kind === "avatar" ? "equipped" : "castle"][i.slot] = id;
+  (state.rpg[groupOf(i.kind)] ??= defaultRoom())[i.slot] = id;
   return true;
 }
 export function unequip(state, id) {
   const i = shop.find((i) => i.id === id);
   if (!i) return false;
-  const group = state.rpg[i.kind === "avatar" ? "equipped" : "castle"];
+  const group = state.rpg[groupOf(i.kind)] || {};
   if (group[i.slot] !== id) return false;
   group[i.slot] = null;
   return true;
@@ -623,11 +701,11 @@ export function unequip(state, id) {
 export function preview(rpg, id) {
   const r = structuredClone(rpg),
     i = shop.find((i) => i.id === id);
-  if (i) r[i.kind === "avatar" ? "equipped" : "castle"][i.slot] = id;
+  if (i) (r[groupOf(i.kind)] ??= defaultRoom())[i.slot] = id;
   return r;
 }
 export function itemArt(id) {
-  const worn = avatarItemArt(id) || castleExtraIcon(id);
+  const worn = avatarItemArt(id) || castleExtraIcon(id) || roomItemArt(id);
   if (worn) return worn;
   let body = "";
   if (id.startsWith("roof"))
