@@ -38,20 +38,20 @@ try {
   const code = await a.locator("#sync-code").inputValue();
   assert.match(code, /^[A-Z2-9]{5}(-[A-Z2-9]{5}){3}$/);
   await a.getByRole("button", { name: "Activer", exact: true }).click();
-  await a.getByText(/Synchronisé à/).waitFor({ timeout: 15000 });
+  await a.getByText(/Synchronisé à/).first().waitFor({ timeout: 15000 });
   assert.equal(store.size, 1);
   assert.ok(!JSON.stringify([...store.values()]).includes("Aventurière"), "serveur : chiffré uniquement");
   // L'appareil A change un réglage (donc une vraie sauvegarde) puis pousse.
   await a.locator("#length").selectOption("12");
   await a.getByRole("button", { name: "Synchroniser maintenant" }).click();
-  await a.getByText(/Synchronisé à/).waitFor({ timeout: 15000 });
+  await a.getByText(/Synchronisé à/).first().waitFor({ timeout: 15000 });
   // L'appareil B se connecte avec le même code et récupère la progression.
   const b = await device();
   await openParent(b);
   await b.locator("#sync-url").fill("http://localhost:4180");
   await b.locator("#sync-code").fill(code.toLowerCase().replaceAll("-", " "));
   await b.getByRole("button", { name: "Activer", exact: true }).click();
-  await b.getByText(/Synchronisé à/).waitFor({ timeout: 15000 });
+  await b.getByText(/Synchronisé à/).first().waitFor({ timeout: 15000 });
   const sb = await b.evaluate(() => JSON.parse(localStorage.getItem("academie.save.v2")));
   assert.equal(sb.settings.length, 12);
   // Adresse sans « https:// » : complétée automatiquement.
@@ -66,10 +66,18 @@ try {
   await b.locator("#sync-code").fill(code);
   await b.getByRole("button", { name: "Activer", exact: true }).click();
   await b.getByRole("button", { name: "Synchroniser maintenant" }).click();
-  await b.getByText(/Synchronisé à/).waitFor({ timeout: 15000 }).catch(async (e) => {
+  await b.getByText(/Synchronisé à/).first().waitFor({ timeout: 15000 }).catch(async (e) => {
     console.log("CFG:", await b.evaluate(() => localStorage.getItem("academie.sync.v1")));
     throw e;
   });
+  // Synchronisation automatique : un changement sur A arrive tout seul sur B (sans bouton), via le rafraîchissement de B.
+  await b.getByRole("button", { name: "Synchroniser maintenant" }).click();
+  await b.getByText(/Synchronisé à/).first().waitFor({ timeout: 15000 });
+  await a.locator("#length").selectOption("5");
+  await a.waitForTimeout(6500); // envoi automatique (4 s après l'enregistrement)
+  await b.getByRole("button", { name: "Synchroniser maintenant" }).click();
+  await b.getByText(/Synchronisé à/).first().waitFor({ timeout: 15000 });
+  assert.equal((await b.evaluate(() => JSON.parse(localStorage.getItem("academie.save.v2")).settings.length)), 5);
   // Hors ligne : l'app reste utilisable, aucun plantage.
   await b.context().setOffline(true);
   await b.getByRole("button", { name: "Synchroniser maintenant" }).click();
