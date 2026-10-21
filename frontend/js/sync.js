@@ -42,7 +42,11 @@ const union = (a = [], b = []) => [...new Set([...a, ...b])];
 const lastAt = (s) => s.evidence.reduce((m, e) => Math.max(m, e.at || 0), 0);
 // Fusion prudente : rien de ce qu'un enfant a appris ou gagné n'est perdu ; le reste suit l'appareil le plus récent.
 export function mergeStates(local, remote) {
-  const remoteNewer = (remote.modified || 0) > (local.modified || 0);
+  // La base est la sauvegarde la plus avancée (jamais une sauvegarde neuve, même plus récente) ; à égalité, la plus récente.
+  const progress = (x) => x.completed.length * 50 + x.history.length + x.rpg.owned.length * 5 + x.inventory.length * 5;
+  const pl = progress(local),
+    pr = progress(remote);
+  const remoteNewer = pr !== pl ? pr > pl : (remote.modified || 0) > (local.modified || 0);
   const newer = remoteNewer ? remote : local,
     older = remoteNewer ? local : remote;
   const out = structuredClone(newer);

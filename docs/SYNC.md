@@ -23,7 +23,7 @@ Sur chaque autre appareil : même adresse, même code. L'échange se fait au lan
 4 s après chaque enregistrement et au retour du réseau. Hors ligne, rien ne change : la reprise est automatique.
 
 ## Fusion
-Le plus récent (`modified`) l'emporte pour l'ensemble de la sauvegarde, mais on ne perd jamais :
+La sauvegarde la plus avancée (aventures, réponses, objets ; à égalité la plus récente) sert de base, mais on ne perd jamais :
 - l'historique de réponses (union, 1000 dernières),
 - les preuves par notion (la notion la plus récemment travaillée est conservée),
 - les aventures terminées, les objets possédés (réserve + boutique de la chambre).
