@@ -174,6 +174,21 @@ try {
   assert.equal((await state()).rpg.castle.roof, "roof-rose");
   assert.equal((await state()).rpg.equipped.head, "head-crown");
   assert.equal((await state()).rpg.look.skin, 2);
+  // Toutes les couleurs de cheveux et toutes les coupes doivent être sélectionnables (régression v0.14).
+  await page.goto("http://localhost:4173");
+  await page.locator('.rpg-shortcuts [data-action="avatar"], [data-action="avatar"]').first().click();
+  const hairCount = await page.locator('[data-action="look"][data-part="hair"]').count();
+  assert.ok(hairCount >= 12, "12 couleurs de cheveux affichées");
+  for (let i = 0; i < hairCount; i++) {
+    await page.locator(`[data-action="look"][data-part="hair"][data-index="${i}"]`).click();
+    assert.equal((await state()).rpg.look.hair, i, "couleur " + i);
+  }
+  const styleIds = await page.locator('[data-action="look"][data-part="style"]').evaluateAll((els) => els.map((e) => Number(e.dataset.index)));
+  assert.ok(styleIds.length >= 10, "10 coupes affichées");
+  for (const id of styleIds) {
+    await page.locator(`[data-action="look"][data-part="style"][data-index="${id}"]`).click();
+    assert.equal((await state()).rpg.look.style, id, "coupe " + id);
+  }
   assert.deepEqual(errors, []);
   console.log(
     "RPG : migration v1, matières, leçons interactives, mission ciblée, aperçu, achat, équipement, château, neuf formats et hors ligne OK.",

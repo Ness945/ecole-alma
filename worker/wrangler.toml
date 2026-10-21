@@ -1,0 +1,7 @@
+name = "academie-sync"
+main = "sync-worker.js"
+compatibility_date = "2024-11-01"
+
+[[kv_namespaces]]
+binding = "SYNC"
+id = "85fd2e9052ac42e2946ad77949a9a8e0"
