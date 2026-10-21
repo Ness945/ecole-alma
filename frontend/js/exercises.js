@@ -248,12 +248,33 @@ export function exercise(id, seed, level = 2, turn = 0, ease = false) {
     }
     case "seasons": {
       const seasons = ["printemps", "été", "automne", "hiver"],
-        i = seed % 4;
-      q.prompt = `Quelle saison vient après ${seasons[i] === "printemps" ? "le printemps" : seasons[i] === "été" ? "l’été" : seasons[i] === "automne" ? "l’automne" : "l’hiver"} en France ?`;
-      q.answer = seasons[(i + 1) % 4];
+        the = ["le printemps", "l’été", "l’automne", "l’hiver"],
+        clues = [
+          ["Les fleurs s’ouvrent et les bourgeons apparaissent. Quelle saison est-ce ?", 0],
+          ["On se baigne et on mange des glaces. Quelle saison est-ce ?", 1],
+          ["Les feuilles changent de couleur et tombent. Quelle saison est-ce ?", 2],
+          ["Il fait très froid et il peut neiger. Quelle saison est-ce ?", 3],
+        ];
+      // 16 variantes (au lieu de 4) : après, avant, entre, repères dans la nature.
+      const v = seed % 16,
+        i = v % 4;
+      if (v < 4) {
+        q.prompt = `Quelle saison vient après ${the[i]} en France ?`;
+        q.answer = seasons[(i + 1) % 4];
+      } else if (v < 8) {
+        q.prompt = `Quelle saison vient avant ${the[i]} en France ?`;
+        q.answer = seasons[(i + 3) % 4];
+      } else if (v < 12) {
+        q.prompt = `Quelle saison se trouve entre ${the[i]} et ${the[(i + 2) % 4]} ?`;
+        q.answer = seasons[(i + 1) % 4];
+      } else {
+        q.prompt = clues[i][0];
+        q.answer = seasons[clues[i][1]];
+      }
       q.options = seasons;
+      q.tolerant = true;
       q.hint =
-        "Le cycle est : printemps, été, automne, hiver, puis il recommence.";
+        "Le cycle : 🌸 printemps → ☀️ été → 🍂 automne → ❄️ hiver, puis il recommence. Écris-le doucement : prin-temps, é-té, au-tomne, hi-ver.";
       break;
     }
     case "colors":
@@ -299,6 +320,34 @@ export function exercise(id, seed, level = 2, turn = 0, ease = false) {
   }
   q.fingerprint = id + ":" + (q.passage || "") + q.prompt + ":" + q.answer;
   return q;
+}
+// Distance d'édition (insertion, suppression, substitution) entre deux petits mots.
+function distance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+const plain = (s) =>
+  normalize(s)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z]/g, "");
+// Pour les suites de mots (saisons, jours, mois) : la notion est la suite, pas l'orthographe.
+// Une faute proche (« Vandredi », « Hivr », « Ive ») compte comme réussie ; la bonne écriture est montrée.
+export function nearCheck(q, value) {
+  if (!q.tolerant || q.type === "choice" || check(q, value)) return false;
+  const got = plain(value).replace(/^h/, ""),
+    want = plain(q.answer).replace(/^h/, "");
+  if (got.length < 3 || got[0] !== want[0]) return false;
+  const best = distance(got, want);
+  let prefix = 0;
+  while (prefix < got.length && got[prefix] === want[prefix]) prefix++;
+  const close = best <= Math.max(1, Math.floor(want.length * 0.4)) || (prefix >= 5 && prefix >= want.length * 0.55);
+  // Jamais si le mot est au moins aussi proche d'une autre réponse possible (jeudi / lundi…).
+  return close && !(q.options || []).some((o) => o !== q.answer && distance(got, plain(o).replace(/^h/, "")) <= best);
 }
 export function check(q, value) {
   return [q.answer, ...(q.accepted || [])].some(

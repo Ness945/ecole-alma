@@ -47,7 +47,7 @@ import {
   easeFor,
   recallFor,
 } from "./core.js";
-import { exercise, check, diagnostic, selectExercise } from "./exercises.js";
+import { exercise, check, nearCheck, diagnostic, selectExercise } from "./exercises.js";
 import { exercise as legacyExercise } from "./exercises-v03.js";
 import {
   shop,
@@ -413,7 +413,8 @@ function answer(value, skip = false) {
     toast("Écris une réponse ou choisis « Je ne sais pas ».");
     return;
   }
-  const correct = !skip && check(q, value);
+  const near = !skip && nearCheck(q, value);
+  const correct = !skip && (near || check(q, value));
   const d = diagnostic(q, value);
   record(
     state,
@@ -440,7 +441,9 @@ function answer(value, skip = false) {
   );
   if (q.type !== "blocks") s.draft = String(value);
   s.answered = true;
-  s.feedback = correct
+  s.feedback = near
+    ? `Bien vu, tu as la bonne idée ! Ça s’écrit : ${q.displayAnswer || q.answer}. Regarde les lettres et on le réécrira ensemble.`
+    : correct
     ? s.assisted || q.guided
       ? "Tu as utilisé l’aide pour avancer. Nous réessaierons avec un nouvel exemple."
       : s.adventure !== undefined

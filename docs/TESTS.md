@@ -58,3 +58,5 @@ La correction du contenu doit aussi être relue par un adulte avant un usage aut
 `tests/castle.test.js` et `tests/castle-browser.mjs` : château 3D (affichage, rotation au glissement, moments, immobile sans animations douces), 15 emplacements, icônes issues de la scène, rendu aux trois moments pour chaque objet, anciennes sauvegardes, achats, animations actives puis coupées, formats et hors ligne.
 
 `tests/sync.test.js` et `tests/sync-browser.mjs` : chiffrement, fusion, service simulé, deux appareils, hors ligne. Voir docs/SYNC.md.
+
+`tests/words.test.js` et `tests/words-browser.mjs` : saisons (16 variantes), calendrier (mois avant/après), tolérance d’orthographe proche avec affichage de la bonne écriture (v0.16).
