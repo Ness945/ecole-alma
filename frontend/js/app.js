@@ -58,6 +58,9 @@ import {
   avatarSvg,
   petIcon,
   groupOf,
+  skins,
+  hairs,
+  styles,
 } from "./rpg.js";
 import { homeView, pickerView, customizationView } from "./rpg-ui.js";
 import {
@@ -969,7 +972,12 @@ app.addEventListener("click", (e) => {
   if (a === "look") {
     const part = b.dataset.part,
       n = Number(b.dataset.index);
-    if (["skin", "hair", "style"].includes(part) && [0, 1, 2, 3].includes(n)) {
+    const valid =
+      part === "skin" ? skins.some((_, i) => i === n)
+      : part === "hair" ? Number.isInteger(n) && n >= 0 && n < hairs.length
+      : part === "style" ? styles.some((st) => st.id === n)
+      : false;
+    if (valid) {
       state.rpg.look[part] = n;
       persist();
       render();
