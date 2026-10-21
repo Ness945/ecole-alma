@@ -7,7 +7,12 @@ export const SYNC_KEY = "academie.sync.v1";
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const SALT = new TextEncoder().encode("academie-des-aventuriers/sync/v1");
 const enc = new TextEncoder();
-const b64 = (u8) => btoa(String.fromCharCode(...u8));
+// Par blocs : une vraie sauvegarde (plusieurs dizaines de Ko) ferait dépasser la pile avec un « ... » géant.
+const b64 = (u8) => {
+  let out = "";
+  for (let i = 0; i < u8.length; i += 8192) out += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  return btoa(out);
+};
 const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 const hex = (u8) => [...u8].map((x) => x.toString(16).padStart(2, "0")).join("");
 
@@ -27,15 +32,25 @@ export async function derive(code) {
   const key = await crypto.subtle.importKey("raw", bits.slice(0, 32), "AES-GCM", false, ["encrypt", "decrypt"]);
   return { id: hex(bits.slice(32)), key };
 }
+const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+// Octet 1 = JSON compressé (gzip) : une sauvegarde chargée reste bien sous la limite du service.
 export async function encrypt(key, state) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const body = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(state))));
-  return b64(new Uint8Array([...iv, ...body]));
+  const packed = await pipe(enc.encode(JSON.stringify(state)), new CompressionStream("gzip"));
+  const plain = new Uint8Array(packed.length + 1);
+  plain[0] = 1;
+  plain.set(packed, 1);
+  const body = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain));
+  const all = new Uint8Array(iv.length + body.length);
+  all.set(iv);
+  all.set(body, iv.length);
+  return b64(all);
 }
 export async function decrypt(key, text) {
   const all = unb64(text);
-  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.slice(0, 12) }, key, all.slice(12));
-  return JSON.parse(new TextDecoder().decode(plain));
+  const plain = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.slice(0, 12) }, key, all.slice(12)));
+  const json = plain[0] === 1 ? await pipe(plain.slice(1), new DecompressionStream("gzip")) : plain;
+  return JSON.parse(new TextDecoder().decode(json));
 }
 
 const union = (a = [], b = []) => [...new Set([...a, ...b])];

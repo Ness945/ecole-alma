@@ -87,3 +87,12 @@ test("un appareil neuf, même plus récent, n'écrase pas une sauvegarde avancé
     assert.equal(m.history.length, 2);
   }
 });
+
+test("une grosse sauvegarde (1000 réponses détaillées) se chiffre sans dépasser la pile ni la limite", async () => {
+  const { key } = await derive(newCode());
+  const big = fresh();
+  big.history = Array.from({ length: 1000 }, (_, i) => ({ skill: Object.keys(big.skills)[0], correct: true, assisted: false, skip: false, dimension: "production", at: i, fingerprint: "x".repeat(300) }));
+  const text = await encrypt(key, big);
+  assert.ok(text.length < 400000, "compressé sous la limite du service");
+  assert.equal((await decrypt(key, text)).history.length, 1000);
+});
