@@ -72,3 +72,18 @@ test("le serveur refuse les écritures en conflit ou mal formées", async () => 
   assert.equal((await put({ base: 1, data: "<script>" })).status, 400);
   assert.equal((await worker.fetch(new Request("https://s.test/v1/zz"), env)).status, 404);
 });
+
+test("un appareil neuf, même plus récent, n'écrase pas une sauvegarde avancée", () => {
+  const ids = Object.keys(fresh().skills);
+  const played = play(play(fresh(), ids[0], 1000), ids[1], 1500);
+  played.name = "Alma";
+  played.stars = 40;
+  const blank = fresh();
+  blank.modified = 9999999;
+  for (const [a, b] of [[blank, played], [played, blank]]) {
+    const m = mergeStates(a, b);
+    assert.equal(m.name, "Alma");
+    assert.equal(m.stars, 40);
+    assert.equal(m.history.length, 2);
+  }
+});
