@@ -47,7 +47,7 @@ import {
   easeFor,
   recallFor,
 } from "./core.js";
-import { exercise, check, nearCheck, diagnostic, selectExercise } from "./exercises.js";
+import { exercise, check, nearCheck, diagnostic, explain, selectExercise } from "./exercises.js";
 import { exercise as legacyExercise } from "./exercises-v03.js";
 import {
   shop,
@@ -410,7 +410,23 @@ function mission() {
             "",
           )}</fieldset><div class="row">${button(s.hints ? "💡 Encore un indice" : "💡 Un indice", "hint", "quiet")}${button("🤷 Je ne sais pas", "skip", "quiet")}</div>`
       : ""
-  }${s.feedback ? `<div class="feedback" role="status">🦄 ${esc(s.feedback)}${s.answered ? `<br>${button(s.index + 1 === s.queue.length ? "Terminer ma mission →" : "Un autre défi →", "next", "primary")}` : ""}</div>` : ""}${fatigue ? `<div class="notice">On a déjà bien travaillé. Tu peux retourner au royaume et te reposer. Ta mission t’attendra.${button("Faire une pause", "home", "quiet")}</div>` : ""}</section></main>`;
+  }${s.feedback ? `<div class="feedback" role="status">🦄 ${esc(s.feedback).replace(/\n/g, "<br>")}${s.answered ? `<br>${button(s.index + 1 === s.queue.length ? "Terminer ma mission →" : "Un autre défi →", "next", "primary")}` : ""}</div>` : ""}${fatigue ? `<div class="notice">On a déjà bien travaillé. Tu peux retourner au royaume et te reposer. Ta mission t’attendra.${button("Faire une pause", "home", "quiet")}</div>` : ""}</section></main>`;
+}
+// Après une erreur : dire clairement que ce n'est pas ça, pourquoi, et ce qu'il fallait répondre.
+function wrongFeedback(q, value, skip, d) {
+  let e = { why: "", slip: "" };
+  try {
+    e = explain(q, value);
+  } catch {}
+  const mine = !skip && String(value).trim() ? `Tu as répondu « ${String(value).trim().slice(0, 40)} ». ` : "";
+  const lines = [
+    skip ? "Regardons ensemble." : `Ce n’est pas tout à fait ça. ${mine}`.trim(),
+    e.slip,
+    e.why || d.text,
+    `Il fallait répondre : ${q.displayAnswer || q.answer}.`,
+    "On essaiera un autre exemple.",
+  ].filter(Boolean);
+  return lines.join("\n");
 }
 function answer(value, skip = false) {
   const s = state.session;
@@ -456,7 +472,7 @@ function answer(value, skip = false) {
       : s.adventure !== undefined
         ? stages[s.adventure].strategy
         : "Tu as trouvé ! Garde cette stratégie pour le prochain défi."
-    : `${skip ? "Regardons ensemble. " : ""}${d.text} La réponse est : ${q.displayAnswer || q.answer}. On essaiera un autre exemple.`;
+    : wrongFeedback(q, value, skip, d);
   if (!correct && s.queue.length < 16) s.queue.push(q.skill);
   // Trois échecs de suite : on revoit d'abord une notion de base déjà abordée, puis on reprend.
   const pre = !correct && s.adventure === undefined ? recallFor(state, q.skill) : null;

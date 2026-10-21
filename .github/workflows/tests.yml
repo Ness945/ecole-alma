@@ -41,7 +41,7 @@ jobs:
       - name: Parcours navigateur
         run: |
           export PLAYWRIGHT_EXECUTABLE="$(node -e "console.log(require(process.env.PW_MODULE).chromium.executablePath())")"
-          for f in browser bridge-browser rpg-browser content-browser market-browser discovery-browser pages-browser story-browser room-browser tablet-browser extras-browser castle-browser followup-browser sync-browser words-browser; do
+          for f in browser bridge-browser rpg-browser content-browser market-browser discovery-browser pages-browser story-browser room-browser tablet-browser extras-browser castle-browser followup-browser sync-browser words-browser explain-browser; do
             echo "== tests/$f.mjs"
             node "tests/$f.mjs" "$PW_MODULE"
           done

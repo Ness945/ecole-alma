@@ -354,6 +354,114 @@ export function check(q, value) {
     (answer) => normalize(answer) === normalize(value),
   );
 }
+// Explication ciblée après une erreur : ce qui s'est sans doute passé, pourquoi, et la bonne réponse.
+// Retourne { why, slip } : `why` explique la bonne réponse ; `slip` (facultatif) nomme l'erreur probable.
+function explainRaw(q, value) {
+  const v = String(value ?? "").trim(),
+    num = /^-?\d+$/.test(v) ? Number(v) : null,
+    nums = (q.prompt.match(/\d+/g) || []).map(Number),
+    ans = q.displayAnswer || q.answer,
+    n = Number(q.answer);
+  const out = (why, slip = "") => ({ why, slip });
+  const near = num !== null && Number.isFinite(n) && Math.abs(num - n) === 1
+    ? "Tu étais tout proche : il manque ou il y a un de trop. Recompte tranquillement, par exemple avec tes doigts ou des petits traits."
+    : "";
+  switch (q.skill) {
+    case "addition": {
+      const [x, y] = nums;
+      return out(`Additionner, c’est réunir : on part de ${x} et on avance de ${y}. ${x} + ${y} = ${ans}.`,
+        num === x - y || num === y - x ? "Tu as retiré au lieu d’ajouter : le signe + veut dire qu’on réunit." : near);
+    }
+    case "subtract": {
+      const [x, y] = nums;
+      return out(`Soustraire, c’est enlever : on part de ${x} et on recule de ${y}. ${x} − ${y} = ${ans}. Pour vérifier : ${ans} + ${y} = ${x}.`,
+        num === x + y ? "Tu as ajouté au lieu de retirer : le signe − veut dire qu’on enlève." : near);
+    }
+    case "multiplication": {
+      if (/paniers/.test(q.prompt)) {
+        const [g, e] = nums;
+        return out(`${g} paniers avec ${e} pommes chacun : on répète ${e} ${g} fois. ${Array(g).fill(e).join(" + ")} = ${ans}.`,
+          num === g + e ? `Tu as additionné ${g} et ${e}. Ici il faut répéter ${e}, ${g} fois.` : near);
+      }
+      const [g, e] = nums;
+      return out(`${g} × ${e}, c’est ${g} groupes de ${e}. ${Array(g).fill(e).join(" + ")} = ${ans}.`,
+        num === g + e ? `Tu as additionné ${g} et ${e}. Le signe × veut dire qu’on répète : ${g} fois ${e}.` : near);
+    }
+    case "number": {
+      if (/^Construis/.test(q.prompt)) return out(`${nums[0]}, c’est ${Math.floor(nums[0] / 10)} dizaines et ${nums[0] % 10} unités. Une dizaine = 10 cubes.`);
+      const [t, u] = nums;
+      return out(`${t} dizaines valent ${t * 10}, et on ajoute ${u} unités : ${t * 10} + ${u} = ${ans}. Le chiffre des dizaines est à gauche, celui des unités à droite.`,
+        num !== null && String(num) === `${u}${t}` ? "Tu as écrit les chiffres à l’envers : les dizaines vont d’abord, puis les unités." : near);
+    }
+    case "hundreds": {
+      const [h, t, u] = nums;
+      return out(`${h} centaines = ${h * 100}, ${t} dizaines = ${t * 10}, ${u} unités = ${u}. On les réunit : ${h * 100} + ${t * 10} + ${u} = ${ans}.`,
+        num !== null && String(num).length !== 3 ? "Un nombre avec des centaines a trois chiffres : centaines, dizaines, unités." : "");
+    }
+    case "compare":
+      return out(`On compare les centaines d’abord, puis les dizaines, puis les unités. Le plus ${/petit/.test(q.prompt) ? "petit" : "grand"} est ${ans}.`);
+    case "complements": {
+      const [x, target] = [nums[0], nums[1]];
+      return out(`De ${x} pour arriver à ${target}, il manque ${ans} : ${x} + ${ans} = ${target}.`,
+        num === target ? `Tu as écrit le total. On cherche ce qu’il faut ajouter à ${x}.` : near);
+    }
+    case "doubles":
+      return out(`Le double, c’est deux fois le même nombre : ${nums[0]} + ${nums[0]} = ${ans}.`, num === nums[0] ? "Tu as recopié le nombre : le double, c’est le nombre deux fois." : near);
+    case "halves":
+      return out(`La moitié, c’est partager en deux parts égales : ${nums[0]} partagé en deux, c’est ${ans} de chaque côté. Pour vérifier : ${ans} + ${ans} = ${nums[0]}.`, num === nums[0] * 2 ? "Tu as doublé au lieu de partager en deux." : near);
+    case "money":
+      return /pièces/.test(q.prompt)
+        ? out(`${nums[0]} pièces de 2 euros valent ${nums[0] * 2} euros (2 + 2 …). On ajoute ensuite ${nums[1]} euro${nums[1] > 1 ? "s" : ""} : ${nums[0] * 2} + ${nums[1]} = ${ans}.`,
+            num === nums[0] + nums[1] ? "Tu as compté chaque pièce pour 1 euro. Une pièce de 2 euros vaut 2 euros." : near)
+        : out(`On rend la différence entre ce qu’on donne et le prix : ${nums[1]} − ${nums[0]} = ${ans} euros.`, num === nums[1] ? "Tu as écrit la somme donnée. On rend seulement ce qui dépasse le prix." : near);
+    case "problem":
+      return out(`${q.hint} La réponse est ${ans}.`, near);
+    case "clock":
+      return out("La petite aiguille donne l’heure ; la grande donne les minutes (sur 12 : heure pile, sur 6 : et demie). Ici, c’est " + ans + ".");
+    case "shapes":
+      return out(/côtés/.test(q.prompt) ? `On suit le contour et on compte chaque côté droit une seule fois : ${ans}.` : `Un triangle a 3 côtés, un carré 4 côtés égaux, un rectangle 4 côtés dont deux plus longs. Ici, c’est un ${ans}.`);
+    case "noun":
+      return out(`Le nom dit de quelle chose ou de quel animal on parle : « ${ans} ». Le petit mot devant le nom, c’est le déterminant, et le mot qui décrit, c’est l’adjectif.`);
+    case "determiner":
+      return out(`Le déterminant est le petit mot placé juste devant le nom pour le présenter : « ${ans} ».`);
+    case "adjective":
+      return out(`L’adjectif dit comment est la chose ou l’animal : « ${ans} ».`);
+    case "agreement":
+      return out(`L’adjectif s’accorde avec le nom : ${q.hint} On écrit donc « ${ans} ».`);
+    case "verb":
+      return out(`Le verbe dit ce que fait le personnage : « ${ans} ».`);
+    case "subject":
+      return out(`Le sujet répond à « Qui est-ce qui … ? » : c’est « ${ans} ». On garde tous les mots qui désignent ce personnage.`);
+    case "present_er":
+    case "etre":
+    case "avoir":
+      return out(`${q.hint} Avec ce sujet, le verbe s’écrit « ${ans} ».`);
+    case "living":
+      return out(`Un être vivant naît, grandit, se nourrit et peut mourir. ${q.hint} Ici : ${ans}.`);
+    case "seasons":
+      return out(`Les saisons se suivent toujours dans le même ordre : 🌸 printemps → ☀️ été → 🍂 automne → ❄️ hiver, puis ça recommence. Ici, c’est « ${ans} ».`);
+    case "calendar":
+      return out(`${q.hint} Ici, c’est « ${ans} ».`);
+    case "reading":
+      return out(`La réponse est écrite dans le texte : « ${q.passage || ""} » On retrouve ${ans}. Relis la phrase en cherchant les mots de la question.`);
+    case "colors":
+    case "animals":
+    case "english_numbers":
+      return out(`${q.hint || ""} C’est « ${ans} ».`);
+    case "sentence":
+      return out("Une phrase commence par une majuscule, raconte quelque chose avec un verbe, et finit par un point.");
+    default:
+      return out(q.hint || "");
+  }
+}
+export function explain(q, value) {
+  try {
+    const e = explainRaw(q, value);
+    // Énoncés d'aventure ou de format inattendu : jamais de texte cassé, on retombe sur l'indice.
+    if (!/undefined|NaN|\[object/.test(e.why + e.slip) && e.why) return e;
+  } catch {}
+  return { why: q.hint || "", slip: "" };
+}
 export function diagnostic(q, value) {
   if (q.skill === "determiner" && normalize(value).includes(q.answer))
     return {
