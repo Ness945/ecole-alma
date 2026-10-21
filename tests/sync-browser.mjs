@@ -33,7 +33,7 @@ const openParent = async (page) => {
 try {
   const a = await device();
   await openParent(a);
-  await a.locator("#sync-url").fill("http://localhost:4180");
+  await a.locator("#sync-url").fill("http://localhost:4180/");
   await a.getByRole("button", { name: "Créer un code" }).click();
   const code = await a.locator("#sync-code").inputValue();
   assert.match(code, /^[A-Z2-9]{5}(-[A-Z2-9]{5}){3}$/);
@@ -54,6 +54,22 @@ try {
   await b.getByText(/Synchronisé à/).waitFor({ timeout: 15000 });
   const sb = await b.evaluate(() => JSON.parse(localStorage.getItem("academie.save.v2")));
   assert.equal(sb.settings.length, 12);
+  // Adresse sans « https:// » : complétée automatiquement.
+  await b.getByRole("button", { name: "Désactiver sur cet appareil" }).click();
+  await b.locator("#sync-url").fill("localhost:1");
+  await b.locator("#sync-code").fill(code);
+  await b.getByRole("button", { name: "Activer", exact: true }).click();
+  assert.equal(await b.evaluate(() => JSON.parse(localStorage.getItem("academie.sync.v1")).url), "https://localhost:1");
+  await b.getByText(/injoignable|indisponible|Erreur|Failed/i).first().waitFor({ timeout: 20000 });
+  await b.getByRole("button", { name: "Désactiver sur cet appareil" }).click();
+  await b.locator("#sync-url").fill("http://localhost:4180");
+  await b.locator("#sync-code").fill(code);
+  await b.getByRole("button", { name: "Activer", exact: true }).click();
+  await b.getByRole("button", { name: "Synchroniser maintenant" }).click();
+  await b.getByText(/Synchronisé à/).waitFor({ timeout: 15000 }).catch(async (e) => {
+    console.log("CFG:", await b.evaluate(() => localStorage.getItem("academie.sync.v1")));
+    throw e;
+  });
   // Hors ligne : l'app reste utilisable, aucun plantage.
   await b.context().setOffline(true);
   await b.getByRole("button", { name: "Synchroniser maintenant" }).click();

@@ -154,7 +154,7 @@ async function runSync(manual = false) {
     writeConfig(localStorage, config);
     syncStatus = "Synchronisé à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + ".";
   } catch (err) {
-    syncStatus = err.message === "Failed to fetch" ? "Serveur injoignable pour le moment." : err.message;
+    syncStatus = /Failed to fetch|aborted|timed out|NetworkError|Load failed/i.test(err.message) ? "Serveur injoignable pour le moment." : err.message;
   } finally {
     syncBusy = false;
     if (route === "parent") render();
@@ -1421,8 +1421,10 @@ app.addEventListener("click", (e) => {
     return;
   }
   if (a === "sync-on") {
-    const url = document.querySelector("#sync-url").value.trim(),
-      code = document.querySelector("#sync-code").value;
+    let url = document.querySelector("#sync-url").value.trim().replace(/\/+$/, "");
+    // L'adresse affichée par le navigateur n'a souvent pas son « https:// » : on l'ajoute.
+    if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
+    const code = document.querySelector("#sync-code").value;
     if (!/^https:\/\/[^\s]+$/.test(url) && !/^http:\/\/localhost[:/]/.test(url)) return toast("Adresse du service invalide (https://…).");
     if (!codeValid(code)) return toast("Code famille trop court : utilisez « Créer un code ».");
     const c = normalizeCode(code).match(/.{1,5}/g).join("-");

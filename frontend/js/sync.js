@@ -86,7 +86,9 @@ export const writeConfig = (storage, c) =>
   c ? storage.setItem(SYNC_KEY, JSON.stringify(c)) : storage.removeItem(SYNC_KEY);
 
 // Un échange complet : lire, fusionner, écrire. Retourne { state, changed (local modifié), pushed, status }.
-export async function syncOnce(local, config, fetchFn = fetch) {
+export async function syncOnce(local, config, rawFetch = (...a) => fetch(...a)) {
+  // Délai maximal : un service injoignable ne doit jamais bloquer les synchronisations suivantes.
+  const fetchFn = (url, init = {}) => rawFetch(url, { ...init, signal: AbortSignal.timeout(12000) });
   const { id, key } = await derive(config.code);
   const url = `${config.url.replace(/\/+$/, "")}/v1/${id}`;
   for (let attempt = 0; attempt < 3; attempt++) {
