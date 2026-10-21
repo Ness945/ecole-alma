@@ -19,8 +19,7 @@ progression est chiffrée sur l'appareil puis déposée sur un petit service que
 
 ## Utiliser
 Espace parent → *Synchronisation chiffrée* : saisir l'adresse, **Créer un code** (le noter), **Activer**.
-Sur chaque autre appareil : même adresse, même code. L'échange se fait au lancement, au retour sur l'application,
-4 s après chaque enregistrement et au retour du réseau. Hors ligne, rien ne change : la reprise est automatique.
+Sur chaque autre appareil : même adresse, même code. L’envoi est automatique : 4 s après chaque réponse, et tout de suite à la fin d’une mission. La réception se fait au lancement, au retour sur l’app, au retour du réseau et toutes les 60 s (page visible, hors séance). Le pied de page affiche « ☁️ Synchronisé à … ». Hors ligne, rien ne change : la reprise est automatique.
 
 ## Fusion
 La sauvegarde la plus avancée (aventures, réponses, objets ; à égalité la plus récente) sert de base, mais on ne perd jamais :

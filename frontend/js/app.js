@@ -47,7 +47,7 @@ import {
   easeFor,
   recallFor,
 } from "./core.js";
-import { exercise, check, diagnostic, selectExercise } from "./exercises.js";
+import { exercise, check, nearCheck, diagnostic, selectExercise } from "./exercises.js";
 import { exercise as legacyExercise } from "./exercises-v03.js";
 import {
   shop,
@@ -127,7 +127,8 @@ try {
 // Synchronisation chiffrée facultative (voir docs/SYNC.md) : hors ligne, tout continue de fonctionner.
 let syncStatus = "",
   syncTimer = 0,
-  syncBusy = false;
+  syncBusy = false,
+  syncAgain = false;
 function syncSoon(delay = 4000) {
   if (!readConfig(localStorage)) return;
   clearTimeout(syncTimer);
@@ -135,7 +136,9 @@ function syncSoon(delay = 4000) {
 }
 async function runSync(manual = false) {
   const config = readConfig(localStorage);
-  if (!config || syncBusy || fatal) return;
+  if (!config || fatal) return;
+  // Un échange est déjà en cours : on en refera un juste après, pour ne rien laisser en attente.
+  if (syncBusy) return void (syncAgain = true);
   if (!navigator.onLine) {
     syncStatus = "Hors ligne : la synchronisation reprendra seule.";
     return;
@@ -157,6 +160,10 @@ async function runSync(manual = false) {
     syncStatus = /Failed to fetch|aborted|timed out|NetworkError|Load failed/i.test(err.message) ? "Serveur injoignable pour le moment." : err.message;
   } finally {
     syncBusy = false;
+    if (syncAgain) {
+      syncAgain = false;
+      syncSoon(500);
+    }
     if (route === "parent") render();
   }
 }
@@ -216,7 +223,7 @@ function header() {
   return `<header class="topbar"><button class="brand quiet" data-action="home" aria-label="Retour au royaume"><img src="./assets/icon.svg" alt=""><div><small>APPRENDRE DEVIENT UNE AVENTURE</small>L’Académie des Aventuriers</div></button><div class="top-actions"><div class="resources"><span title="Étoiles de progression">⭐ ${state.stars}</span><span title="Pièces à dépenser">🪙 ${state.rpg.coins}</span><span title="Graines du jardin">🌱 ${state.seeds}</span></div><button data-action="avatar" class="header-girl" aria-label="Mon aventurière">${avatarSvg(state.rpg)}</button></div></header>`;
 }
 function footer() {
-  return `<footer class="footer"><span>À petits pas, de grandes découvertes.<br>Progression enregistrée sur cet appareil.</span><div>${button(state.settings.sound ? "🔊 Son" : "🔇 Son", "sound", "quiet small")}${button("⚙ Espace parent", "parent-gate", "quiet small")}</div></footer>`;
+  return `<footer class="footer"><span>À petits pas, de grandes découvertes.<br>${readConfig(localStorage) ? "☁️ " + (syncStatus.startsWith("Synchronisé") ? syncStatus : "Synchronisation chiffrée active.") : "Progression enregistrée sur cet appareil."}</span><div>${button(state.settings.sound ? "🔊 Son" : "🔇 Son", "sound", "quiet small")}${button("⚙ Espace parent", "parent-gate", "quiet small")}</div></footer>`;
 }
 function page(title, body) {
   return `<main class="page"><div class="page-head">${button("←", "home", "quiet", 'aria-label="Retour au royaume"')}<h1>${title}</h1></div>${body}</main>`;
@@ -413,7 +420,8 @@ function answer(value, skip = false) {
     toast("Écris une réponse ou choisis « Je ne sais pas ».");
     return;
   }
-  const correct = !skip && check(q, value);
+  const near = !skip && nearCheck(q, value);
+  const correct = !skip && (near || check(q, value));
   const d = diagnostic(q, value);
   record(
     state,
@@ -440,7 +448,9 @@ function answer(value, skip = false) {
   );
   if (q.type !== "blocks") s.draft = String(value);
   s.answered = true;
-  s.feedback = correct
+  s.feedback = near
+    ? `Bien vu, tu as la bonne idée ! Ça s’écrit : ${q.displayAnswer || q.answer}. Regarde les lettres et on le réécrira ensemble.`
+    : correct
     ? s.assisted || q.guided
       ? "Tu as utilisé l’aide pour avancer. Nous réessaierons avec un nouvel exemple."
       : s.adventure !== undefined
@@ -475,8 +485,11 @@ function next() {
     answered: false,
     order: [],
   });
-  if (s.index === s.queue.length) reward(state, s);
+  const done = s.index === s.queue.length;
+  if (done) reward(state, s);
   persist();
+  // Fin d'une mission : envoi immédiat (pas d'attente) pour retrouver la progression ailleurs.
+  if (done) syncSoon(300);
   render();
 }
 function finish() {
@@ -1522,6 +1535,8 @@ app.addEventListener("change", async (e) => {
 });
 render();
 if (readConfig(localStorage)) runSync();
+// Récupère aussi ce qu'un autre appareil a envoyé (toutes les 60 s, page visible seulement).
+setInterval(() => document.visibilityState === "visible" && !state.session && syncSoon(100), 60000);
 document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && syncSoon(500));
 window.addEventListener("online", () => syncSoon(500));
 app.addEventListener(

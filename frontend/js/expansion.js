@@ -482,17 +482,22 @@ export function extraExercise(q, id, seed, turn) {
         ];
       const list = mode === 2 ? months : days,
         i = seed % list.length,
-        shift = mode === 1 ? list.length - 1 : 1;
+        back = mode === 1 || (mode === 2 && Math.floor(seed / 12) % 3 === 1),
+        shift = back ? list.length - 1 : 1;
       q.prompt =
         mode === 2
-          ? "Quel mois vient après " + list[i] + " ?"
-          : "Quel jour vient " +
-            (mode === 1 ? "avant " : "après ") +
-            list[i] +
-            " ?";
+          ? "Quel mois vient " + (back ? "avant " : "après ") + list[i] + " ?"
+          : "Quel jour vient " + (back ? "avant " : "après ") + list[i] + " ?";
       q.answer = list[(i + shift) % list.length];
       q.options = [q.answer, list[i], list[(i + 3) % list.length]];
-      q.hint = list.join(", ") + ". Puis le cycle recommence.";
+      q.tolerant = true;
+      // Pour les mois : seulement les voisins, pas douze mots d'un coup.
+      q.hint =
+        mode === 2
+          ? "Dans l’ordre : …" +
+            [-2, -1, 0, 1, 2].map((d) => list[(i + d + list.length) % list.length]).join(", ") +
+            "… Puis le cycle recommence en janvier."
+          : list.join(", ") + ". Puis le cycle recommence.";
       break;
     }
     case "english_numbers": {
@@ -602,9 +607,9 @@ export const extraDemos = {
     "Nous avons des livres. Avons est la forme du verbe avoir avec nous.",
   ],
   calendar: [
-    "📅",
-    "Dimanche → ?",
-    "Après dimanche vient lundi : une nouvelle semaine commence.",
+    "📅 lun · mar · mer · jeu · ven · sam · dim",
+    "Sept jours, douze mois : on tourne en rond",
+    "Après dimanche vient lundi. Après décembre vient janvier. Avant mardi, c’est lundi. Dis-les doucement à voix haute, comme une chanson.",
   ],
   english_numbers: [
     "1 · 2 · 3 · 4 · 5",

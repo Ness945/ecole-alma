@@ -70,9 +70,9 @@ export function lessonActivity(id, step = 0) {
       "L’arbre grandit et se nourrit : il est vivant. La pierre n’est pas vivante.",
     ],
     seasons: [
-      "🌸 ☀️ 🍂 ❄️",
-      "Printemps → été → automne → hiver",
-      "Après l’hiver, le printemps revient. Le cycle recommence.",
+      "🌸 printemps → ☀️ été → 🍂 automne → ❄️ hiver → 🌸 …",
+      "Quatre saisons qui tournent en rond",
+      "Le printemps, les fleurs. L’été, la plage. L’automne, les feuilles qui tombent. L’hiver, le froid. Après l’hiver, le printemps revient : le cycle recommence. Pour écrire : prin-temps, é-té, au-tomne, hi-ver.",
     ],
     colors: [
       "🔴 🔵 🟢 🟡",
