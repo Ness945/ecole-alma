@@ -154,7 +154,7 @@ try {
     .getByRole("button", { name: "🤷 Je ne sais pas", exact: true })
     .click();
   assert.ok(
-    (await page.locator(".feedback").textContent()).includes("La réponse est"),
+    (await page.locator(".feedback").textContent()).includes("Il fallait répondre"),
   );
   await page.locator('[data-action="next"]').click();
   s = await page.evaluate(() =>
