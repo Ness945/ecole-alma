@@ -109,6 +109,8 @@ const SLOT_GROUPS = {
     ["toy", "Jouets"],
     ["deco", "Au mur"],
     ["plant", "Plantes"],
+    ["seat", "Sièges"],
+    ["ceiling", "Plafond"],
   ],
   castle: [
     ["roof", "Toits"],

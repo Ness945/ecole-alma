@@ -4,6 +4,7 @@
 // Repère : viewBox 0 0 800 520. Mur du fond jusqu'à y = 330, sol ensuite, plinthe à 322–338.
 // Emplacements : mur, sol, lit, tapis, fenêtre, lampe, étagère, bureau, jouets, décoration, plante.
 import { petIcon } from "./avatar-art.js";
+import { moreRoom } from "./room-art-more.js";
 
 export const roomSlots = [
   "wall",
@@ -17,6 +18,8 @@ export const roomSlots = [
   "toy",
   "deco",
   "plant",
+  "seat",
+  "ceiling",
 ];
 const star = (x, y, r, fill) => {
   const p = [];
@@ -172,6 +175,11 @@ const PLANTS = {
     `<ellipse cx="610" cy="392" rx="30" ry="7" fill="#00000014"/><path d="M588 392 594 346H626L632 392Z" fill="#a994d6" stroke="#7a68ad" stroke-width="3"/>${[[596, 310], [610, 290], [626, 308], [604, 322], [620, 326]].map(([x, y], i) => `<path d="M${x} ${y}L${608 + (i - 2) * 3} 348" stroke="#5f9a63" stroke-width="4"/>${flower(x, y, 8, ["#f4a8b6", "#fff4d8", "#f6d36e", "#fff4d8", "#f4a8b6"][i])}`).join("")}`,
 };
 
+// Objets ajoutés en v0.14 (fichier à part) : mêmes tables, deux emplacements en plus (sièges, plafond).
+const MORE = moreRoom({ solidWall, bedBase, nightstand, shelfBoard, deskTop, rug, windowArt, star, flower });
+const SEATS = MORE.seat,
+  CEILINGS = MORE.ceiling;
+for (const [t, k] of [[WALLS, "wall"], [FLOORS, "floor"], [BEDS, "bed"], [RUGS, "rug"], [WINDOWS, "window"], [LAMPS, "lamp"], [SHELVES, "shelf"], [DESKS, "desk"], [TOYS, "toy"], [DECOS, "deco"], [PLANTS, "plant"]]) Object.assign(t, MORE[k]);
 const GROUPS = {
   wall: WALLS,
   floor: FLOORS,
@@ -184,6 +192,8 @@ const GROUPS = {
   toy: TOYS,
   deco: DECOS,
   plant: PLANTS,
+  seat: SEATS,
+  ceiling: CEILINGS,
 };
 const FRAG = {};
 for (const g of Object.values(GROUPS))
@@ -206,6 +216,8 @@ for (const id of roomItems) {
       toy: [30, 330, 190, 160],
       deco: [330, 56, 190, 160],
       plant: [570, 224, 80, 176],
+      seat: [620, 380, 180, 140],
+      ceiling: [260, 0, 540, 110],
     }[slot] || [0, 0, 800, 520];
 }
 Object.assign(VIEW, {
@@ -218,6 +230,12 @@ Object.assign(VIEW, {
   "toy-dollhouse": [20, 320, 200, 170],
   "toy-train": [20, 370, 220, 120],
   "toy-blocks": [40, 380, 170, 110],
+  "plant-palm": [540, 224, 150, 176],
+  "plant-fern": [540, 224, 150, 176],
+  "plant-sunflower": [560, 190, 100, 210],
+  "ceiling-balloons": [470, 0, 150, 120],
+  "toy-kitchen": [20, 340, 200, 150],
+  "bed-boat": [262, 90, 330, 330],
 });
 const ICON_BG = { wall: null, floor: null };
 export function roomItemArt(id) {
@@ -237,5 +255,5 @@ export function roomSvg(rpg, label = "Ta chambre", opts = {}) {
     win = pick("window", WINDOWS)(),
     bed = pick("bed", BEDS)();
   const pet = opts.pet && petIcon(opts.pet) ? `<g transform="translate(448 398) scale(.95)"><g class="room-pet">${petIcon(opts.pet).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</g></g>` : "";
-  return `<svg class="room-art" viewBox="0 0 800 520" role="img" aria-label="${label}"><g>${wall}</g><rect y="322" width="800" height="14" fill="#ffffffaa"/><g>${floor}</g>${win}${some("deco", DECOS)}${some("shelf", SHELVES)}${some("rug", RUGS)}${some("toy", TOYS)}${bed}${some("desk", DESKS)}${some("plant", PLANTS)}${opts.night ? '<rect width="800" height="520" fill="#1b2150" opacity=".32"/>' : ""}${some("lamp", LAMPS)}${opts.night && r.lamp ? '<circle class="room-glow" cx="244" cy="262" r="120" fill="#ffe9a0" opacity=".3"/>' : ""}${pet}</svg>`;
+  return `<svg class="room-art" viewBox="0 0 800 520" role="img" aria-label="${label}"><g>${wall}</g><rect y="322" width="800" height="14" fill="#ffffffaa"/><g>${floor}</g>${win}${some("deco", DECOS)}${some("shelf", SHELVES)}${some("rug", RUGS)}${some("toy", TOYS)}${bed}${some("desk", DESKS)}${some("seat", SEATS)}${some("plant", PLANTS)}${some("ceiling", CEILINGS)}${opts.night ? '<rect width="800" height="520" fill="#1b2150" opacity=".32"/>' : ""}${some("lamp", LAMPS)}${opts.night && r.lamp ? '<circle class="room-glow" cx="244" cy="262" r="120" fill="#ffe9a0" opacity=".3"/>' : ""}${pet}</svg>`;
 }

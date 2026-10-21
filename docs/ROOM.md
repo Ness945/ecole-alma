@@ -8,3 +8,11 @@ Pièce décorable de l'aventurière (route `room`, 5ᵉ raccourci de l'accueil e
 - **Sauvegarde** : champ optionnel `rpg.room` (11 emplacements, `null` = défaut). Les anciennes sauvegardes sans chambre restent valides et sont complétées au chargement ; un objet non possédé ou posé sur le mauvais emplacement est refusé.
 - **Dessin** : `frontend/js/room-art.js`, SVG local sans identifiants ; l'icône de la boutique est un recadrage du même dessin que la scène. Disponible hors ligne (cache `content-v17`).
 - **Limites** : dessin fait à la main, non validé sur une vraie tablette ; les objets ne se déplacent pas (un emplacement fixe par type).
+
+## Extension v0.14
+- 49 objets de plus (98 au total) : murs (pêche, beurre, pois, cœurs, océan, espace), sols (parquet foncé, rose, plage, carreaux bleus, nuages), lits (lapin, bateau, fusée), tapis (cœur, fleur, lune), fenêtres (coucher de soleil, mer, papillons), lampes (nuage, fleur, hibou), étagères (crayons, trophées, aquarium), bureau (piano, sciences), jouets (robot, licorne, dînette, château en blocs), décoration murale (soleil, cadres, affiches mer / espace, attrape-rêves), plantes (fougère, tournesol, palmier).
+- Deux nouveaux emplacements : **Sièges** (ballon, pouf, sac poire, tabouret champignon, fauteuil) et **Plafond** (ballons, avions en papier, lanternes, mobiles étoilés).
+- Dessins dans `frontend/js/room-art-more.js` (même principe : l'icône est un recadrage de la scène). Les anciennes sauvegardes restent valides (nouveaux emplacements vides).
+
+## Personnage (v0.14)
+12 couleurs de cheveux (8 nouvelles : roux, platine, châtain clair, auburn, rose, lilas, bleu, menthe) et 10 coiffures (6 nouvelles : carré, couettes, macarons, boucles, cheveux courts, longs et nœud). Les quatre premières couleurs et coiffures gardent leur numéro.

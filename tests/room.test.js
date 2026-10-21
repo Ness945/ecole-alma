@@ -17,9 +17,9 @@ import {
 import { roomItems, roomItemArt } from "../frontend/js/room-art.js";
 
 const items = shop.filter((i) => i.kind === "room");
-test("chambre : au moins 40 objets, 11 emplacements, au moins 3 choix chacun", () => {
-  assert.ok(items.length >= 40);
-  assert.equal(roomSlots.length, 11);
+test("chambre : au moins 90 objets, 13 emplacements, au moins 3 choix chacun", () => {
+  assert.ok(items.length >= 90);
+  assert.equal(roomSlots.length, 13);
   for (const s of roomSlots)
     assert.ok(items.filter((i) => i.slot === s).length >= 3, s);
   assert.equal(new Set(shop.map((i) => i.id)).size, shop.length, "ids uniques");
@@ -73,4 +73,16 @@ test("chambre : sauvegardes anciennes valides, objets faux refusés", () => {
   assert.ok(validRpg(bad));
   bad.room.wall = "bed-star";
   assert.equal(validRpg(bad), false, "mauvais emplacement");
+});
+test("v0.14 : couleurs et coiffures ajoutées, anciennes valeurs conservées, sièges et plafond utilisables", async () => {
+  const { hairs, styles, validRpg, defaultRpg: dr, avatarSvg } = await import("../frontend/js/rpg.js");
+  assert.deepEqual(hairs.slice(0, 4), ["#59382e", "#a56539", "#e4bc68", "#302c39"]);
+  assert.ok(hairs.length >= 12 && styles.length >= 10);
+  const r = dr();
+  r.look = { skin: 1, hair: hairs.length - 1, style: styles.length - 1 };
+  assert.equal(validRpg(r), true);
+  assert.match(avatarSvg(r), /<svg/);
+  r.look.hair = hairs.length;
+  assert.equal(validRpg(r), false);
+  assert.ok(items.filter((i) => i.slot === "seat").length >= 5 && items.filter((i) => i.slot === "ceiling").length >= 4);
 });
