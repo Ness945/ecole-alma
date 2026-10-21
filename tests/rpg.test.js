@@ -185,7 +185,7 @@ test("anciennes sauvegardes : sans emplacement « chaussures » ni coiffure, ell
   assert.equal(validRpgState(old), true);
   assert.doesNotThrow(() => drawAvatar(old));
   const bad = newRpg();
-  bad.look.style = 9;
+  bad.look.style = 99;
   assert.equal(validRpgState(bad), false);
   const wrongSlot = newRpg();
   wrongSlot.owned = ["boots-trail"];

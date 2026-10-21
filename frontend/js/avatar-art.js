@@ -4,12 +4,32 @@
 // Aucun dégradé nommé : les identifiants dupliqués d'un document HTML rendraient les icônes fragiles.
 
 export const skins = ["#f4c7a3", "#dca578", "#b97a51", "#875039"];
-export const hairs = ["#59382e", "#a56539", "#e4bc68", "#302c39"];
+export const hairs = [
+  "#59382e",
+  "#a56539",
+  "#e4bc68",
+  "#302c39",
+  // Ajoutées en v0.14 (à la suite : les anciennes sauvegardes gardent leur couleur)
+  "#c4562d", // roux
+  "#efe1b8", // blond platine
+  "#8a6a4a", // châtain clair
+  "#7a2f2a", // auburn
+  "#e58fb0", // rose
+  "#a68fd6", // lilas
+  "#5f93d0", // bleu
+  "#6bbf9d", // menthe
+];
 export const styles = [
   { id: 0, name: "Cheveux longs" },
   { id: 1, name: "Queue de cheval" },
   { id: 2, name: "Tresses" },
   { id: 3, name: "Chignon" },
+  { id: 4, name: "Carré" },
+  { id: 5, name: "Couettes" },
+  { id: 6, name: "Macarons" },
+  { id: 7, name: "Boucles" },
+  { id: 8, name: "Cheveux courts" },
+  { id: 9, name: "Longs et nœud" },
 ];
 
 const clamp = (n) => Math.max(0, Math.min(255, Math.round(n)));
@@ -290,12 +310,37 @@ function hairBack(style, c) {
     return `<path d="M170 72C210 66 228 112 214 154 208 178 196 190 186 198 192 170 194 142 178 116Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/><path d="M80 112C70 60 100 40 130 40c32 0 60 22 50 72Z" fill="${c}"/>`;
   if (style === 2) return `<path d="M80 112C70 60 100 38 130 38c32 0 60 22 50 74Z" fill="${c}"/>`;
   if (style === 3) return `<path d="M80 112C70 60 100 38 130 38c32 0 60 22 50 74Z" fill="${c}"/>`;
+  if (style === 4)
+    return `<path d="M76 112C66 60 98 36 130 38c34-2 66 22 54 74 8 22 6 46-2 62-32 10-76 10-108 0-8-16-10-40-6-62Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/>`;
+  if (style === 5)
+    return `<path d="M80 112C70 60 100 38 130 38c32 0 60 22 50 74Z" fill="${c}"/><path d="M86 104C50 98 36 142 50 184 72 180 92 152 90 116Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/><path d="M174 104C210 98 224 142 210 184 188 180 168 152 170 116Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/>`;
+  if (style === 6)
+    return `<path d="M80 112C70 60 100 38 130 38c32 0 60 22 50 74Z" fill="${c}"/><circle cx="90" cy="46" r="21" fill="${c}" stroke="${o}" stroke-width="3"/><circle cx="170" cy="46" r="21" fill="${c}" stroke="${o}" stroke-width="3"/><path d="M80 38q8-8 18-6M160 38q8-8 18-6" fill="none" stroke="${shade(c, 0.28)}" stroke-width="4" stroke-linecap="round" opacity=".7"/>`;
+  if (style === 7)
+    return [[72, 92, 24], [64, 124, 24], [74, 156, 22], [188, 92, 24], [196, 124, 24], [186, 156, 22], [92, 52, 26], [130, 38, 28], [168, 52, 26]]
+      .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="${o}" stroke-width="3"/>`)
+      .join("");
+  if (style === 8) return `<path d="M82 108C74 58 100 38 130 38c32 0 56 20 48 70Z" fill="${c}"/>`;
+  if (style === 9)
+    return `<path d="M78 112C54 150 58 202 76 224c24 10 84 10 108 0 18-22 22-74-2-112C170 40 90 40 78 112Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/><path d="M70 160q-8 18 0 40M190 160q8 18 0 40" fill="none" stroke="${shade(c, -0.12)}" stroke-width="5" stroke-linecap="round"/>`;
   return `<path d="M78 112C54 150 58 202 76 224c24 10 84 10 108 0 18-22 22-74-2-112C170 40 90 40 78 112Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/>`;
 }
 function hairFront(style, c) {
   const o = line(c),
     hi = shade(c, 0.28);
   const bangs = `<path d="M80 110C72 62 100 38 132 38c34 0 52 30 48 72-10-16-22-30-30-44-12 22-40 38-70 44Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/><path d="M96 60Q118 44 142 48" fill="none" stroke="${hi}" stroke-width="5" stroke-linecap="round" opacity=".7"/><path d="M84 106q-8 14-6 34m96-34q10 14 8 32" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round"/>`;
+  const tie = (x, y) => `<circle cx="${x}" cy="${y}" r="7" fill="#dc94af" stroke="#b9708c" stroke-width="2"/>`;
+  if (style === 4) return bangs;
+  if (style === 5) return `${bangs}${tie(86, 100)}${tie(174, 100)}`;
+  if (style === 6) return `${bangs}${tie(96, 62)}${tie(164, 62)}`;
+  if (style === 7)
+    return [[98, 66, 17], [118, 54, 17], [142, 54, 17], [162, 66, 17], [86, 90, 13], [174, 90, 13]]
+      .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" stroke="${o}" stroke-width="3"/>`)
+      .join("") + `<path d="M104 56q8-6 16-4" fill="none" stroke="${hi}" stroke-width="4" stroke-linecap="round" opacity=".7"/>`;
+  if (style === 8)
+    return `<path d="M82 106C76 64 100 42 132 42c30 0 50 22 46 62-14-6-26-16-34-30-10 16-34 28-62 32Z" fill="${c}" stroke="${o}" stroke-width="3" stroke-linejoin="round"/><path d="M98 62Q118 48 140 52" fill="none" stroke="${hi}" stroke-width="5" stroke-linecap="round" opacity=".7"/>`;
+  if (style === 9)
+    return `${bangs}<path d="M130 46l-24-14v28Z M130 46l24-14v28Z" fill="#dc94af" stroke="#b9708c" stroke-width="2" stroke-linejoin="round"/><circle cx="130" cy="46" r="7" fill="#e8a6bf" stroke="#b9708c" stroke-width="2"/>`;
   if (style === 3)
     return `<circle cx="130" cy="36" r="21" fill="${c}" stroke="${o}" stroke-width="3"/><path d="M118 28q10-8 22-2" fill="none" stroke="${hi}" stroke-width="4" stroke-linecap="round" opacity=".7"/><path d="M110 52q20 10 40 0" fill="none" stroke="#dc94af" stroke-width="6" stroke-linecap="round"/>${bangs}`;
   if (style === 1) return `${bangs}<path d="M170 78q12 4 12 14" fill="none" stroke="#dc94af" stroke-width="8" stroke-linecap="round"/>`;

@@ -8,6 +8,7 @@ import {
 } from "./avatar-art.js";
 import { roofColors, defaultRoof, castleExtraIcon } from "./castle-art.js";
 import { roomItems, roomItemArt, roomSvg, roomSlots } from "./room-art.js";
+import { moreNames } from "./room-art-more.js";
 import { castleSvg, castleSceneItems, castleSceneIcon, castleNewSlots, phaseNow } from "./castle-scene.js";
 export { castleSvg, phaseNow, castleNewSlots };
 export { skins, hairs, styles, avatarSvg, petIcon, roomSvg, roomSlots };
@@ -589,6 +590,7 @@ const ROOM_DATA = {
   "plant-flowers": ["Pot de fleurs", 10],
   "plant-tall": ["Grande plante", 14],
 };
+Object.assign(ROOM_DATA, moreNames);
 for (const id of roomItems)
   shop.push({
     id,
@@ -691,7 +693,7 @@ export function validRpg(r) {
     r.owned.some((id) => !shop.some((i) => i.id === id)) ||
     !r.look ||
     ![0, 1, 2, 3].includes(r.look.skin) ||
-    ![0, 1, 2, 3].includes(r.look.hair) ||
+    !(Number.isInteger(r.look.hair) && r.look.hair >= 0 && r.look.hair < hairs.length) ||
     // Coiffure : absente des sauvegardes antérieures (équivaut à 0).
     !(r.look.style === undefined || styles.some((s) => s.id === r.look.style))
   )
