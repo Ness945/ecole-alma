@@ -56,3 +56,5 @@ La correction du contenu doit aussi être relue par un adulte avant un usage aut
 `tests/followup.test.js` et `tests/followup-browser.mjs` : adaptation après échecs, indice en deux temps, détails conservés, page de suivi parent, impression, hors ligne. Voir docs/SUIVI.md.
 
 `tests/castle.test.js` et `tests/castle-browser.mjs` : château 3D (affichage, rotation au glissement, moments, immobile sans animations douces), 15 emplacements, icônes issues de la scène, rendu aux trois moments pour chaque objet, anciennes sauvegardes, achats, animations actives puis coupées, formats et hors ligne.
+
+`tests/sync.test.js` et `tests/sync-browser.mjs` : chiffrement, fusion, service simulé, deux appareils, hors ligne. Voir docs/SYNC.md.

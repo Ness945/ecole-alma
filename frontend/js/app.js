@@ -72,6 +72,7 @@ import {
 } from "./extras.js";
 import { plantIcon } from "./plant-art.js";
 import { followupView } from "./followup.js";
+import { syncOnce, readConfig, writeConfig, newCode, codeValid, normalizeCode } from "./sync.js";
 import { subjects, lessonActivity } from "./lessons.js";
 import {
   stages,
@@ -119,10 +120,56 @@ try {
   fatal = e.message;
   state = fresh();
 }
+
+// Synchronisation chiffrée facultative (voir docs/SYNC.md) : hors ligne, tout continue de fonctionner.
+let syncStatus = "",
+  syncTimer = 0,
+  syncBusy = false;
+function syncSoon(delay = 4000) {
+  if (!readConfig(localStorage)) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(runSync, delay);
+}
+async function runSync(manual = false) {
+  const config = readConfig(localStorage);
+  if (!config || syncBusy || fatal) return;
+  if (!navigator.onLine) {
+    syncStatus = "Hors ligne : la synchronisation reprendra seule.";
+    return;
+  }
+  syncBusy = true;
+  const started = state.modified || 0;
+  try {
+    const r = await syncOnce(state, config);
+    if (r.changed && (state.modified || 0) === started && !state.session) {
+      state = r.state;
+      upgradeDiscovery(state);
+      save(localStorage, state);
+      render();
+    }
+    config.last = Date.now();
+    writeConfig(localStorage, config);
+    syncStatus = "Synchronisé à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + ".";
+  } catch (err) {
+    syncStatus = err.message === "Failed to fetch" ? "Serveur injoignable pour le moment." : err.message;
+  } finally {
+    syncBusy = false;
+    if (route === "parent") render();
+  }
+}
+function syncPanel() {
+  const c = readConfig(localStorage);
+  const body = c
+    ? `<p>Synchronisation <strong>active</strong>. ${syncStatus || (c.last ? "Dernier échange réussi : " + new Date(c.last).toLocaleString("fr-FR") + "." : "")}</p><p class="sub">Code famille : <strong>${c.code}</strong> — à saisir sur l’autre appareil.</p><div class="actions">${button("Synchroniser maintenant", "sync-now", "ghost")}${button("Désactiver sur cet appareil", "sync-off", "ghost")}</div>`
+    : `<p>Retrouvez la même progression sur tous les appareils. La sauvegarde est <strong>chiffrée sur l’appareil</strong> avant l’envoi : le serveur ne voit que du texte illisible. Facultatif, désactivé par défaut.</p><label>Adresse du service<input id="sync-url" type="url" placeholder="https://academie-sync.votre-compte.workers.dev" autocomplete="off"></label><label>Code famille<input id="sync-code" type="text" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off"></label><p class="sub">Premier appareil : appuyez sur « Créer un code » et notez-le. Autres appareils : saisissez le même code.</p><div class="actions">${button("Créer un code", "sync-gen", "ghost")}${button("Activer", "sync-on")}</div>`;
+  return `<section class="panel"><p class="eyebrow">Plusieurs appareils</p><h2>Synchronisation chiffrée</h2>${body}</section>`;
+}
 function persist() {
   try {
     if (fatal) return false;
+    state.modified = Date.now();
     save(localStorage, state);
+    syncSoon();
     storageError = "";
     return true;
   } catch {
@@ -595,7 +642,7 @@ function parent() {
         })
         .join("") ||
       "<p>Aucune réponse pour le moment. Indiquez les notions déjà travaillées ou commencez par une découverte.</p>"
-    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${followupView(state)}${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
+    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${followupView(state)}${syncPanel()}${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
       .map((s) => {
         const p = state.skills[s.id];
         return `<section class="skill-row"><div class="skill-top"><h3>${s.icon} ${s.name}</h3><select data-status="${s.id}" aria-label="Statut scolaire : ${s.name}" ${state.session ? "disabled" : ""}>${[
@@ -1361,6 +1408,35 @@ app.addEventListener("click", (e) => {
     return;
   }
   if (a === "import") document.querySelector("#import-file").click();
+  if (a === "sync-gen") {
+    document.querySelector("#sync-code").value = newCode();
+    return;
+  }
+  if (a === "sync-on") {
+    const url = document.querySelector("#sync-url").value.trim(),
+      code = document.querySelector("#sync-code").value;
+    if (!/^https:\/\/[^\s]+$/.test(url) && !/^http:\/\/localhost[:/]/.test(url)) return toast("Adresse du service invalide (https://…).");
+    if (!codeValid(code)) return toast("Code famille trop court : utilisez « Créer un code ».");
+    const c = normalizeCode(code).match(/.{1,5}/g).join("-");
+    writeConfig(localStorage, { url, code: c });
+    syncStatus = "Synchronisation en cours…";
+    render();
+    runSync(true);
+    return;
+  }
+  if (a === "sync-now") {
+    syncStatus = "Synchronisation en cours…";
+    render();
+    runSync(true);
+    return;
+  }
+  if (a === "sync-off") {
+    writeConfig(localStorage, null);
+    syncStatus = "";
+    render();
+    toast("Synchronisation désactivée sur cet appareil.");
+    return;
+  }
 });
 app.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -1435,6 +1511,9 @@ app.addEventListener("change", async (e) => {
   }
 });
 render();
+if (readConfig(localStorage)) runSync();
+document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && syncSoon(500));
+window.addEventListener("online", () => syncSoon(500));
 app.addEventListener(
   "toggle",
   (e) => {
