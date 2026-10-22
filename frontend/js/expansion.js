@@ -1,4 +1,6 @@
+import { curriculumSkills, curriculumDemos, curriculumExercise, curriculumNumeric } from "./curriculum-skills.js";
 export const extraSkills = [
+...[
   [
     "hundreds",
     "Mathématiques",
@@ -126,7 +128,9 @@ export const extraSkills = [
   pre,
   lesson,
   icon,
-}));
+})),
+...curriculumSkills,
+];
 export const sentences = [
   ["Le renard", "saute", "sauter"],
   ["La petite fée", "chante", "chanter"],
@@ -525,7 +529,9 @@ export function extraExercise(q, id, seed, turn) {
       break;
     }
     default:
-      return false;
+      if (!curriculumExercise(q, id, seed, turn)) return false;
+      if (curriculumNumeric.has(id) && q.type === "input") q.numeric = true;
+      return true;
   }
   if (
     [
@@ -541,6 +547,7 @@ export function extraExercise(q, id, seed, turn) {
   return true;
 }
 export const extraDemos = {
+  ...curriculumDemos,
   hundreds: [
     "🧱 🧱",
     "200 + 40 + 3",

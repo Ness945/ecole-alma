@@ -1,4 +1,5 @@
-// Le Grand Livre des Lucioles : 5 livres de 20 chapitres.
+import { moreBooks, moreRaw } from "./story-more.js";
+// Le Grand Livre des Lucioles : 8 livres de 20 chapitres.
 // Chaque chapitre est lié à un petit pouvoir (compétence) ; l'enfant peut ouvrir
 // n'importe quel chapitre non terminé, le livre propose seulement la suite logique.
 // Les chapitres 1 à 3 sont les trois parties du pont (adventure.js).
@@ -43,7 +44,7 @@ export const books = [
       "La tortue Mousse t’accueille sur l’île où les saisons se suivent. On y apprend le vivant, le temps qui passe et quelques mots d’anglais.",
     end: "Le Grand Livre des Lucioles est complet ! Sa dernière page raconte ton voyage : tu y es l’héroïne.",
   },
-];
+].concat(moreBooks);
 // [compétence, titre, texte]
 const raw = [
   // Livre 1 — La forêt des lucioles (1-20)
@@ -551,7 +552,8 @@ const raw = [
     "La dernière page",
     "Le Grand Livre est complet. Lis la dernière page écrite pour toi : ton voyage devient histoire.",
   ],
-];
+]
+  .concat(moreRaw);
 export const chapters = raw.map(([skill, title, text], i) => ({
   n: i + 1,
   book: Math.floor(i / 20) + 1,

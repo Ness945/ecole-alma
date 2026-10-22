@@ -28,6 +28,13 @@ export const subjects = [
     className: "english",
     text: "Écouter et découvrir les mots anglais.",
   },
+  {
+    name: "Vivre ensemble",
+    title: "La place du respect",
+    icon: "🤝",
+    className: "emc",
+    text: "Règles, respect, émotions et sécurité.",
+  },
 ];
 export function lessonActivity(id, step = 0) {
   if (id === "multiplication") {
