@@ -21,7 +21,7 @@ try {
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${w}×${h} ${r} : débordement`);
       if (r === "missions") {
         const hs = await page.locator(".subject-tab").evaluateAll((t) => t.map((e) => e.getBoundingClientRect().height));
-        assert.equal(hs.length, 4);
+        assert.equal(hs.length, 5);
         assert.ok(Math.max(...hs) < 200, `cartes de matières trop hautes : ${hs}`);
       }
     }
