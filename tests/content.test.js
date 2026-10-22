@@ -10,9 +10,9 @@ import { skills } from "../frontend/js/content.js";
 import { exercise, check, selectExercise } from "../frontend/js/exercises.js";
 import { fresh, validate } from "../frontend/js/core.js";
 
-test("30 notions avec leçons et exemples pour les 15 ajouts", () => {
-  assert.equal(skills.length, 30);
-  assert.equal(extraSkills.length, 15);
+test("88 notions avec leçons et exemples pour les 73 ajouts", () => {
+  assert.equal(skills.length, 88);
+  assert.equal(extraSkills.length, 73);
   for (const s of extraSkills) {
     assert.ok(s.lesson.length > 40);
     assert.equal(extraDemos[s.id].length, 3);

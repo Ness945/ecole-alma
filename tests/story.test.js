@@ -39,9 +39,9 @@ const finishChapter = (s, n, uuid = "u" + n) => {
   s.session = null;
 };
 
-test("le Grand Livre : 100 chapitres, 5 livres de 20, tous reliés à un petit pouvoir existant", () => {
-  assert.equal(CHAPTER_COUNT, 100);
-  assert.equal(books.length, 5);
+test("le Grand Livre : 160 chapitres, 8 livres de 20, tous reliés à un petit pouvoir existant", () => {
+  assert.equal(CHAPTER_COUNT, 160);
+  assert.equal(books.length, 8);
   const ids = new Set(skills.map((s) => s.id));
   for (const b of books) assert.equal(chapters.filter((c) => c.book === b.id).length, 20);
   chapters.forEach((c, i) => {
@@ -49,7 +49,7 @@ test("le Grand Livre : 100 chapitres, 5 livres de 20, tous reliés à un petit p
     assert.ok(ids.has(c.skill), `chapitre ${c.n} : compétence ${c.skill}`);
     assert.ok(c.title.length > 3 && c.text.length > 30);
   });
-  assert.equal(new Set(chapters.map((c) => c.title)).size, 100, "titres tous différents");
+  assert.equal(new Set(chapters.map((c) => c.title)).size, 160, "titres tous différents");
   assert.deepEqual(
     chapters.slice(0, 3).map((c) => [c.skill, c.title, c.text]),
     stages.map((s) => [s.skill, s.title, s.story]),
@@ -87,7 +87,7 @@ test("un chapitre ouvre son petit pouvoir, crée une mission valide, et n'est va
   s.session = null;
   assert.throws(() => createChapter(s, 44, 1, "again"), /déjà terminé/);
   assert.throws(() => createChapter(s, 2, 1, "bridge"), /pont/);
-  assert.throws(() => createChapter(s, 101, 1, "x"));
+  assert.throws(() => createChapter(s, 161, 1, "x"));
 });
 test("les chapitres terminés disparaissent des listes et ne sont plus proposés", () => {
   const s = fresh();

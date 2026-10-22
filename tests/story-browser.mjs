@@ -63,8 +63,8 @@ try {
   await page.getByRole("heading", { name: /Bienvenue dans ton royaume/ }).waitFor();
   // Départ : le pont est le début du Grand Livre, mais le livre s'ouvre déjà.
   await page.getByRole("button", { name: "Ouvrir le Grand Livre", exact: true }).click();
-  await page.getByRole("heading", { name: "0 chapitre sur 100" }).waitFor();
-  assert.equal(await page.locator('[data-action="book-select"]').count(), 5);
+  await page.getByRole("heading", { name: "0 chapitre sur 160" }).waitFor();
+  assert.equal(await page.locator('[data-action="book-select"]').count(), 8);
   await noOverflow("Livre");
 
   // Alma n'a jamais vu la multiplication : elle la choisit directement.
@@ -93,14 +93,14 @@ try {
   await page.getByRole("heading", { name: /Bienvenue dans ton royaume/ }).waitFor();
   assert.equal((await state()).session, null);
   await page.getByRole("button", { name: "Ouvrir le Grand Livre", exact: true }).click();
-  await page.getByRole("heading", { name: "1 chapitre sur 100" }).waitFor();
+  await page.getByRole("heading", { name: "1 chapitre sur 160" }).waitFor();
   assert.equal(await page.locator('[data-chapter="44"]').count(), 0, "chapitre terminé : plus proposé");
   await page.locator('[data-action="book-select"][data-book="3"]').click();
   assert.equal(await page.locator('[data-chapter="44"]').count(), 0);
   assert.equal(await page.locator('[data-chapter="41"]').count(), 1);
   await page.reload();
   await page.getByRole("button", { name: "Ouvrir le Grand Livre", exact: true }).click();
-  await page.getByRole("heading", { name: "1 chapitre sur 100" }).waitFor();
+  await page.getByRole("heading", { name: "1 chapitre sur 160" }).waitFor();
   assert.match(await page.locator(".book-journal summary").textContent(), /1 chapitre terminé/);
 
   // Entraînement après une leçon : choix libre depuis le catalogue.
@@ -170,7 +170,7 @@ try {
   await context.setOffline(true);
   await page.reload();
   await page.getByRole("button", { name: "Ouvrir le Grand Livre", exact: true }).click();
-  await page.getByRole("heading", { name: "1 chapitre sur 100" }).waitFor();
+  await page.getByRole("heading", { name: "1 chapitre sur 160" }).waitFor();
   await context.setOffline(false);
   assert.deepEqual(errors, []);
   console.log("Grand Livre : chapitre libre sans prérequis, reprise, chapitre terminé masqué, entraînement, jardin 8→24, plantes améliorées, compagnon, château et hors ligne OK.");

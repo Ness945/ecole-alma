@@ -62,3 +62,5 @@ La correction du contenu doit aussi être relue par un adulte avant un usage aut
 `tests/words.test.js` et `tests/words-browser.mjs` : saisons (16 variantes), calendrier (mois avant/après), tolérance d’orthographe proche avec affichage de la bonne écriture (v0.16).
 
 `tests/explain.test.js` et `tests/explain-browser.mjs` : après une erreur, retour en lignes (ce qu’elle a répondu, erreur probable, explication, bonne réponse) pour toutes les notions (v0.17).
+
+- `tests/curriculum.test.js` : 58 nouveaux thèmes (matière, prérequis, leçon, chapitre), exercices valides à tous les niveaux, retenue < 100, au moins 9 exercices différents par thème.

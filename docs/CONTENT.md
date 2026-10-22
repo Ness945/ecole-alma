@@ -15,3 +15,15 @@ Constat sur une vraie sauvegarde : l'ordre était souvent connu, mais les répon
 - Saisons : 16 variantes (après, avant, entre, repères dans la nature) ; leçon avec le cycle illustré et l'écriture par syllabes.
 - Calendrier : mois avant/après, indice limité aux mois voisins.
 - Réponses écrites : une faute proche est acceptée (`nearCheck`, distance d'édition bornée, jamais si un autre mot proposé est plus proche, jamais en choix multiple) ; la bonne écriture est affichée.
+
+## Programme CE1 élargi (v0.18.0)
+
+58 petits pouvoirs ajoutés (88 au total), écrits à partir des attendus officiels du cycle 2 (Éduscol). Les textes sont originaux ; aucun contenu d'un site tiers n'est copié.
+
+- Mathématiques (18) : `curriculum-maths.js` — comptage par bonds, voisins, ordre, pair/impair, calcul mental ±10/100, addition avec retenue, soustraction avec échange, tables, partage, problèmes en deux étapes, longueurs, masses et contenances, durées, lignes et angles droits, symétrie, quadrillage, solides, pictogrammes.
+- Français (15) : `curriculum-french.js` — types de phrases, pronoms, féminin, pluriel, homophones, synonymes, contraires, familles de mots, syllabes, sons, noms propres, futur, passé composé, verbes irréguliers, alphabet.
+- Questionner le monde (15), Vivre ensemble / EMC (5) et Anglais (5) : `curriculum-world.js`.
+- Définitions et leçons illustrées (visuel, titre, explication en deux temps) : `curriculum-skills.js`.
+- Grand Livre : livres 6 à 8 (60 chapitres, `story-more.js`), soit 160 chapitres.
+
+Les banques de questions (format `question|bonne réponse|faux 1|faux 2|explication`) contiennent 9 à 12 questions par thème ; les thèmes calculés (maths, conjugaison, alphabet) en génèrent beaucoup plus.

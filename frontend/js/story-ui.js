@@ -26,7 +26,7 @@ const esc = (x) =>
 const btn = (label, action, cls = "", extra = "") =>
   `<button data-action="${action}" class="${cls}" ${extra}>${label}</button>`;
 const skillOf = (id) => skills.find((s) => s.id === id);
-const romans = ["I", "II", "III", "IV", "V"];
+const romans = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 const openAction = (n) => (n <= BRIDGE_CHAPTERS ? "bridge" : "chapter-open");
 export function storyTeaser(state) {
   const next = nextChapter(state),
@@ -62,7 +62,7 @@ export function bookView(state, book = currentBook(state)) {
     return `<article class="chapter-card ${featured ? "featured" : ""}" data-chapter="${c.n}"><div class="chapter-num">${c.n}</div><div><p class="eyebrow">${featured ? "PROCHAIN CHAPITRE" : `CHAPITRE ${c.n}`} · ${sk.icon} ${esc(sk.name)}${fresh ? ' · <span class="chapter-new">nouveau pouvoir</span>' : ""}</p><h3>${esc(c.title)}</h3>${featured ? `<p>${esc(c.text)}</p>` : ""}</div>${btn(featured ? "Ouvrir ce chapitre →" : "Ouvrir", openAction(c.n), featured ? "primary" : "secondary small", `data-n="${c.n}"`)}</article>`;
   };
   const finished = chapters.filter((c) => chapterDone(state, c.n));
-  return `<section class="book-head"><div><p class="eyebrow">LE GRAND LIVRE DES LUCIOLES</p><h2>${done} chapitre${done > 1 ? "s" : ""} sur ${CHAPTER_COUNT}</h2><p class="sub">Choisis le chapitre que tu veux : le livre te propose la suite, mais rien ne t’oblige. Un chapitre terminé disparaît de la liste.</p></div><div class="progress book-progress" role="progressbar" aria-label="Progression du Grand Livre" aria-valuemin="0" aria-valuemax="${CHAPTER_COUNT}" aria-valuenow="${done}"><span style="width:${(done / CHAPTER_COUNT) * 100}%"></span></div></section><div class="book-tabs" role="group" aria-label="Les cinq livres">${tabs}</div><section class="panel book-intro"><p class="eyebrow">${b.icon} LIVRE ${romans[book - 1]}</p><h2>${b.title}</h2><p>${b.intro}</p></section>${
+  return `<section class="book-head"><div><p class="eyebrow">LE GRAND LIVRE DES LUCIOLES</p><h2>${done} chapitre${done > 1 ? "s" : ""} sur ${CHAPTER_COUNT}</h2><p class="sub">Choisis le chapitre que tu veux : le livre te propose la suite, mais rien ne t’oblige. Un chapitre terminé disparaît de la liste.</p></div><div class="progress book-progress" role="progressbar" aria-label="Progression du Grand Livre" aria-valuemin="0" aria-valuemax="${CHAPTER_COUNT}" aria-valuenow="${done}"><span style="width:${(done / CHAPTER_COUNT) * 100}%"></span></div></section><div class="book-tabs" role="group" aria-label="Les huit livres">${tabs}</div><section class="panel book-intro"><p class="eyebrow">${b.icon} LIVRE ${romans[book - 1]}</p><h2>${b.title}</h2><p>${b.intro}</p></section>${
     next
       ? `<div class="chapter-list">${card(next, true)}${open
           .slice(1)
