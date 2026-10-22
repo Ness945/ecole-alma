@@ -26,6 +26,7 @@ const esc = (x) =>
 const btn = (label, action, cls = "", extra = "") =>
   `<button data-action="${action}" class="${cls}" ${extra}>${label}</button>`;
 const skillOf = (id) => skills.find((s) => s.id === id);
+import { mixQueue } from "./evaluation.js";
 const romans = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 const openAction = (n) => (n <= BRIDGE_CHAPTERS ? "bridge" : "chapter-open");
 export function storyTeaser(state) {
@@ -83,5 +84,6 @@ export function chapterFinish(state, session) {
     b = books[c.book - 1],
     full = bookDone(state, c.book),
     next = nextChapter(state);
-  return `<section class="panel celebration chapter-finish"><div class="emoji">${full ? "🏆" : "📖"}</div><h1>Chapitre ${c.n} terminé !</h1><p><strong>${esc(c.title)}</strong> rejoint ton journal. Il ne réapparaîtra plus dans ta liste.</p>${full ? `<div class="notice">${b.end}</div>` : ""}<p>⭐ ${session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p>${next ? btn(`Chapitre suivant : ${esc(next.title)} →`, "book-next", "primary") : ""} ${btn("Voir le Grand Livre", "chapter-to-book", "secondary")} ${btn("Retour au menu principal", "finish-home", "secondary")} ${btn("Planter mes graines", "finish", "quiet")}</p></section>`;
+  const mix = mixQueue(state).length >= 3;
+  return `<section class="panel celebration chapter-finish"><div class="emoji">${full ? "🏆" : "📖"}</div><h1>Chapitre ${c.n} terminé !</h1><p><strong>${esc(c.title)}</strong> rejoint ton journal. Il ne réapparaîtra plus dans ta liste.</p>${full ? `<div class="notice">${b.end}</div>` : ""}<p>⭐ ${session.queue.length} étoiles d’aventure · 🌱 2 graines · 🪙 10 pièces</p><p>${next ? btn(`Chapitre suivant : ${esc(next.title)} →`, "book-next", "primary") : ""} ${mix ? btn("🎲 Mini-bilan mélangé · 5 questions", "mix-start", "secondary") : ""} ${btn("Voir le Grand Livre", "chapter-to-book", "secondary")} ${btn("Retour au menu principal", "finish-home", "secondary")} ${btn("Planter mes graines", "finish", "quiet")}</p></section>`;
 }

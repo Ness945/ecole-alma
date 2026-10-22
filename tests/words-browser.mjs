@@ -29,7 +29,7 @@ try {
       const q = await page.evaluate(async () => {
         const st = JSON.parse(localStorage.getItem("academie.save.v2")), s = st.session,
           { exercise } = await import("/js/exercises.js");
-        return exercise(s.queue[s.index], s.questionSeed, st.skills[s.queue[s.index]].level, s.index, Boolean(s.questionEase));
+        return exercise(s.queue[s.index], s.questionSeed, st.skills[s.queue[s.index]].level, s.index, Boolean(s.questionEase), s.questionTier ?? 1);
       });
       // Mot proche : on retire une lettre au milieu
       if (q.answer.length < 5) {
@@ -52,7 +52,7 @@ try {
       const q = await page.evaluate(async () => {
         const st = JSON.parse(localStorage.getItem("academie.save.v2")), s = st.session,
           { exercise } = await import("/js/exercises.js");
-        return exercise(s.queue[s.index], s.questionSeed, st.skills[s.queue[s.index]].level, s.index, Boolean(s.questionEase));
+        return exercise(s.queue[s.index], s.questionSeed, st.skills[s.queue[s.index]].level, s.index, Boolean(s.questionEase), s.questionTier ?? 1);
       });
       await page.locator(".choices").getByRole("button", { name: q.answer, exact: true }).click();
       await page.locator('[data-action="next"]').click();

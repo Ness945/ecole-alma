@@ -75,9 +75,9 @@ export const curriculumSkills = defs.map(([id, subject, name, pre, lesson, icon]
 export const curriculumDemos = Object.fromEntries(defs.map(([id, , , , , , v, t, x]) => [id, [v, t, x]]));
 const m = new Set(mathsIds), f = new Set(frenchIds), w = new Set(worldIds);
 export const curriculumNumeric = new Set(["count_step", "neighbors", "mental10", "add_carry", "sub_borrow", "tables", "sharing", "problem2", "duration", "syllables"]);
-export function curriculumExercise(q, id, seed, turn) {
+export function curriculumExercise(q, id, seed, turn, tier = 1) {
   const r = rng(seed * 2654435761 + turn * 97 + 13);
-  if (m.has(id)) return mathsExercise(q, id, seed, turn, r), true;
+  if (m.has(id)) return mathsExercise(q, id, seed, turn, r, tier), true;
   if (f.has(id)) return frenchExercise(q, id, seed, turn, r), true;
   if (w.has(id)) return worldExercise(q, id, seed, turn, r), true;
   return false;

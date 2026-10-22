@@ -22,7 +22,7 @@ const question = () =>
       st = JSON.parse(localStorage.getItem("academie.save.v2")),
       { exercise } = await import("/js/exercises.js"),
       id = s.queue[s.index];
-    return exercise(id, s.questionSeed, st.skills[id].level, s.index, Boolean(s.questionEase));
+    return exercise(id, s.questionSeed, st.skills[id].level, s.index, Boolean(s.questionEase), s.questionTier ?? 1);
   });
 async function reply(correct) {
   const q = await question();

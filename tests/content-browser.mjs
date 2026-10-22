@@ -39,6 +39,8 @@ try {
         s.session.questionSeed,
         s.skills[s.session.queue[0]].level,
         0,
+        false,
+        s.session.questionTier ?? 1,
       );
     });
     if (q.type === "input") {

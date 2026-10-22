@@ -3,6 +3,7 @@
 // Ce sont des observations prudentes, pas un diagnostic.
 import { skills } from "./content.js";
 import { DAY } from "./core.js";
+import { slipOf } from "./slips.js";
 
 const WEEK = 7 * DAY;
 const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -47,7 +48,7 @@ const TIPS = {
   animals: "Chansons ou images d'animaux : dites le nom anglais avant de montrer la carte.",
   english_numbers: "Comptez en anglais de 1 à 10 en montant l'escalier.",
 };
-const tipFor = (id) => TIPS[id] || (subjectOf(id) === "Mathématiques" ? "Refaites 3 ou 4 exemples avec des objets à manipuler." : "Relisez ensemble quelques exemples à voix haute.");
+export const tipFor = (id) => TIPS[id] || (subjectOf(id) === "Mathématiques" ? "Refaites 3 ou 4 exemples avec des objets à manipuler." : "Relisez ensemble quelques exemples à voix haute.");
 
 // ───────── Erreurs : on regarde la réponse donnée, pas seulement « faux » ─────────
 export function errorOf(e) {
@@ -56,6 +57,8 @@ export function errorOf(e) {
   const a = String(e.answer ?? "").trim(),
     x = String(e.expected ?? "").trim();
   if (e.answer !== undefined && a === "") return { code: "empty", label: "Pas de réponse" };
+  const sl = slipOf({ skill: e.skill, prompt: e.prompt, answer: e.answer, expected: e.expected });
+  if (sl) return { code: sl.code, label: sl.label };
   const na = Number(a.replace(",", ".")),
     nx = Number(x.replace(",", "."));
   if (a !== "" && x !== "" && Number.isFinite(na) && Number.isFinite(nx)) {

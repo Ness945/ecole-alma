@@ -461,7 +461,7 @@ export function validate(raw) {
       s.index > s.queue.length ||
       !integer(s.seed) ||
       !integer(s.started) ||
-      !["normal", "discovery", "mini", "daily", "review"].includes(s.mode) ||
+      !["normal", "discovery", "mini", "daily", "review", "bilan", "weak", "mix"].includes(s.mode) ||
       typeof s.draft !== "string" ||
       s.draft.length > 500 ||
       typeof s.assisted !== "boolean" ||

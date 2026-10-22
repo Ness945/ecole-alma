@@ -1836,3 +1836,71 @@ body {
 .castle3d.ready > .castle-art {
   visibility: hidden;
 }
+
+/* Bilan, points à renforcer, rapport (v0.19) */
+.bilan-teaser {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: #f3eefa;
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.bilan-teaser h3,
+.bilan-teaser p {
+  margin: 2px 0;
+}
+.bilan-chips,
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.bilan-chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  background: #eceaf3;
+  color: #454058;
+}
+.bilan-chip.map-good {
+  background: #e2f1e4;
+}
+.bilan-chip.map-mid {
+  background: #fbf0d6;
+}
+.bilan-chip.map-low {
+  background: #f6e1e6;
+}
+.bilan-result {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  max-width: 560px;
+  margin: 12px auto;
+}
+.bilan-result li {
+  padding: 6px 10px;
+  border-radius: 12px;
+  margin: 4px 0;
+  background: #f5f3fa;
+}
+.week-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.weak-note small {
+  display: block;
+  margin-top: 4px;
+}
+@media print {
+  .bilan-teaser {
+    display: none;
+  }
+}

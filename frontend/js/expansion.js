@@ -331,7 +331,7 @@ export function clockSvg(hour, half = false) {
     "",
   )}<path d="M100 100L${x} ${y}" stroke="#765788" stroke-width="8" stroke-linecap="round"/><path d="M100 100V${half ? 160 : 40}" stroke="#438c8b" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="100" r="6" fill="#454058"/></svg>`;
 }
-export function extraExercise(q, id, seed, turn) {
+export function extraExercise(q, id, seed, turn, tier = 1) {
   const a = 2 + (seed % 9),
     b = 2 + (Math.floor(seed / 9) % 8),
     mode = turn % 3;
@@ -529,7 +529,7 @@ export function extraExercise(q, id, seed, turn) {
       break;
     }
     default:
-      if (!curriculumExercise(q, id, seed, turn)) return false;
+      if (!curriculumExercise(q, id, seed, turn, tier)) return false;
       if (curriculumNumeric.has(id) && q.type === "input") q.numeric = true;
       return true;
   }

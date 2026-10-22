@@ -65,7 +65,7 @@ const solidBank = parseBank([
   "Combien d’arêtes a un cube ?|12|6|8|Un cube a 12 arêtes (les bords).",
 ]);
 
-export function mathsExercise(q, id, seed, turn, r) {
+export function mathsExercise(q, id, seed, turn, r, tier = 1) {
   const choice = q.type === "choice";
   const num = (answer, hint, spread) => {
     q.answer = String(answer);
@@ -76,8 +76,8 @@ export function mathsExercise(q, id, seed, turn, r) {
   switch (id) {
     case "count_step": {
       const step = pick(r, [2, 5, 10]),
-        down = seed % 5 === 4,
-        start = step * between(r, down ? 6 : 0, down ? 12 : 8),
+        down = tier === 0 ? false : tier === 2 ? seed % 2 === 0 : seed % 5 === 4,
+        start = step * (tier === 0 ? between(r, 0, 4) : tier === 2 ? between(r, down ? 8 : 5, down ? 15 : 12) : between(r, down ? 6 : 0, down ? 12 : 8)),
         seq = Array.from({ length: 5 }, (_, i) => start + (down ? -i : i) * step),
         hole = between(r, 1, 4);
       q.prompt = `Compte de ${step} en ${step}${down ? " en reculant" : ""} : ${seq.map((v, i) => (i === hole ? "…" : v)).join(", ")}. Quel nombre manque ?`;
@@ -85,7 +85,12 @@ export function mathsExercise(q, id, seed, turn, r) {
       return true;
     }
     case "neighbors": {
-      const n = pick(r, [between(r, 10, 98), 9 + 10 * between(r, 1, 9), 99, 109, 199 + 100 * between(r, 0, 6)]),
+      const n =
+          tier === 0
+            ? between(r, 10, 48)
+            : tier === 2
+              ? pick(r, [9 + 10 * between(r, 10, 98), 99 + 100 * between(r, 1, 8), between(r, 100, 998)])
+              : pick(r, [between(r, 10, 98), 9 + 10 * between(r, 1, 9), 99, 109, 199 + 100 * between(r, 0, 6)]),
         after = seed % 2 === 0,
         ans = after ? n + 1 : n - 1;
       q.prompt = `Quel nombre vient juste ${after ? "après" : "avant"} ${n} ?`;
@@ -94,7 +99,8 @@ export function mathsExercise(q, id, seed, turn, r) {
     }
     case "order": {
       const nums = new Set();
-      while (nums.size < 3) nums.add(between(r, 10, 99));
+      const [olo, ohi, ocount] = tier === 0 ? [10, 49, 3] : tier === 2 ? [100, 999, 4] : [10, 99, 3];
+      while (nums.size < ocount) nums.add(between(r, olo, ohi));
       const list = [...nums],
         asc = seed % 2 === 0,
         sorted = [...list].sort((a, b) => (asc ? a - b : b - a));
@@ -102,12 +108,12 @@ export function mathsExercise(q, id, seed, turn, r) {
       q.prompt = `Range ces nombres ${asc ? "du plus petit au plus grand" : "du plus grand au plus petit"} : ${list.join(" ; ")}.`;
       q.answer = fmt(sorted);
       q.accepted = [sorted.join(" "), sorted.join(","), sorted.join(" ; "), sorted.join(";"), sorted.join(" - "), sorted.join("-")];
-      q.options = [q.answer, fmt([...sorted].reverse()), fmt([sorted[1], sorted[0], sorted[2]])];
+      q.options = [q.answer, fmt([...sorted].reverse()), fmt([sorted[1], sorted[0], ...sorted.slice(2)])];
       q.hint = `Compare d’abord les dizaines. ${asc ? "Le plus petit d’abord" : "Le plus grand d’abord"} : ${q.answer}.`;
       return true;
     }
     case "evenodd": {
-      const n = between(r, 0, 99);
+      const n = tier === 0 ? between(r, 0, 20) : tier === 2 ? between(r, 100, 999) : between(r, 0, 99);
       q.prompt = `Le nombre ${n} est-il pair ou impair ?`;
       q.answer = n % 2 === 0 ? "pair" : "impair";
       q.options = ["pair", "impair"];
@@ -116,8 +122,8 @@ export function mathsExercise(q, id, seed, turn, r) {
       return true;
     }
     case "mental10": {
-      const kind = pick(r, ["+10", "−10", "+100", "−100", "+9", "−9"]),
-        n = kind.endsWith("100") ? between(r, 2, 8) * 100 + between(r, 0, 99) : between(r, 20, 90);
+      const kind = pick(r, tier === 0 ? ["+10", "−10"] : tier === 2 ? ["+100", "−100", "+9", "−9"] : ["+10", "−10", "+100", "−100", "+9", "−9"]),
+        n = kind.endsWith("100") ? between(r, 2, 8) * 100 + between(r, 0, 99) : tier === 2 ? between(r, 120, 890) : between(r, 20, 90);
       const ans = { "+10": n + 10, "−10": n - 10, "+100": n + 100, "−100": n - 100, "+9": n + 9, "−9": n - 9 }[kind];
       q.prompt = `Combien font ${n} ${kind[0]} ${kind.slice(1)} ?`;
       num(ans, {
@@ -133,8 +139,8 @@ export function mathsExercise(q, id, seed, turn, r) {
     case "add_carry": {
       const ua = between(r, 4, 9),
         ub = between(r, 10 - ua, 9),
-        ta = between(r, 1, 6),
-        tb = between(r, 1, Math.max(1, 8 - ta));
+        ta = tier === 0 ? between(r, 1, 3) : tier === 2 ? between(r, 4, 7) : between(r, 1, 6),
+        tb = between(r, 1, Math.max(1, (tier === 0 ? 4 : 8) - ta));
       const a = ta * 10 + ua,
         b = tb * 10 + ub;
       q.prompt = `Combien font ${a} + ${b} ?`;
@@ -144,8 +150,8 @@ export function mathsExercise(q, id, seed, turn, r) {
     case "sub_borrow": {
       const ua = between(r, 0, 5),
         ub = between(r, ua + 1, 9),
-        ta = between(r, 4, 9),
-        tb = between(r, 1, ta - 1);
+        ta = tier === 0 ? between(r, 3, 5) : between(r, 4, 9),
+        tb = tier === 2 ? between(r, Math.ceil(ta / 2), ta - 1) : between(r, 1, tier === 0 ? Math.min(2, ta - 1) : ta - 1);
       const a = ta * 10 + ua,
         b = tb * 10 + ub;
       q.prompt = `Combien font ${a} − ${b} ?`;
@@ -153,9 +159,9 @@ export function mathsExercise(q, id, seed, turn, r) {
       return true;
     }
     case "tables": {
-      const t = pick(r, [2, 3, 4, 5, 10]),
-        n = between(r, 1, 10),
-        missing = turn % 3 === 2;
+      const t = pick(r, tier === 0 ? [2, 5, 10] : [2, 3, 4, 5, 10]),
+        n = tier === 0 ? between(r, 1, 5) : tier === 2 ? between(r, 6, 10) : between(r, 1, 10),
+        missing = tier === 2 ? turn % 3 !== 0 : turn % 3 === 2;
       if (missing) {
         q.prompt = `${t} × … = ${t * n}. Quel nombre manque ?`;
         num(n, `Compte de ${t} en ${t} jusqu’à ${t * n} : ${Array.from({ length: n }, (_, i) => t * (i + 1)).join(", ")}. Il y a ${n} pas.`, [1, 2, 3]);
@@ -166,8 +172,8 @@ export function mathsExercise(q, id, seed, turn, r) {
       return true;
     }
     case "sharing": {
-      const k = between(r, 2, 5),
-        m = between(r, 2, 6),
+      const k = tier === 0 ? between(r, 2, 3) : between(r, 2, 5),
+        m = tier === 0 ? between(r, 2, 4) : tier === 2 ? between(r, 5, 9) : between(r, 2, 6),
         thing = pick(r, things),
         holder = pick(r, holders);
       if (seed % 2) {
@@ -181,9 +187,9 @@ export function mathsExercise(q, id, seed, turn, r) {
     }
     case "problem2": {
       const [n1, n2] = shuffled(r, names),
-        a = between(r, 6, 15),
-        b = between(r, 2, 6),
-        c = between(r, 1, 5),
+        a = tier === 0 ? between(r, 4, 9) : tier === 2 ? between(r, 15, 40) : between(r, 6, 15),
+        b = tier === 0 ? between(r, 1, 4) : tier === 2 ? between(r, 4, 12) : between(r, 2, 6),
+        c = tier === 0 ? between(r, 1, 3) : tier === 2 ? between(r, 3, 9) : between(r, 1, 5),
         form = seed % 4;
       const f = [
         [`${n1} a ${a} cerises. Elle en reçoit ${b}, puis elle en mange ${c}. Combien lui en reste-t-il ?`, a + b - c, `D’abord ${a} + ${b} = ${a + b}. Puis ${a + b} − ${c} = ${a + b - c}.`],
