@@ -14,6 +14,7 @@ import {
   styles,
 } from "./rpg.js";
 import { subjects } from "./lessons.js";
+import { weakQueue, assessmentProgress } from "./evaluation.js";
 import { reviewQueue, dailyAvailable, newStickers, exportDue } from "./extras.js";
 import { storyTeaser } from "./story-ui.js";
 const esc = (x) =>
@@ -40,6 +41,13 @@ function homeExtras(state) {
     cards.push(
       btn(`<span>🦄</span><strong>Luna te repose une question</strong><small>${due} notion${due > 1 ? "s" : ""} à retrouver</small>`, "review", "extra-card"),
     );
+  if (!state.session) {
+    const prog = assessmentProgress(state);
+    if (weakQueue(state).length)
+      cards.push(btn("<span>🎯</span><strong>Points à renforcer</strong><small>6 défis choisis par Luna</small>", "weak-start", "extra-card"));
+    else if (!prog.done && state.completed.length >= 1)
+      cards.push(btn("<span>🗺️</span><strong>Le bilan de Luna</strong><small>Découvre où tu en es</small>", "bilan", "extra-card"));
+  }
   cards.push(
     btn(`<span>⭐</span><strong>Mon album</strong><small>${fresh ? `${fresh} nouveau${fresh > 1 ? "x" : ""} !` : "Mes autocollants"}</small>`, "album", `extra-card ${fresh ? "has-new" : ""}`),
   );

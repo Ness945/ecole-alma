@@ -25,7 +25,7 @@ async function answerAll() {
     const q = await page.evaluate(async () => {
       const s = JSON.parse(localStorage.getItem("academie.save.v2"));
       const { exercise } = await import("/js/exercises.js");
-      return exercise(s.session.queue[s.session.index], s.session.questionSeed ?? (s.session.seed + s.session.index * 7919) >>> 0, s.skills[s.session.queue[s.session.index]].level, s.session.index);
+      return exercise(s.session.queue[s.session.index], s.session.questionSeed ?? (s.session.seed + s.session.index * 7919) >>> 0, s.skills[s.session.queue[s.session.index]].level, s.session.index, false, s.session.questionTier ?? 1);
     });
     if (q.type === "input") {
       await page.locator("#answer-input").fill(q.answer);

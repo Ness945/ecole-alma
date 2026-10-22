@@ -25,7 +25,7 @@ try {
   const q = await page.evaluate(async () => {
     const st = JSON.parse(localStorage.getItem("academie.save.v2")), s = st.session,
       { exercise } = await import("/js/exercises.js");
-    return exercise(s.queue[s.index], s.questionSeed, st.skills[s.queue[s.index]].level, s.index, Boolean(s.questionEase));
+    return exercise(s.queue[s.index], s.questionSeed, st.skills[s.queue[s.index]].level, s.index, Boolean(s.questionEase), s.questionTier ?? 1);
   });
   if (q.type === "input") {
     await page.locator("#answer-input").fill("999");

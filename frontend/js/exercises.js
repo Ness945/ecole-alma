@@ -1,3 +1,4 @@
+import { slipOf } from "./slips.js";
 import { extraExercise, stories, sentences } from "./expansion.js";
 const nouns = [
   ["renard", "renards", "m"],
@@ -49,12 +50,20 @@ export const normalize = (s) =>
     .replace(/\s+/g, " ");
 // ease = true : l'enfant vient d'échouer deux fois sur cette notion. Nombres plus petits, matériel visible
 // (niveau 1) et, pour les autres notions, un petit coup de pouce affiché d'emblée (q.support).
-export function exercise(id, seed, level = 2, turn = 0, ease = false) {
+export function exercise(id, seed, level = 2, turn = 0, ease = false, tier = 1) {
   const r = rng(seed),
     a = ease ? 1 + Math.floor(r() * 4) : 2 + Math.floor(r() * 8),
     b = ease ? 1 + Math.floor(r() * 3) : 1 + Math.floor(r() * 8),
     g = group(seed);
   if (ease) level = 1;
+  // Échelle de difficulté : palier 0 (facile), 1 (normal), 2 (plus difficile) — voir evaluation.js.
+  const easy = ease || tier === 0,
+    r2 = rng(seed * 7 + 3);
+  let a2 = a,
+    b2 = b;
+  if (!ease && tier === 0 && (id === "addition" || id === "subtract")) (a2 = 1 + Math.floor(r2() * 5)), (b2 = 1 + Math.floor(r2() * 4));
+  if (!ease && tier === 2 && id === "addition") (a2 = 10 + Math.floor(r2() * 20)), (b2 = 5 + Math.floor(r2() * 15));
+  if (!ease && tier === 2 && id === "subtract") (a2 = 3 + Math.floor(r2() * 15)), (b2 = 5 + Math.floor(r2() * 15));
   const choice = turn % 3 === 0;
   const q = {
     skill: id,
@@ -70,8 +79,8 @@ export function exercise(id, seed, level = 2, turn = 0, ease = false) {
   };
   switch (id) {
     case "multiplication": {
-      const groups = 2 + (seed % (ease ? 2 : 4)),
-        each = 2 + (Math.floor(seed / 4) % (ease ? 2 : 4));
+      const groups = tier === 2 && !ease ? [2, 3, 4, 5, 10][seed % 5] : 2 + (seed % (easy ? 2 : 4)),
+        each = tier === 2 && !ease ? 2 + (Math.floor(seed / 5) % 9) : 2 + (Math.floor(seed / 4) % (easy ? 2 : 4));
       q.prompt =
         turn % 3 === 2
           ? `Pour le goûter, ${groups} paniers contiennent chacun ${each} pommes. Combien y a-t-il de pommes en tout ?`
@@ -89,8 +98,8 @@ export function exercise(id, seed, level = 2, turn = 0, ease = false) {
       break;
     }
     case "number": {
-      const tens = 1 + Math.floor(r() * (ease ? 2 : 5)),
-        units = Math.floor(r() * (ease ? 5 : 10));
+      const tens = 1 + Math.floor(r() * (easy ? 2 : tier === 2 ? 9 : 5)),
+        units = Math.floor(r() * (easy ? 5 : 10));
       q.prompt = `Construis ${tens * 10 + units} avec les dizaines et les unités.`;
       q.type = "blocks";
       q.dimension = "manipulation";
@@ -105,15 +114,15 @@ export function exercise(id, seed, level = 2, turn = 0, ease = false) {
       break;
     }
     case "addition":
-      q.prompt = `Combien font ${a} + ${b} ?`;
-      q.answer = String(a + b);
-      q.hint = `Pars de ${a}, puis avance de ${b}.`;
-      q.visual = level < 3 ? "🍎".repeat(a) + " + " + "🍎".repeat(b) : "";
+      q.prompt = `Combien font ${a2} + ${b2} ?`;
+      q.answer = String(a2 + b2);
+      q.hint = `Pars de ${a2}, puis avance de ${b2}.`;
+      q.visual = level < 3 && a2 + b2 <= 20 ? "🍎".repeat(a2) + " + " + "🍎".repeat(b2) : "";
       break;
     case "subtract":
-      q.prompt = `Combien font ${a + b} − ${b} ?`;
-      q.answer = String(a);
-      q.hint = `Dessine ${a + b} points et barre ${b} points.`;
+      q.prompt = `Combien font ${a2 + b2} − ${b2} ?`;
+      q.answer = String(a2);
+      q.hint = `Dessine ${a2 + b2} points et barre ${b2} points.`;
       break;
     case "problem": {
       q.type = "input";
@@ -305,7 +314,7 @@ export function exercise(id, seed, level = 2, turn = 0, ease = false) {
       break;
     }
     default:
-      if (!extraExercise(q, id, seed, turn)) throw Error("Compétence inconnue");
+      if (!extraExercise(q, id, seed, turn, tier)) throw Error("Compétence inconnue");
   }
   if (q.type === "choice" && !q.options.length)
     q.options = [
@@ -457,6 +466,10 @@ function explainRaw(q, value) {
 export function explain(q, value) {
   try {
     const e = explainRaw(q, value);
+    if (!e.slip) {
+      const sl = slipOf({ skill: q.skill, prompt: String(q.prompt).replace(/<[^>]*>/g, ""), answer: value, expected: q.answer });
+      if (sl) e.slip = `${sl.label}. ${sl.tip}`;
+    }
     // Énoncés d'aventure ou de format inattendu : jamais de texte cassé, on retombe sur l'indice.
     if (!/undefined|NaN|\[object/.test(e.why + e.slip) && e.why) return e;
   } catch {}
@@ -476,7 +489,7 @@ export function diagnostic(q, value) {
   };
 }
 
-export function selectExercise(id, seed, level, turn, history = [], ease = false) {
+export function selectExercise(id, seed, level, turn, history = [], ease = false, tier = 1) {
   const recent = new Set(
     history
       .filter((e) => e.skill === id)
@@ -486,8 +499,8 @@ export function selectExercise(id, seed, level, turn, history = [], ease = false
   let q;
   for (let i = 0; i < 100; i++) {
     const selectedSeed = (seed + i * 104729) >>> 0;
-    q = exercise(id, selectedSeed, level, turn, ease);
+    q = exercise(id, selectedSeed, level, turn, ease, tier);
     if (!recent.has(q.fingerprint)) return { q, seed: selectedSeed };
   }
-  return { q: exercise(id, seed, level, turn, ease), seed };
+  return { q: exercise(id, seed, level, turn, ease, tier), seed };
 }

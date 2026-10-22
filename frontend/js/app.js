@@ -75,6 +75,8 @@ import {
 } from "./extras.js";
 import { plantIcon } from "./plant-art.js";
 import { followupView } from "./followup.js";
+import { bilanView, bilanFinish, bilanTeaser, evaluationParentView } from "./evaluation-ui.js";
+import { tierFor, batchById, recordAssessment, outcomeOf, weakQueue, mixQueue } from "./evaluation.js";
 import { syncOnce, readConfig, writeConfig, newCode, codeValid, normalizeCode } from "./sync.js";
 import { subjects, lessonActivity } from "./lessons.js";
 import {
@@ -244,6 +246,8 @@ function current() {
   if (s.questionSeed === undefined) {
     // Adaptation : après deux échecs de suite sur la notion, exemple plus simple avec soutien (figé pour la question).
     s.questionEase = easeFor(state, id);
+    // Palier de difficulté figé pour la question (le bilan reste toujours au palier normal).
+    s.questionTier = s.mode === "bilan" ? 1 : tierFor(state, id);
     s.questionSeed = selectExercise(
       id,
       seed,
@@ -251,11 +255,12 @@ function current() {
       s.index,
       state.history,
       s.questionEase,
+      s.questionTier,
     ).seed;
     s.qStart = Date.now();
     persist();
   }
-  return exercise(id, s.questionSeed, state.skills[id].level, s.index, Boolean(s.questionEase));
+  return exercise(id, s.questionSeed, state.skills[id].level, s.index, Boolean(s.questionEase), s.questionTier ?? 1);
 }
 function bridgeTeaser() {
   const n = bridgeCount(state);
@@ -278,18 +283,24 @@ function clearing() {
     `<section class="clearing-scene"><span>🌲</span><span>🦊</span><span>🌳</span><h2>Tu as trouvé mon petit refuge !</h2></section><article class="panel"><p class="eyebrow">Un nouveau lieu dans ton royaume</p><h2>Le renard et les trois passages</h2><p class="passage">Le renard attendait près de la rivière. « Je voyais le château, mais je ne pouvais pas le rejoindre. »<br>Luna lui montre le pont : « Nous avons compté, cherché les mots et essayé encore. »<br>Le renard pose une petite graine dans sa main. « Alors, plantons une histoire ensemble. »</p>${button("🔊 Écouter l’histoire", "clearing-audio")} ${button("Retrouver mon jardin", "garden", "primary")}</article>`,
   );
 }
-function start(mode = "normal", id = null, count = 5) {
+function start(mode = "normal", id = null, count = 5, forced = null) {
   if (state.session) {
     route = "mission";
     render();
     return;
   }
-  const queue = id
+  const queue = forced
+    ? forced
+    : id
     ? Array(count).fill(id)
     : mode === "review"
       ? reviewQueue(state)
       : mode === "daily"
         ? dailyQueue(state)
+        : mode === "weak"
+          ? weakQueue(state)
+          : mode === "mix"
+            ? mixQueue(state)
         : plan(state, mode === "mini" ? 5 : (state.settings.length ?? 12));
   if (!queue.length) {
     route = "discover";
@@ -330,7 +341,10 @@ function album() {
   );
 }
 function discover() {
-  return page("Choisir ma mission", pickerView(state, selectedSubject));
+  return page("Choisir ma mission", bilanTeaser(state) + pickerView(state, selectedSubject));
+}
+function bilanPage() {
+  return page("Le bilan de Luna", bilanView(state));
 }
 function lesson() {
   const skill = skills.find((s) => s.id === lessonId);
@@ -473,9 +487,10 @@ function answer(value, skip = false) {
         ? stages[s.adventure].strategy
         : "Tu as trouvé ! Garde cette stratégie pour le prochain défi."
     : wrongFeedback(q, value, skip, d);
-  if (!correct && s.queue.length < 16) s.queue.push(q.skill);
+  if (s.mode === "bilan") recordAssessment(state, q.skill, s.id, outcomeOf(correct, s.assisted || skip || Boolean(q.guided) || Boolean(q.support), skip));
+  if (!correct && s.queue.length < 16 && s.mode !== "bilan") s.queue.push(q.skill);
   // Trois échecs de suite : on revoit d'abord une notion de base déjà abordée, puis on reprend.
-  const pre = !correct && s.adventure === undefined ? recallFor(state, q.skill) : null;
+  const pre = !correct && s.adventure === undefined && s.mode !== "bilan" ? recallFor(state, q.skill) : null;
   if (pre && !(s.recalled || []).includes(pre) && s.queue.length < 16) {
     s.queue.splice(s.index + 1, 0, pre);
     s.recalled = [...(s.recalled || []), pre];
@@ -491,6 +506,7 @@ function next() {
   s.index++;
   delete s.questionSeed;
   delete s.questionEase;
+  delete s.questionTier;
   delete s.qStart;
   Object.assign(s, {
     hints: 0,
@@ -509,6 +525,7 @@ function next() {
   render();
 }
 function finish() {
+  if (state.session.mode === "bilan") return page("Série terminée !", bilanFinish(state, state.session));
   if (state.session.chapter !== undefined)
     return page("Chapitre terminé !", chapterFinish(state, state.session));
   if (state.session.adventure !== undefined) {
@@ -674,7 +691,7 @@ function parent() {
         })
         .join("") ||
       "<p>Aucune réponse pour le moment. Indiquez les notions déjà travaillées ou commencez par une découverte.</p>"
-    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${followupView(state)}${syncPanel()}${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
+    }<p class="sub">Prochaine mission : ${[...new Set(plan(state, 5))].map((id) => skills.find((x) => x.id === id).name).join(", ") || "une découverte choisie ensemble"}.</p></section>${evaluationParentView(state)}${followupView(state)}${syncPanel()}${weekPanel()}${discoveryParentSummary(state)}${adventureReport()}${learningReport(state)}<section class="panel settings"><h2>Profil et sauvegardes</h2><label>Nom du royaume <input id="profile-name" type="text" maxlength="40" value="${esc(state.name)}"></label><label><input type="checkbox" id="motion" ${state.settings.motion ? "checked" : ""}> Animations douces</label><label><input type="checkbox" id="textsize" ${state.settings.textSize === "large" ? "checked" : ""}> Texte plus grand</label><label><input type="checkbox" id="slow" ${state.settings.slow ? "checked" : ""}> Voix plus lente</label><label>Longueur d’une mission <select id="length">${[[5, "Courte · 5 défis"], [8, "Moyenne · 8 défis"], [12, "Longue · 12 défis"]].map(([n, t]) => `<option value="${n}" ${(state.settings.length ?? 12) === n ? "selected" : ""}>${t}</option>`).join("")}</select></label><div class="row">${button("Exporter la sauvegarde JSON", "export")}${button("Importer une sauvegarde", "import")}<input type="file" id="import-file" accept="application/json,.json" hidden></div><p class="sub">Sauvegarde locale à cet appareil et à cette adresse. Exportez régulièrement pour changer de navigateur ou de tablette. L’import remplace la progression ; une copie de l’état actuel est téléchargée avant remplacement.</p></section><h2>Notions et prérequis</h2><div class="parent-grid">${skills
       .map((s) => {
         const p = state.skills[s.id];
         return `<section class="skill-row"><div class="skill-top"><h3>${s.icon} ${s.name}</h3><select data-status="${s.id}" aria-label="Statut scolaire : ${s.name}" ${state.session ? "disabled" : ""}>${[
@@ -725,6 +742,7 @@ function render() {
         discovery: () => discoveryView(state),
         "discovery-parent": discoveryParentPage,
         missions: discover,
+        bilan: bilanPage,
         rooms: castleRooms,
         "legacy-outfits": legacyOutfits,
         bridge,
@@ -1106,6 +1124,7 @@ app.addEventListener("click", (e) => {
       "discover",
       "story",
       "science",
+      "bilan",
     ].includes(a)
   ) {
     go(a);
@@ -1117,6 +1136,29 @@ app.addEventListener("click", (e) => {
   }
   if (a === "review" || a === "daily") {
     start(a);
+    return;
+  }
+  if (a === "bilan-back") {
+    state.session = null;
+    persist();
+    go("bilan");
+    return;
+  }
+  if (a === "bilan-start") {
+    const batch = batchById(b.dataset.batch);
+    if (!batch || state.session) return go(state.session ? "mission" : "bilan");
+    for (const id of batch.skills) if (state.skills[id].status !== "seen") state.skills[id].status = "seen";
+    start("bilan", null, 5, [...batch.skills]);
+    return;
+  }
+  if (a === "weak-start") {
+    start("weak");
+    return;
+  }
+  if (a === "mix-start") {
+    if (state.session && state.session.index < state.session.queue.length) return go("mission");
+    state.session = null;
+    start("mix");
     return;
   }
   if (a === "castle-time") {

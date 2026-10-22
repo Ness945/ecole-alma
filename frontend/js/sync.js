@@ -81,6 +81,10 @@ export function mergeStates(local, remote) {
     if (!seen.has(k)) (seen.add(k), hist.push(e));
   }
   out.history = hist.sort((x, y) => x.at - y.at).slice(-1000);
+  if (newer.assessment || older.assessment) {
+    out.assessment = { ...(older.assessment || {}) };
+    for (const [id, v] of Object.entries(newer.assessment || {})) if (!out.assessment[id] || v.at >= out.assessment[id].at) out.assessment[id] = v;
+  }
   out.completed = union(newer.completed, older.completed);
   out.inventory = union(newer.inventory, older.inventory);
   if (out.rpg && older.rpg) out.rpg.owned = union(newer.rpg.owned, older.rpg.owned);

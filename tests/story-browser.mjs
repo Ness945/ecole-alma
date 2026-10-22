@@ -44,6 +44,8 @@ async function answerAll() {
         s.session.questionSeed ?? (s.session.seed + s.session.index * 7919) >>> 0,
         s.skills[s.session.queue[s.session.index]].level,
         s.session.index,
+        false,
+        s.session.questionTier ?? 1,
       );
     });
     if (q.type === "input") {
