@@ -1,5 +1,5 @@
 import { skills, chapters, items } from "./content.js";
-import { wordModes, newWordGame, wordMenu, wordView, wordTeaser, writeGrid, gridFor, cellsFor, selectedWord, arrowPuzzles, answerWord, nextWord } from './word-workshop.js';
+import { validPuzzle, wordModes, newWordGame, wordMenu, wordView, wordTeaser, writeGrid, gridFor, cellsFor, selectedWord, arrowPuzzles, answerWord, nextWord } from './word-workshop.js';
 import {
   marketView,
   marketTeaser,
@@ -837,7 +837,7 @@ app.addEventListener("click", (e) => {
     if(a==='words-resume'){go('word-game');return;}
     if(a==='words-start'){
       const mode=b.dataset.mode,puzzle=Number(b.dataset.puzzle);
-      if(!Object.hasOwn(wordModes,mode)||![0,1,2].includes(puzzle))return;
+      if(!Object.hasOwn(wordModes,mode)||!validPuzzle(mode,puzzle))return;
       if(state.wordGame&&!state.wordGame.finished){
         if(state.wordGame.mode===mode&&state.wordGame.puzzle===puzzle){go('word-game');return;}
         if(!confirm('Un jeu de mots est en pause. Commencer cette série remplacera uniquement ce jeu en cours. Continuer ?'))return;

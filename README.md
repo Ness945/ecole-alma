@@ -18,7 +18,7 @@ Une mission terminée apporte des étoiles de participation, deux graines, dix p
 
 ## Fonctionnalités présentes
 
-**Atelier des mots (0.20)** : 36 exercices de mots à trous, infinitifs et adjectifs qualificatifs, plus trois petites grilles de mots fléchés avec lettres croisées, indices et reprise. Accessible depuis l’accueil et les missions de français. [Fonctionnement](docs/WORD-WORKSHOP.md).
+**Atelier des mots (0.20)** : 36 exercices de mots à trous, infinitifs et adjectifs qualificatifs, plus 503 petites grilles de mots fléchés avec lettres croisées, indices, reprise et rangement automatique des grilles terminées. Accessible depuis l’accueil et les missions de français. [Fonctionnement](docs/WORD-WORKSHOP.md).
 
 **Nouveau — le château animé (0.11) :** une scène qui vit (jour / soir / nuit, nuages, bannières, fontaine, compagnon qui se promène, créatures, météo) et une cinquantaine d’objets sur 15 emplacements (murs, tours, porte, fenêtres, douves, chemin, lumières…). Voir [le détail](docs/CASTLE.md).
 

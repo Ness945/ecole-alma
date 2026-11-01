@@ -1,3 +1,4 @@
+import { generateArrowPuzzles } from "./arrow-generator.js";
 // Banques originales : une seule réponse attendue par consigne.
 export const wordModes = {
   cloze: {
@@ -126,6 +127,10 @@ export const arrowPuzzles = [
     ],
   },
 ];
+const originalSets = new Set(arrowPuzzles.map(p=>p.words.map(w=>w.answer).sort().join(":")));
+arrowPuzzles.push(...generateArrowPuzzles(503).filter(p=>!originalSets.has(p.words.map(w=>w.answer).sort().join(":"))).slice(0,500));
+export const availableArrows = s => arrowPuzzles.map((_,i)=>i).filter(i=>!s.completed.includes(`words:arrow:${i}`));
+export const validPuzzle = (mode,n) => Number.isInteger(n)&&n>=0&&n<(mode==="arrow"?arrowPuzzles.length:3);
 export const cellsFor = (w) =>
   Array.from(
     w.answer,
@@ -254,7 +259,7 @@ export function validWordGame(g) {
   if (
     !g ||
     !Object.hasOwn(wordModes, g.mode) ||
-    ![0, 1, 2].includes(g.puzzle) ||
+    !validPuzzle(g.mode,g.puzzle) ||
     !Number.isInteger(g.index) ||
     g.index < 0 ||
     g.index > (g.mode === "arrow" ? 2 : 3) ||
@@ -327,7 +332,7 @@ export function wordMenu(s) {
   )
     .map(
       ([mode, v]) =>
-        `<section class="panel"><p class="eyebrow">${v.icon} FRANÇAIS</p><h2>${v.title}</h2><p>${v.lesson}</p><div class="words-series">${[0, 1, 2].map((n) => b(`${s.completed.includes(`words:${mode}:${n}`) ? "✓ " : ""}${mode === "arrow" ? arrowPuzzles[n].title : "Série " + (n + 1)}`, "start", `data-mode="${mode}" data-puzzle="${n}"`)).join("")}</div></section>`,
+        `<section class="panel"><p class="eyebrow">${v.icon} FRANÇAIS</p><h2>${v.title}</h2><p>${v.lesson}</p><div class="words-series">${(mode === "arrow" ? availableArrows(s).slice(0,6) : [0, 1, 2]).map((n) => b(`${s.completed.includes(`words:${mode}:${n}`) ? "✓ " : ""}${mode === "arrow" ? arrowPuzzles[n].title : "Série " + (n + 1)}`, "start", `data-mode="${mode}" data-puzzle="${n}"`)).join("")}</div>${mode === "arrow" ? `<p class="sub">${availableArrows(s).length} grilles à découvrir. Les grilles terminées sont rangées automatiquement.</p><details><summary>Mes grilles terminées (${arrowPuzzles.length-availableArrows(s).length})</summary><div class="words-series">${arrowPuzzles.map((p,n)=>s.completed.includes(`words:arrow:${n}`)?b(p.title,"start",`data-mode="arrow" data-puzzle="${n}"`):"").join("")}</div></details>` : ""}</section>`,
     )
     .join(
       "",
@@ -340,7 +345,7 @@ export function wordView(s) {
   let body = "";
   if (g.finished) {
     const solo = g.results.filter((r) => r.correct && !r.assisted).length;
-    body = `<h2>Ton jardin de mots a grandi !</h2><p>${g.solved.length} mots retrouvés, dont ${solo} sans indice ni correction préalable.</p><p>Ta récompense est conservée. Tu peux rejouer ou découvrir une autre série.</p>${b("Choisir un autre jeu", "open")}`;
+    body = `<h2>Ton jardin de mots a grandi !</h2><p>${g.solved.length} mots retrouvés, dont ${solo} sans indice ni correction préalable.</p><p>Ta récompense est conservée. Tu peux rejouer ou découvrir une autre série.</p>${g.mode === "arrow" && availableArrows(s).length ? b("Une nouvelle grille →","start",`data-mode="arrow" data-puzzle="${availableArrows(s)[0]}"`) : ""}${b("Choisir un autre jeu", "open")}`;
   } else if (g.mode !== "arrow") {
     const q = wordQuestion(g);
     body = `<p class="eyebrow">MOT ${g.index + 1} / 4</p><div class="word-phrase">${q.phrase}</div><h2>${q.prompt}</h2><label for="word-input">Écris le mot entier</label><input id="word-input" maxlength="80" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(g.draft)}" ${g.solved.includes(g.index) ? "disabled" : ""}>${g.solved.includes(g.index) ? b("Continuer →", "next") : b("Vérifier mon mot", "check")} ${b("Un indice", "hint")}${g.assisted.includes(g.index) ? `<p class="notice">${q.hint}</p>` : ""}`;

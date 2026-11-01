@@ -31,6 +31,7 @@ try{
   await page.getByRole('button',{name:'Choisir un autre jeu',exact:true}).click();
  }
  assert.equal((await state()).rpg.coins,120);
+ await page.getByText(/Mes grilles terminées/).click();
  await page.locator('[data-action="words-start"][data-mode="arrow"][data-puzzle="0"]').click();
  await page.locator('[data-action="words-hint"]').click();
  assert.ok((await state()).wordGame.assisted.includes(0));
@@ -38,6 +39,13 @@ try{
  await page.locator('[data-action="words-open"]').first().click();await page.locator('[data-action="words-resume"]').click();
  for(let i=0;i<3;i++){await page.locator(`[data-action="words-select"][data-index="${i}"]`).click();await page.locator('#word-input').fill(arrowPuzzles[0].words[i].answer);await page.locator('[data-action="words-check"]').click();}
  assert.equal((await state()).rpg.coins,120);
+ await page.getByRole('button',{name:'Une nouvelle grille →',exact:true}).click();
+ assert.equal((await state()).wordGame.puzzle,3);
+ for(let i=0;i<3;i++){await page.locator('[data-action="words-select"][data-index="'+i+'"]').click();await page.locator('#word-input').fill(arrowPuzzles[3].words[i].answer);await page.locator('[data-action="words-check"]').click();}
+ assert.equal((await state()).rpg.coins,130);
+ await page.getByRole('button',{name:'Choisir un autre jeu',exact:true}).click();
+ assert.equal(await page.locator('[data-action="words-start"][data-mode="arrow"][data-puzzle="3"]').isVisible(),false);
+ assert.equal(await page.locator('[data-action="words-start"][data-mode="arrow"][data-puzzle="4"]').isVisible(),true);
  assert.deepEqual(errors,[]);
- console.log('Atelier : 36 exercices, 3 grilles, correction, pause, indices, format mobile, hors ligne et récompenses sans doublons OK.');
+ console.log('Atelier : exercices, grilles originales et générée, archivage, enchaînement, reprise, hors ligne et récompenses OK.');
 }finally{await browser.close();}
