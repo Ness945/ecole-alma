@@ -1,4 +1,5 @@
 import { skills, chapters, items } from "./content.js";
+import { wordModes, newWordGame, wordMenu, wordView, wordTeaser, writeGrid, gridFor, cellsFor, selectedWord, arrowPuzzles, answerWord, nextWord } from './word-workshop.js';
 import {
   marketView,
   marketTeaser,
@@ -233,7 +234,7 @@ function page(title, body) {
 function home() {
   return homeView(state).replace(
     "</main>",
-    discoveryTeaser(state) + marketTeaser(state) + "</main>",
+    wordTeaser() + discoveryTeaser(state) + marketTeaser(state) + "</main>",
   );
 }
 function current() {
@@ -341,7 +342,7 @@ function album() {
   );
 }
 function discover() {
-  return page("Choisir ma mission", bilanTeaser(state) + pickerView(state, selectedSubject));
+  return page("Choisir ma mission", (selectedSubject === "Français" ? wordTeaser() : "") + bilanTeaser(state) + pickerView(state, selectedSubject));
 }
 function bilanPage() {
   return page("Le bilan de Luna", bilanView(state));
@@ -739,6 +740,8 @@ function render() {
       {
         home,
         market: () => marketView(state),
+        words: () => wordMenu(state),
+        'word-game': () => wordView(state),
         discovery: () => discoveryView(state),
         "discovery-parent": discoveryParentPage,
         missions: discover,
@@ -829,6 +832,40 @@ app.addEventListener("click", (e) => {
   const b = e.target.closest("[data-action]");
   if (!b || b.disabled) return;
   const a = b.dataset.action;
+  if(a.startsWith('words-')){
+    if(a==='words-open'){go('words');return;}
+    if(a==='words-resume'){go('word-game');return;}
+    if(a==='words-start'){
+      const mode=b.dataset.mode,puzzle=Number(b.dataset.puzzle);
+      if(!Object.hasOwn(wordModes,mode)||![0,1,2].includes(puzzle))return;
+      if(state.wordGame&&!state.wordGame.finished){
+        if(state.wordGame.mode===mode&&state.wordGame.puzzle===puzzle){go('word-game');return;}
+        if(!confirm('Un jeu de mots est en pause. Commencer cette série remplacera uniquement ce jeu en cours. Continuer ?'))return;
+      }
+      state.wordGame=newWordGame(mode,puzzle);persist();go('word-game');return;
+    }
+    const g=state.wordGame;if(!g||g.finished)return;
+    if(g.mode==='arrow'&&(a==='words-select'||a==='words-cell')){
+      const grid=gridFor(arrowPuzzles[g.puzzle]);
+      const options=a==='words-cell'?grid[b.dataset.cell]?.words: [Number(b.dataset.index)];
+      if(!options)return;
+      const index=options.find(i=>i!==g.index&&!g.solved.includes(i))??options[0];
+      if(![0,1,2].includes(index))return;
+      g.index=index;g.draft='';g.feedback='';g.attempted=false;
+    }
+    if(a==='words-hint'&&!g.solved.includes(g.index)){
+      g.assisted=Array.from(new Set([...g.assisted,g.index]));
+      if(g.mode==='arrow'){
+        const grid=gridFor(arrowPuzzles[g.puzzle]),key=cellsFor(selectedWord(g)).find(k=>g.letters[k]!==grid[k].answer);
+        if(key){g.letters[key]=grid[key].answer;g.assisted=Array.from(new Set([...g.assisted,...grid[key].words]));}
+      }
+      g.attempted=false;g.feedback='Luna t’aide. Tu peux continuer tranquillement.';
+    }
+    if(a==='words-check')answerWord(g);
+    if(a==='words-next')nextWord(g);
+    if(g.finished)reward(state,{id:`words:${g.mode}:${g.puzzle}`,index:g.solved.length,queue:Array(g.solved.length).fill('noun')});
+    persist();render();return;
+  }
   if (a.startsWith("disc-")) {
     discoveryAction(discoveryCtx(), b);
     return;
@@ -1532,6 +1569,14 @@ app.addEventListener("submit", (e) => {
   }
 });
 app.addEventListener("input", (e) => {
+  if(e.target.id==='word-input'&&state.wordGame&&!state.wordGame.finished&&!state.wordGame.solved.includes(state.wordGame.index)){
+    const g=state.wordGame;
+    if(g.mode==='arrow'){
+      writeGrid(g,e.target.value);
+      document.querySelectorAll('[data-action="words-cell"]').forEach(el=>el.textContent=g.letters[el.dataset.cell]||'·');
+    }else{g.draft=e.target.value;g.attempted=false;g.feedback='';}
+    persist();
+  }
   if (e.target.id === "answer-input") {
     state.session.draft = e.target.value;
     persist();

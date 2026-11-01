@@ -2,6 +2,7 @@ import { skills, items } from "./content.js";
 import { defaultRpg, validRpg, defaultRoom, roomSlots, shop, castleNewSlots } from "./rpg.js";
 import { extraSkills } from "./expansion.js";
 import { validMarket } from "./market.js";
+import { validWordGame } from './word-workshop.js';
 import { validDiscovery } from "./discovery-model.js";
 import { validChapterSession } from "./story-data.js";
 export const DAY = 86400000;
@@ -301,6 +302,7 @@ export function validate(raw) {
   raw.rpg.room ??= defaultRoom();
   for (const s of roomSlots) raw.rpg.room[s] ??= null;
   if (!validMarket(raw.market)) fail();
+  if (!validWordGame(raw.wordGame)) fail();
   if (!validDiscovery(raw.discovery)) fail();
   if (
     raw.marketDecor !== undefined &&
